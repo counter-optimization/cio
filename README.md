@@ -1,5 +1,17 @@
 # Eval
 
+## TODOs
+
+- [ ] Write test files for crypto functions
+  - [ ] AESNI-256-GCM
+  - [ ] ChaCha20-Poly1305
+  - [ ] Argon2id
+  - [ ] Ed25519 signing
+- [ ] Get pipeline working w/out checker (no mitigations)
+- [ ] Get pipeline working with choice of mitigations
+- [ ] Automate running the pipeline for all cases
+- [ ] Automate `.tex` output from raw eval data
+
 ## Required repositories
 - Pandora LLVM: https://github.com/Flandini/llvm-project
 - Checker: https://github.com/Flandini/checker
@@ -12,10 +24,41 @@
 ## Data
 We want eval data on:
 
-[ ] test case runtime overhead with/without mitigations
+- [ ] runtime overhead for crypto functions
+  - with/without mitigations, ablated over different mitigations
 
-[ ] checker runtime
+- [ ] checker runtime
 
-[ ] compilation runtime with/without mitigations
+- [ ] compilation runtime overhead with/without mitigations
 
-[ ] pruning/ablation on checker features
+- [ ] pruning/ablation on checker features
+
+## Pipeline
+
+- [ ] Compile crypto libraries
+  - [ ] libsodium
+    - [ ] with mitigations
+    - [ ] without mitigations
+  - [ ] HACL*
+    - [ ] with mitigations
+    - [ ] without mitigations
+  - [ ] Ablate compilations across...
+    - [ ] Silent store
+    - [ ] Comp simp categories (final list TBD)
+      - [ ] All arithmetic ops?
+      - [ ] All bitwise ops?
+      - [ ] Shifts only?
+      - [ ] `mul` only?
+- [ ] Run checker on compiled libraries
+  - [ ] libsodium
+    - [ ] with mitigations
+    - [ ] without mitigations
+  - [ ] HACL*
+    - [ ] with mitigations
+    - [ ] without mitigations
+- [ ] Evaluate on crypto functions (final list TBD)
+  - [ ] AESNI-256-GCM
+  - [ ] ChaCha20-Poly1305
+  - [ ] Argon2id
+  - [ ] Ed25519 signing
+- [ ] Output final data to LaTeX
