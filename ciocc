@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python3 /Users/mkf727/projects/pandora-eval/sac-llvm.py $*
