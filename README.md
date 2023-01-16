@@ -6,7 +6,7 @@
   - [ ] AESNI-256-GCM
   - [ ] ChaCha20-Poly1305
   - [ ] Argon2id
-  - [ ] Ed25519 signing
+  - [X] Ed25519 signing
 - [ ] Get pipeline working w/out checker (no mitigations)
 - [ ] Get pipeline working with choice of mitigations
 - [ ] Automate running the pipeline for all cases
@@ -56,9 +56,10 @@ We want eval data on:
   - [ ] HACL*
     - [ ] with mitigations
     - [ ] without mitigations
-- [ ] Evaluate on crypto functions (final list TBD)
+- [ ] Evaluate on crypto functions (final list TBD) 
+  - [ ] run `make` to do all of this
   - [ ] AESNI-256-GCM
   - [ ] ChaCha20-Poly1305
   - [ ] Argon2id
-  - [ ] Ed25519 signing
+  - [X] Ed25519 signing
 - [ ] Output final data to LaTeX
