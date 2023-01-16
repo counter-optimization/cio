@@ -9,17 +9,17 @@ EVAL_ED25519=eval_ed25519.o
 
 .PHONY: clean libsodium
 
-all: libsodium eval_ed25519_normal
+all: eval_ed25519_normal
 
 eval_ed25519_hardened: $(EVAL_ED25519)
-	LIBSODIUM_ARCHIVES=find $(LIBSODIUM_DIR) -name *.ar
+	LIBSODIUM_ARCHIVES=find ./$(LIBSODIUM_DIR) -name *.ar
 
 eval_ed25519_normal: $(EVAL_ED25519)
-	LIBSODIUM_ARCHIVES=find $(LIBSODIUM_DIR) -name *.ar
-	echo $$LIBSODIUM_ARCHIVES
+	LIBSODIUM_ARCHIVES=find ./$(LIBSODIUM_DIR) -name *.ar
+	echo $(LIBSODIUM_ARCHIVES)
 
 libsodium:
-	cd $(LIBSODIUM_DIR); /configure CC=$(CC)
+	cd $(LIBSODIUM_DIR); ./configure CC=$(CC)
 	$(MAKE) -C $(LIBSODIUM_DIR)
 
 %.o: %.c
