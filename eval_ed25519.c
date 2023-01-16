@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include <assert.h> 
 
 #include "eval_util.h"
@@ -56,6 +57,14 @@ main(int argc, char** argv)
   assert(privk && "Couldn't allocate private key bytes in eval_ed25519.c");
   assert(pubk && "Couldn't allocate pub key bytes in eval_ed25519.c");
 
+  // allocate space for timer reads
+  uint64_t* times = calloc(num_iter, sizeof(uint64_t));
+  assert(times &&
+	 "Couldn't allocate array for benchmark times in eval_ed25519.c");
+
+  uint64_t start_time = 0;
+  uint64_t end_time = 0;
+
   // main loop
   for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
     // generate private key
@@ -63,9 +72,10 @@ main(int argc, char** argv)
     int _eval_unused = crypto_sign_keypair(/*public=*/ pubk, /*secret=*/ privk);
 
     // generate message
-    eval_rand_fill_buf(msg, msg_sz);
+    ciocc_eval_rand_fill_buf(msg, msg_sz);
 
     // start counting cycles
+    start_time = START_CYCLE_TIMER;
     
     // sign the message
     int sign_result = crypto_sign(/*signed msg buf=*/ signed_msg,
@@ -77,10 +87,19 @@ main(int argc, char** argv)
     assert(-1 != sign_result); // -1 on err, 0 on ok
     
     // stop counting cycles
+    end_time = STOP_CYCLE_TIMER;
+
+    times[cur_iter] = end_time - start_time;
 
     // verify the message for sanity check
     int open_result = crypto_sign_open(opened_msg, &msg_sz,
 				       signed_msg, signed_msg_sz, pubk);
     assert(0 == open_result && "in eval_ed25519.c, error verifying sign of msg");
+  }
+
+  // output the timer results
+  printf("eval_ed25519 cycle counts for %d iterations\n", num_iter);
+  for (int ii = 0; ii < num_iter; ++ii) {
+    printf("%" PRIu64 "\n", times[ii]);
   }
 }
