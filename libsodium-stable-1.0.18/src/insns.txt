@@ -1,0 +1,6980 @@
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_sub>:
+	movabsq $0x7ffffffffffff,%rax
+	pushq  %rbx
+	movq   (%rdx),%r11
+	movq   %r11,%r8
+	shrq   $0x33,%r8
+	addq   0x8(%rdx),%r8
+	movq   %r8,%rcx
+	movq   %r8,%r10
+	shrq   $0x33,%rcx
+	addq   0x10(%rdx),%rcx
+	andq   %rax,%r10
+	movq   %rcx,%r8
+	andq   %rax,%rcx
+	shrq   $0x33,%r8
+	addq   0x18(%rdx),%r8
+	movq   %rcx,%r9
+	movq   %r8,%rcx
+	andq   %rax,%r8
+	shrq   $0x33,%rcx
+	addq   0x20(%rdx),%rcx
+	movabsq $0xfffffffffffda,%rdx
+	addq   (%rsi),%rdx
+	movq   %rcx,%rbx
+	shrq   $0x33,%rcx
+	andq   %rax,%rbx
+	andq   %r11,%rax
+	movq   0x8(%rsi),%r11
+	subq   %rax,%rdx
+	movabsq $0xffffffffffffe,%rax
+	addq   %rax,%r11
+	subq   %r10,%r11
+	movq   0x10(%rsi),%r10
+	addq   %rax,%r10
+	subq   %r9,%r10
+	movq   0x18(%rsi),%r9
+	addq   %rax,%r9
+	addq   0x20(%rsi),%rax
+	leaq   (%rcx,%rcx,8),%rsi
+	movq   %r11,0x8(%rdi)
+	leaq   (%rcx,%rsi,2),%rcx
+	subq   %rbx,%rax
+	subq   %r8,%r9
+	movq   %r10,0x10(%rdi)
+	subq   %rcx,%rdx
+	movq   %r9,0x18(%rdi)
+	popq   %rbx
+	movq   %rdx,(%rdi)
+	movq   %rax,0x20(%rdi)
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_cmov>:
+	pushq  %r13
+	movl   %edx,%edx
+	movq   %rdi,%rax
+	pushq  %r12
+	negq   %rdx
+	pushq  %rbp
+	pushq  %rbx
+	movq   (%rdi),%r13
+	movq   (%rsi),%rbp
+	movq   0x8(%rdi),%r12
+	movq   0x10(%rdi),%rbx
+	movq   0x18(%rdi),%r10
+	xorq   %r13,%rbp
+	movq   0x20(%rdi),%r9
+	movq   0x8(%rsi),%r8
+	movq   0x10(%rsi),%rdi
+	movq   0x18(%rsi),%rcx
+	movq   0x20(%rsi),%r11
+	movq   %rbp,%rsi
+	xorq   %r12,%r8
+	andq   %rdx,%rsi
+	xorq   %rbx,%rdi
+	xorq   %r10,%rcx
+	xorq   %r13,%rsi
+	andq   %rdx,%rdi
+	xorq   %r9,%r11
+	andq   %rdx,%rcx
+	movq   %rsi,(%rax)
+	movq   %r8,%rsi
+	xorq   %r10,%rcx
+	andq   %rdx,%rsi
+	andq   %r11,%rdx
+	movq   %rcx,0x18(%rax)
+	xorq   %r12,%rsi
+	xorq   %r9,%rdx
+	movq   %rsi,0x8(%rax)
+	movq   %rdi,%rsi
+	xorq   %rbx,%rsi
+	movq   %rdx,0x20(%rax)
+	popq   %rbx
+	movq   %rsi,0x10(%rax)
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_mul>:
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	movq   0x10(%rsi),%rdi
+	movq   0x8(%rdx),%rax
+	movq   0x18(%rsi),%r14
+	movq   0x20(%rsi),%r9
+	movq   0x8(%rsi),%rcx
+	movq   (%rsi),%r12
+	movq   0x18(%rdx),%r15
+	movq   %rax,-0x40(%rsp)
+	leaq   (%rdi,%rdi,8),%rax
+	movq   (%rdx),%rsi
+	movq   0x20(%rdx),%r13
+	movq   %r9,-0x10(%rsp)
+	movq   0x10(%rdx),%rbx
+	leaq   (%rdi,%rax,2),%rdx
+	leaq   (%r14,%r14,8),%rax
+	movq   %rdx,-0x28(%rsp)
+	leaq   (%r14,%rax,2),%rdx
+	leaq   (%r9,%r9,8),%rax
+	movq   %rbx,-0x18(%rsp)
+	leaq   (%r9,%rax,2),%rbx
+	movq   %r12,%rax
+	movq   %rdx,-0x38(%rsp)
+	mulq   %rsi
+	movq   %rax,%r10
+	leaq   (%rcx,%rcx,8),%rax
+	movq   %rdx,%r11
+	leaq   (%rcx,%rax,2),%r8
+	movq   %r8,%rax
+	mulq   %r13
+	movq   %rax,%r8
+	movq   -0x28(%rsp),%rax
+	movq   %rdx,%r9
+	mulq   %r15
+	addq   %rax,%r8
+	movq   -0x38(%rsp),%rax
+	adcq   %rdx,%r9
+	addq   %r10,%r8
+	adcq   %r11,%r9
+	mulq   -0x18(%rsp)
+	addq   %rax,%r8
+	movq   -0x40(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %rbx
+	addq   %r8,%rax
+	movq   %rax,%r10
+	movq   -0x40(%rsp),%rax
+	adcq   %r9,%rdx
+	movq   %rdx,%r11
+	mulq   %r12
+	movq   %rax,%r8
+	movq   %rsi,%rax
+	movq   %rdx,%r9
+	mulq   %rcx
+	addq   %rax,%r8
+	movq   -0x28(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %r13
+	addq   %rax,%r8
+	movq   -0x38(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %r15
+	addq   %rax,%r8
+	movq   -0x18(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %rbx
+	addq   %r8,%rax
+	movq   %rax,-0x28(%rsp)
+	movq   -0x18(%rsp),%rax
+	adcq   %r9,%rdx
+	movq   %rdx,-0x20(%rsp)
+	mulq   %r12
+	movq   %rax,%r8
+	movq   -0x40(%rsp),%rax
+	movq   %rdx,%r9
+	mulq   %rcx
+	addq   %rax,%r8
+	movq   %rsi,%rax
+	adcq   %rdx,%r9
+	mulq   %rdi
+	addq   %rax,%r8
+	movq   -0x38(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %r13
+	addq   %rax,%r8
+	movq   %r15,%rax
+	adcq   %rdx,%r9
+	mulq   %rbx
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   %rax,-0x38(%rsp)
+	movq   %r12,%rax
+	movq   %rdx,-0x30(%rsp)
+	mulq   %r15
+	movq   %rax,%r8
+	movq   -0x18(%rsp),%rax
+	movq   %rdx,%r9
+	mulq   %rcx
+	addq   %rax,%r8
+	movq   -0x40(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %rdi
+	addq   %rax,%r8
+	movq   %rsi,%rax
+	adcq   %rdx,%r9
+	mulq   %r14
+	addq   %rax,%r8
+	movq   %rbx,%rax
+	adcq   %rdx,%r9
+	mulq   %r13
+	addq   %rax,%r8
+	movq   %r12,%rax
+	adcq   %rdx,%r9
+	mulq   %r13
+	movq   %rax,%r12
+	movq   %r15,%rax
+	movq   %rdx,%r13
+	mulq   %rcx
+	movq   %rax,%rcx
+	movq   -0x18(%rsp),%rax
+	movq   %rdx,%rbx
+	addq   %r12,%rcx
+	adcq   %r13,%rbx
+	mulq   %rdi
+	addq   %rax,%rcx
+	movq   -0x40(%rsp),%rax
+	adcq   %rdx,%rbx
+	mulq   %r14
+	addq   %rax,%rcx
+	movq   -0x10(%rsp),%rax
+	adcq   %rdx,%rbx
+	mulq   %rsi
+	movq   %r11,%rsi
+	movq   %r10,%r11
+	addq   %rcx,%rax
+	movabsq $0x7ffffffffffff,%rcx
+	adcq   %rbx,%rdx
+	movq   %r10,%rbx
+	andq   %rcx,%r11
+	shrdq  $0x33,%rsi,%rbx
+	shrq   $0x33,%rsi
+	movq   %rsi,%rdi
+	movq   %rbx,%rsi
+	addq   -0x28(%rsp),%rsi
+	adcq   -0x20(%rsp),%rdi
+	movq   %rsi,%r10
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rcx,%r10
+	shrq   $0x33,%rdi
+	addq   -0x38(%rsp),%rsi
+	adcq   -0x30(%rsp),%rdi
+	movq   %rsi,%rbx
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rcx,%rbx
+	shrq   $0x33,%rdi
+	addq   %r8,%rsi
+	adcq   %r9,%rdi
+	movq   %rsi,%r14
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   %rsi,%rax
+	movq   %r14,%rsi
+	adcq   %rdi,%rdx
+	movq   %rax,%r12
+	andq   %rcx,%rsi
+	shrdq  $0x33,%rdx,%rax
+	movq   %rsi,0x18(%rbp)
+	leaq   (%rax,%rax,8),%rdx
+	leaq   (%rax,%rdx,2),%rdi
+	movq   %r12,%rax
+	addq   %r11,%rdi
+	andq   %rcx,%rax
+	movq   %rdi,%rdx
+	andq   %rcx,%rdi
+	movq   %rax,0x20(%rbp)
+	shrq   $0x33,%rdx
+	movq   %rdi,0x0(%rbp)
+	addq   %r10,%rdx
+	movq   %rdx,%rdi
+	shrq   $0x33,%rdx
+	addq   %rbx,%rdx
+	andq   %rcx,%rdi
+	popq   %rbx
+	movq   %rdi,0x8(%rbp)
+	movq   %rdx,0x10(%rbp)
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_sq>:
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	movq   0x8(%rsi),%r8
+	movq   0x10(%rsi),%rdi
+	movq   0x18(%rsi),%rcx
+	leaq   (%r8,%r8,1),%rax
+	movq   (%rsi),%r9
+	movq   0x20(%rsi),%rsi
+	movq   %rax,-0x20(%rsp)
+	leaq   (%rdi,%rdi,8),%rax
+	leaq   (%rdi,%rax,2),%r10
+	leaq   (%r8,%r8,8),%rax
+	leaq   (%r8,%rax,2),%r12
+	addq   %r10,%r10
+	leaq   (%r9,%r9,1),%rbx
+	addq   %r12,%r12
+	movq   %r12,%rax
+	mulq   %rsi
+	movq   %rax,%r12
+	movq   %r10,%rax
+	movq   %rdx,%r13
+	mulq   %rcx
+	addq   %rax,%r12
+	movq   %r9,%rax
+	adcq   %rdx,%r13
+	mulq   %r9
+	movq   %r12,%r14
+	movq   %r13,%r15
+	addq   %rax,%r14
+	movq   %rbx,%rax
+	adcq   %rdx,%r15
+	mulq   %r8
+	movq   %rax,%r12
+	movq   %r10,%rax
+	movq   %rdx,%r13
+	mulq   %rsi
+	addq   %rax,%r12
+	leaq   (%rcx,%rcx,8),%rax
+	leaq   (%rcx,%rax,2),%r9
+	adcq   %rdx,%r13
+	movq   %r9,%rax
+	leaq   (%r9,%r9,1),%r10
+	mulq   %rcx
+	addq   %rax,%r12
+	movq   %r10,%rax
+	adcq   %rdx,%r13
+	mulq   %rsi
+	movq   %rax,%r10
+	movq   %rbx,%rax
+	movq   %rdx,%r11
+	mulq   %rdi
+	addq   %rax,%r10
+	movq   %r8,%rax
+	adcq   %rdx,%r11
+	mulq   %r8
+	movq   %rax,%r8
+	movq   %rdx,%r9
+	movq   %rcx,%rax
+	addq   %r10,%r8
+	adcq   %r11,%r9
+	mulq   %rbx
+	movq   %r8,-0x18(%rsp)
+	movq   %r9,-0x10(%rsp)
+	movq   %rax,%r8
+	movq   -0x20(%rsp),%rax
+	movq   %rdx,%r9
+	mulq   %rdi
+	addq   %rax,%r8
+	leaq   (%rsi,%rsi,8),%rax
+	leaq   (%rsi,%rax,2),%rax
+	adcq   %rdx,%r9
+	mulq   %rsi
+	addq   %rax,%r8
+	movq   %rsi,%rax
+	movq   %r14,%rsi
+	adcq   %rdx,%r9
+	mulq   %rbx
+	movq   %rax,%r10
+	movq   -0x20(%rsp),%rax
+	movq   %rdx,%r11
+	mulq   %rcx
+	movq   %rax,%rcx
+	movq   %rdx,%rbx
+	movq   %rdi,%rax
+	addq   %r10,%rcx
+	adcq   %r11,%rbx
+	mulq   %rdi
+	movq   %r14,%r11
+	movq   %r15,%rdi
+	addq   %rcx,%rax
+	movabsq $0x7ffffffffffff,%rcx
+	adcq   %rbx,%rdx
+	shrdq  $0x33,%r15,%rsi
+	andq   %rcx,%r11
+	shrq   $0x33,%rdi
+	addq   %r12,%rsi
+	adcq   %r13,%rdi
+	movq   %rsi,%r10
+	andq   %rcx,%r10
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   -0x18(%rsp),%rsi
+	adcq   -0x10(%rsp),%rdi
+	movq   %rsi,%rbx
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rcx,%rbx
+	shrq   $0x33,%rdi
+	addq   %r8,%rsi
+	adcq   %r9,%rdi
+	movq   %rsi,%r14
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   %rsi,%rax
+	movq   %r14,%rsi
+	adcq   %rdi,%rdx
+	movq   %rax,%r12
+	andq   %rcx,%rsi
+	shrdq  $0x33,%rdx,%rax
+	movq   %rsi,0x18(%rbp)
+	leaq   (%rax,%rax,8),%rdx
+	leaq   (%rax,%rdx,2),%rdi
+	movq   %r12,%rax
+	addq   %r11,%rdi
+	andq   %rcx,%rax
+	movq   %rdi,%rdx
+	andq   %rcx,%rdi
+	movq   %rax,0x20(%rbp)
+	shrq   $0x33,%rdx
+	movq   %rdi,0x0(%rbp)
+	addq   %r10,%rdx
+	movq   %rdx,%rdi
+	shrq   $0x33,%rdx
+	addq   %rbx,%rdx
+	andq   %rcx,%rdi
+	popq   %rbx
+	movq   %rdi,0x8(%rbp)
+	movq   %rdx,0x10(%rbp)
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_sq2>:
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	movq   %rdi,%r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	movq   0x10(%rsi),%rdi
+	movq   0x8(%rsi),%r8
+	movq   0x18(%rsi),%rcx
+	leaq   (%rdi,%rdi,8),%rax
+	movq   (%rsi),%r9
+	movq   0x20(%rsi),%rsi
+	leaq   (%rdi,%rax,2),%r10
+	leaq   (%r8,%r8,8),%rax
+	leaq   (%r8,%rax,2),%r14
+	addq   %r10,%r10
+	leaq   (%r9,%r9,1),%rbx
+	addq   %r14,%r14
+	leaq   (%r8,%r8,1),%rbp
+	movq   %r14,%rax
+	mulq   %rsi
+	movq   %rax,%r14
+	movq   %r10,%rax
+	movq   %rdx,%r15
+	mulq   %rcx
+	addq   %rax,%r14
+	movq   %r9,%rax
+	adcq   %rdx,%r15
+	mulq   %r9
+	addq   %rax,%r14
+	movq   %rbx,%rax
+	adcq   %rdx,%r15
+	mulq   %r8
+	movq   %r14,-0x28(%rsp)
+	movq   %r15,-0x20(%rsp)
+	movq   %rax,%r14
+	movq   %r10,%rax
+	movq   %rdx,%r15
+	mulq   %rsi
+	addq   %rax,%r14
+	leaq   (%rcx,%rcx,8),%rax
+	leaq   (%rcx,%rax,2),%r9
+	adcq   %rdx,%r15
+	movq   %r9,%rax
+	leaq   (%r9,%r9,1),%r10
+	mulq   %rcx
+	addq   %rax,%r14
+	movq   %r10,%rax
+	adcq   %rdx,%r15
+	mulq   %rsi
+	movq   %rax,%r10
+	movq   %rbx,%rax
+	movq   %rdx,%r11
+	mulq   %rdi
+	addq   %rax,%r10
+	movq   %r8,%rax
+	adcq   %rdx,%r11
+	mulq   %r8
+	movq   %rax,%r8
+	movq   %rdx,%r9
+	movq   %rcx,%rax
+	addq   %r10,%r8
+	adcq   %r11,%r9
+	mulq   %rbx
+	movq   %r8,-0x18(%rsp)
+	movq   %r9,-0x10(%rsp)
+	movq   %rax,%r8
+	movq   %rdi,%rax
+	movq   %rdx,%r9
+	mulq   %rbp
+	addq   %rax,%r8
+	leaq   (%rsi,%rsi,8),%rax
+	leaq   (%rsi,%rax,2),%rax
+	adcq   %rdx,%r9
+	mulq   %rsi
+	addq   %rax,%r8
+	movq   %rsi,%rax
+	movq   -0x28(%rsp),%rsi
+	adcq   %rdx,%r9
+	mulq   %rbx
+	movq   %rax,%r10
+	movq   %rcx,%rax
+	movq   %rdx,%r11
+	mulq   %rbp
+	movabsq $0x7ffffffffffff,%rbp
+	movq   %rax,%rcx
+	movq   %rdx,%rbx
+	movq   %rdi,%rax
+	addq   %r10,%rcx
+	movq   -0x18(%rsp),%r10
+	adcq   %r11,%rbx
+	mulq   %rdi
+	movq   -0x20(%rsp),%rdi
+	movq   -0x10(%rsp),%r11
+	addq   %rcx,%rax
+	adcq   %rbx,%rdx
+	shldq  $0x1,%rsi,%rdi
+	addq   %rsi,%rsi
+	shldq  $0x1,%r14,%r15
+	movq   %rsi,%r12
+	addq   %r14,%r14
+	shrdq  $0x33,%rdi,%rsi
+	shldq  $0x1,%r10,%r11
+	andq   %rbp,%r12
+	addq   %r10,%r10
+	shldq  $0x1,%r8,%r9
+	shldq  $0x1,%rax,%rdx
+	addq   %r8,%r8
+	addq   %rax,%rax
+	shrq   $0x33,%rdi
+	addq   %r14,%rsi
+	adcq   %r15,%rdi
+	movq   %rsi,%rcx
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rbp,%rcx
+	shrq   $0x33,%rdi
+	addq   %r10,%rsi
+	adcq   %r11,%rdi
+	movq   %rsi,%r10
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rbp,%r10
+	shrq   $0x33,%rdi
+	addq   %r8,%rsi
+	adcq   %r9,%rdi
+	movq   %rsi,%r14
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   %rsi,%rax
+	movq   %r14,%rsi
+	adcq   %rdi,%rdx
+	movq   %rax,-0x28(%rsp)
+	andq   %rbp,%rsi
+	shrdq  $0x33,%rdx,%rax
+	movq   %rdx,-0x20(%rsp)
+	leaq   (%rax,%rax,8),%rdx
+	movq   %rsi,0x18(%r13)
+	leaq   (%rax,%rdx,2),%rdi
+	movq   -0x28(%rsp),%rax
+	popq   %rbx
+	addq   %r12,%rdi
+	movq   %rdi,%rdx
+	andq   %rbp,%rax
+	andq   %rbp,%rdi
+	shrq   $0x33,%rdx
+	movq   %rdi,0x0(%r13)
+	addq   %rcx,%rdx
+	movq   %rax,0x20(%r13)
+	movq   %rdx,%rcx
+	shrq   $0x33,%rdx
+	andq   %rbp,%rcx
+	addq   %r10,%rdx
+	popq   %rbp
+	popq   %r12
+	movq   %rcx,0x8(%r13)
+	movq   %rdx,0x10(%r13)
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_reduce>:
+	pushq  %r15
+	movq   %rdi,%rcx
+	movq   %rsi,%rax
+	xorl   %edi,%edi
+	pushq  %r14
+	pushq  %r13
+	xorl   %r13d,%r13d
+	pushq  %r12
+	pushq  %rbp
+	movl   $0x13,%ebp
+	pushq  %rbx
+	movq   (%rsi),%rbx
+	movq   0x8(%rsi),%r12
+	movq   0x10(%rax),%r10
+	movq   %rbx,%rsi
+	movq   0x18(%rax),%r8
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   %rsi,%r12
+	adcq   %rdi,%r13
+	movq   %r12,%rsi
+	xorl   %r11d,%r11d
+	shrdq  $0x33,%r13,%rsi
+	movq   %r13,%rdi
+	shrq   $0x33,%rdi
+	addq   %rsi,%r10
+	adcq   %rdi,%r11
+	movq   %r10,%rsi
+	xorl   %r9d,%r9d
+	shrdq  $0x33,%r11,%rsi
+	movq   %r11,%rdi
+	shrq   $0x33,%rdi
+	addq   %rsi,%r8
+	movq   0x20(%rax),%rsi
+	adcq   %rdi,%r9
+	movq   %r8,%rax
+	xorl   %edi,%edi
+	shrdq  $0x33,%r9,%rax
+	movq   %r9,%rdx
+	shrq   $0x33,%rdx
+	addq   %rax,%rsi
+	adcq   %rdx,%rdi
+	movq   %rsi,%rax
+	xorl   %r15d,%r15d
+	movq   %rsi,-0x28(%rsp)
+	movq   %rdi,%rdx
+	shrdq  $0x33,%rdi,%rax
+	shrq   $0x33,%rdx
+	imulq  $0x13,%rdx,%rdi
+	mulq   %rbp
+	addq   %rdi,%rdx
+	movabsq $0x7ffffffffffff,%rdi
+	andq   %rdi,%rbx
+	movq   %rbx,%r14
+	movq   %r12,%rbx
+	addq   %rax,%r14
+	adcq   %rdx,%r15
+	movq   %r14,%r12
+	andq   %rdi,%rbx
+	xorl   %edx,%edx
+	movq   %r15,%r13
+	shrdq  $0x33,%r15,%r12
+	shrq   $0x33,%r13
+	addq   %rbx,%r12
+	movq   %r10,%rbx
+	adcq   %rdx,%r13
+	movq   %r12,%r10
+	andq   %rdi,%rbx
+	xorl   %edx,%edx
+	movq   %r13,%r11
+	shrdq  $0x33,%r13,%r10
+	shrq   $0x33,%r11
+	addq   %rbx,%r10
+	movq   %r8,%rbx
+	adcq   %rdx,%r11
+	movq   %r10,%r8
+	andq   %rdi,%rbx
+	xorl   %edx,%edx
+	shrdq  $0x33,%r11,%r8
+	movq   %rbx,%rax
+	movq   %r11,%r9
+	shrq   $0x33,%r9
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   -0x28(%rsp),%r9
+	movq   %rax,%rbx
+	movq   %rdx,%rsi
+	movq   %rbx,%r8
+	xorl   %edx,%edx
+	movq   %rbx,-0x28(%rsp)
+	andq   %rdi,%r9
+	shrdq  $0x33,%rsi,%r8
+	movq   -0x28(%rsp),%rbx
+	movq   %r9,%rax
+	movq   %rsi,%r9
+	shrq   $0x33,%r9
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   %rax,-0x18(%rsp)
+	xorl   %r9d,%r9d
+	shrdq  $0x33,%rdx,%rax
+	shrq   $0x33,%rdx
+	imulq  $0x13,%rdx,%rsi
+	mulq   %rbp
+	addq   %rsi,%rdx
+	movq   %r14,%rsi
+	andq   %rdi,%rsi
+	movq   %rsi,%r8
+	movq   %r12,%rsi
+	addq   $0x13,%r8
+	adcq   $0x0,%r9
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   %rax,%r12
+	andq   %rdi,%rsi
+	movq   %rax,%r14
+	movq   %rdx,%r15
+	xorl   %edx,%edx
+	movq   %r15,%r13
+	shrdq  $0x33,%r15,%r12
+	shrq   $0x33,%r13
+	addq   %rsi,%r12
+	movq   %r10,%rsi
+	adcq   %rdx,%r13
+	movq   %r12,%r10
+	andq   %rdi,%rsi
+	xorl   %edx,%edx
+	movq   %r13,%r11
+	shrdq  $0x33,%r13,%r10
+	shrq   $0x33,%r11
+	addq   %rsi,%r10
+	adcq   %rdx,%r11
+	movq   %r10,%r8
+	andq   %rdi,%rbx
+	xorl   %edx,%edx
+	shrdq  $0x33,%r11,%r8
+	movq   %rbx,%rax
+	movq   %r11,%r9
+	shrq   $0x33,%r9
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   -0x18(%rsp),%r9
+	movq   %rax,%rbx
+	movq   %rdx,%rsi
+	movq   %rbx,%r8
+	xorl   %edx,%edx
+	movq   %rbx,-0x28(%rsp)
+	andq   %rdi,%r9
+	shrdq  $0x33,%rsi,%r8
+	movq   %rsi,-0x20(%rsp)
+	movq   -0x28(%rsp),%rbx
+	movq   %r9,%rax
+	movq   %rsi,%r9
+	shrq   $0x33,%r9
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   %rax,-0x18(%rsp)
+	xorl   %r9d,%r9d
+	xorl   %r15d,%r15d
+	movq   %rdx,-0x10(%rsp)
+	shrdq  $0x33,%rdx,%rax
+	shrq   $0x33,%rdx
+	imulq  $0x13,%rdx,%rsi
+	mulq   %rbp
+	addq   %rsi,%rdx
+	movq   %r14,%rsi
+	movabsq $0x7ffffffffffed,%r14
+	andq   %rdi,%rsi
+	addq   %rsi,%r14
+	movq   %r10,%rsi
+	adcq   %r9,%r15
+	addq   %rax,%r14
+	movq   %r12,%rax
+	adcq   %rdx,%r15
+	andq   %rdi,%rax
+	xorl   %r9d,%r9d
+	xorl   %edx,%edx
+	movq   %rax,%r8
+	movq   %r9,%r13
+	movq   %r15,%r9
+	movabsq $0x7ffffffffffff,%rax
+	movq   %r8,%r12
+	movq   %r14,%r8
+	addq   %rax,%r12
+	adcq   %rdx,%r13
+	shrdq  $0x33,%r15,%r8
+	shrq   $0x33,%r9
+	addq   %r8,%r12
+	adcq   %r9,%r13
+	andq   %rdi,%rsi
+	xorl   %r9d,%r9d
+	movq   %r12,%r8
+	movq   %rsi,%r10
+	movq   %r9,%r11
+	movq   %r13,%r9
+	addq   %rax,%r10
+	adcq   %rdx,%r11
+	shrdq  $0x33,%r13,%r8
+	shrq   $0x33,%r9
+	addq   %r8,%r10
+	adcq   %r9,%r11
+	andq   %rdi,%rbx
+	xorl   %r9d,%r9d
+	movq   %rbx,%r8
+	movq   %r10,%rbx
+	movq   %r11,%rsi
+	addq   %rax,%r8
+	adcq   %rdx,%r9
+	shrdq  $0x33,%r11,%rbx
+	shrq   $0x33,%rsi
+	addq   %rbx,%r8
+	movq   -0x18(%rsp),%rbx
+	adcq   %rsi,%r9
+	andq   %rdi,%r10
+	movq   %r8,%rsi
+	andq   %rdi,%r14
+	andq   %rdi,%rbx
+	movq   %r10,0x10(%rcx)
+	andq   %rdi,%r12
+	andq   %rdi,%rsi
+	movq   %rbx,%r10
+	movq   %r12,0x8(%rcx)
+	popq   %rbx
+	addq   %rax,%r10
+	shrdq  $0x33,%r9,%r8
+	popq   %rbp
+	movq   %r14,(%rcx)
+	addq   %r8,%r10
+	popq   %r12
+	popq   %r13
+	movq   %rsi,0x18(%rcx)
+	andq   %rdi,%r10
+	movq   %r10,0x20(%rcx)
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_pow22523>:
+	pushq  %r15
+	movq   %rdi,%r15
+	pushq  %r14
+	movq   %rsi,%r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	movl   $0x4,%ebx
+	subq   $0x98,%rsp
+	movq   %rsp,%r13
+	leaq   0x30(%rsp),%rbp
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	movq   %rbp,%rdx
+	movq   %r14,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_mul>
+	movq   %rbp,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rdx
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <fe25519_pow22523+0x82>
+	movq   %r13,%rdx
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	movl   $0x9,%ebx
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <fe25519_pow22523+0xb0>
+	movq   %r13,%rdx
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	movl   $0x13,%ebx
+	callq  <fe25519_mul>
+	leaq   0x60(%rsp),%r12
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_sq>
+	nopl   0x0(%rax,%rax,1)
+	movq   %r12,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <fe25519_pow22523+0xe8>
+	movq   %rbp,%rdx
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	movl   $0xa,%ebx
+	callq  <fe25519_mul>
+	nopl   0x0(%rax,%rax,1)
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <fe25519_pow22523+0x110>
+	movq   %r13,%rdx
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	movl   $0x31,%ebx
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	xchgw  %ax,%ax
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <fe25519_pow22523+0x140>
+	movq   %r13,%rdx
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	movl   $0x63,%ebx
+	callq  <fe25519_mul>
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_sq>
+	xchgw  %ax,%ax
+	movq   %r12,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <fe25519_pow22523+0x170>
+	movq   %rbp,%rdx
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	movl   $0x32,%ebx
+	callq  <fe25519_mul>
+	nopl   0x0(%rax,%rax,1)
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <fe25519_pow22523+0x198>
+	movq   %r13,%rdx
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	movq   %r15,%rdi
+	callq  <fe25519_mul>
+	addq   $0x98,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_p3_0>:
+	pxor   %xmm0,%xmm0
+	movq   $0x0,0x20(%rdi)
+	movq   $0x1,0x28(%rdi)
+	movq   $0x1,0x50(%rdi)
+	movq   $0x0,0x98(%rdi)
+	movups %xmm0,(%rdi)
+	movups %xmm0,0x10(%rdi)
+	movups %xmm0,0x30(%rdi)
+	movups %xmm0,0x40(%rdi)
+	movups %xmm0,0x58(%rdi)
+	movups %xmm0,0x68(%rdi)
+	movups %xmm0,0x78(%rdi)
+	movups %xmm0,0x88(%rdi)
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_p2_dbl>:
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	leaq   0x50(%rbp),%r12
+	movq   %rsi,%rbx
+	leaq   0x78(%rbp),%r13
+	leaq   0x28(%rbp),%r14
+	subq   $0x38,%rsp
+	callq  <fe25519_sq>
+	leaq   0x28(%rbx),%rsi
+	movq   %r12,%rdi
+	movq   %rsp,%r15
+	callq  <fe25519_sq>
+	leaq   0x50(%rbx),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq2>
+	movq   0x30(%rbx),%rsi
+	movq   0x38(%rbx),%rcx
+	movq   0x40(%rbx),%rdx
+	movq   0x48(%rbx),%rax
+	movq   0x28(%rbx),%rdi
+	addq   0x8(%rbx),%rsi
+	addq   0x10(%rbx),%rcx
+	addq   0x18(%rbx),%rdx
+	addq   0x20(%rbx),%rax
+	addq   (%rbx),%rdi
+	movq   %rsi,0x30(%rbp)
+	movq   %r14,%rsi
+	movq   %rdi,0x28(%rbp)
+	movq   %r15,%rdi
+	movq   %rcx,0x38(%rbp)
+	movq   %rdx,0x40(%rbp)
+	movq   %rax,0x48(%rbp)
+	callq  <fe25519_sq>
+	movq   0x8(%rbp),%rsi
+	movq   0x10(%rbp),%rcx
+	addq   0x58(%rbp),%rsi
+	addq   0x60(%rbp),%rcx
+	movq   0x18(%rbp),%rdx
+	movq   0x20(%rbp),%rax
+	movq   %rsi,0x30(%rbp)
+	movq   %r12,%rsi
+	addq   0x68(%rbp),%rdx
+	addq   0x70(%rbp),%rax
+	movq   %rcx,0x38(%rbp)
+	movq   0x0(%rbp),%rdi
+	addq   0x50(%rbp),%rdi
+	movq   %rdx,0x40(%rbp)
+	movq   %rbp,%rdx
+	movq   %rdi,0x28(%rbp)
+	movq   %r12,%rdi
+	movq   %rax,0x48(%rbp)
+	callq  <fe25519_sub>
+	movq   %r14,%rdx
+	movq   %r15,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_sub>
+	addq   $0x38,%rsp
+	movq   %r12,%rdx
+	movq   %r13,%rsi
+	popq   %rbx
+	movq   %r13,%rdi
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	jmpq   <fe25519_sub>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_p3_dbl>:
+	subq   $0x88,%rsp
+	movq   %rsi,%rax
+	movq   0x8(%rsi),%r8
+	movq   0x10(%rsi),%rsi
+	movq   0x18(%rax),%rcx
+	movq   0x20(%rax),%rdx
+	movq   %rsi,0x10(%rsp)
+	movq   0x38(%rax),%rsi
+	movq   (%rax),%r9
+	movq   %r8,0x8(%rsp)
+	movq   %rcx,0x18(%rsp)
+	movq   0x30(%rax),%r8
+	movq   0x40(%rax),%rcx
+	movq   %rdx,0x20(%rsp)
+	movq   0x48(%rax),%rdx
+	movq   %rsi,0x38(%rsp)
+	movq   0x60(%rax),%rsi
+	movq   %r9,(%rsp)
+	movq   %r8,0x30(%rsp)
+	movq   0x28(%rax),%r9
+	movq   %rcx,0x40(%rsp)
+	movq   0x58(%rax),%r8
+	movq   %rdx,0x48(%rsp)
+	movq   0x68(%rax),%rcx
+	movq   0x70(%rax),%rdx
+	movq   0x50(%rax),%rax
+	movq   %rsi,0x60(%rsp)
+	movq   %rsp,%rsi
+	movq   %r9,0x28(%rsp)
+	movq   %rax,0x50(%rsp)
+	movq   %r8,0x58(%rsp)
+	movq   %rcx,0x68(%rsp)
+	movq   %rdx,0x70(%rsp)
+	callq  <ge25519_p2_dbl>
+	addq   $0x88,%rsp
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_madd>:
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	movq   %rdx,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	pushq  %rbx
+	movq   %rdi,%rbx
+	leaq   0x28(%rbx),%r13
+	leaq   0x78(%rbx),%r15
+	subq   $0x58,%rsp
+	movq   0x10(%rbp),%rcx
+	movq   0x18(%rbp),%rdx
+	addq   0x38(%rbp),%rcx
+	movq   0x20(%rbp),%rax
+	movq   0x0(%rbp),%rdi
+	addq   0x48(%rbp),%rax
+	addq   0x40(%rbp),%rdx
+	addq   0x28(%rbp),%rdi
+	movq   0x8(%rsi),%rsi
+	addq   0x30(%rbp),%rsi
+	movq   %rcx,0x10(%rbx)
+	movq   %rax,0x20(%rbx)
+	movq   %rdi,(%rbx)
+	movq   %r13,%rdi
+	movq   %rsi,0x8(%rbx)
+	leaq   0x28(%rbp),%rsi
+	movq   %rdx,0x18(%rbx)
+	movq   %rbp,%rdx
+	callq  <fe25519_sub>
+	leaq   0x50(%rbx),%r9
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	movq   %r9,%rdi
+	movq   %r9,0x18(%rsp)
+	callq  <fe25519_mul>
+	leaq   0x28(%r12),%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	leaq   0x78(%rbp),%rdx
+	leaq   0x50(%r12),%rsi
+	movq   %r15,%rdi
+	callq  <fe25519_mul>
+	movq   0x58(%rbp),%rcx
+	movq   0x50(%rbp),%rax
+	movq   %r13,%rdx
+	movq   0x18(%rsp),%rsi
+	movq   %rbx,%rdi
+	leaq   (%rcx,%rcx,1),%r10
+	movq   0x60(%rbp),%rcx
+	addq   %rax,%rax
+	movq   %rax,0x20(%rsp)
+	leaq   (%rcx,%rcx,1),%r12
+	movq   0x68(%rbp),%rcx
+	movq   0x70(%rbp),%rbp
+	movq   %rax,0x10(%rsp)
+	movq   %r10,0x28(%rsp)
+	leaq   (%rcx,%rcx,1),%r14
+	addq   %rbp,%rbp
+	movq   %r10,0x8(%rsp)
+	movq   %r12,0x30(%rsp)
+	movq   %r14,0x38(%rsp)
+	movq   %rbp,0x40(%rsp)
+	callq  <fe25519_sub>
+	movq   0x58(%rbx),%rdi
+	movq   0x60(%rbx),%rsi
+	movq   0x70(%rbx),%rdx
+	movq   0x68(%rbx),%rcx
+	movq   0x50(%rbx),%r8
+	addq   0x88(%rbx),%r12
+	addq   0x90(%rbx),%r14
+	addq   0x98(%rbx),%rbp
+	movq   %r12,0x60(%rbx)
+	movq   0x8(%rsp),%r10
+	movq   0x10(%rsp),%rax
+	movq   %r14,0x68(%rbx)
+	addq   0x80(%rbx),%r10
+	addq   0x78(%rbx),%rax
+	movq   %rbp,0x70(%rbx)
+	addq   %rdi,0x30(%rbx)
+	movq   %r15,%rdi
+	addq   %rsi,0x38(%rbx)
+	leaq   0x20(%rsp),%rsi
+	addq   %rdx,0x48(%rbx)
+	movq   %r15,%rdx
+	addq   %r8,0x28(%rbx)
+	addq   %rcx,0x40(%rbx)
+	movq   %rax,0x50(%rbx)
+	movq   %r10,0x58(%rbx)
+	callq  <fe25519_sub>
+	addq   $0x58,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_cmov8>:
+	pushq  %r15
+	pxor   %xmm0,%xmm0
+	pushq  %r14
+	leaq   0x28(%rdi),%r14
+	pushq  %r13
+	leaq   0x50(%rdi),%r13
+	pushq  %r12
+	movsbq %dl,%r12
+	movq   %r12,%rax
+	sarq   $0x3f,%r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	andl   %edx,%r12d
+	pushq  %rbx
+	shrq   $0x3f,%rax
+	movq   %rsi,%rbx
+	negl   %r12d
+	leal   (%rdx,%r12,2),%r12d
+	movl   %r12d,%edx
+	subq   $0xc8,%rsp
+	movups %xmm0,0x8(%rdi)
+	xorl   $0x1,%edx
+	movq   $0x1,(%rdi)
+	movzbl %dl,%edx
+	movq   $0x1,0x28(%rdi)
+	movq   $0x0,0x70(%rdi)
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movups %xmm0,0x18(%rdi)
+	movl   %edx,%r15d
+	movups %xmm0,0x30(%rdi)
+	movups %xmm0,0x40(%rdi)
+	movups %xmm0,0x50(%rdi)
+	movups %xmm0,0x60(%rdi)
+	movq   %rax,0x8(%rsp)
+	callq  <fe25519_cmov>
+	leaq   0x28(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x50(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   %r12d,%edx
+	leaq   0x78(%rbx),%rsi
+	movq   %rbp,%rdi
+	xorl   $0x2,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,%r15d
+	callq  <fe25519_cmov>
+	leaq   0xa0(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0xc8(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   %r12d,%edx
+	leaq   0xf0(%rbx),%rsi
+	movq   %rbp,%rdi
+	xorl   $0x3,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,%r15d
+	callq  <fe25519_cmov>
+	leaq   0x118(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x140(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   %r12d,%edx
+	leaq   0x168(%rbx),%rsi
+	movq   %rbp,%rdi
+	xorl   $0x4,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,%r15d
+	callq  <fe25519_cmov>
+	leaq   0x190(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x1b8(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   %r12d,%edx
+	leaq   0x1e0(%rbx),%rsi
+	movq   %rbp,%rdi
+	xorl   $0x5,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,%r15d
+	callq  <fe25519_cmov>
+	leaq   0x208(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x230(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   %r12d,%edx
+	leaq   0x258(%rbx),%rsi
+	movq   %rbp,%rdi
+	xorl   $0x6,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,%r15d
+	callq  <fe25519_cmov>
+	leaq   0x280(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x2a8(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   %r12d,%edx
+	xorl   $0x8,%r12d
+	movq   %rbp,%rdi
+	xorl   $0x7,%edx
+	leaq   0x2d0(%rbx),%rsi
+	movzbl %r12b,%r12d
+	movzbl %dl,%edx
+	subl   $0x1,%r12d
+	subl   $0x1,%edx
+	shrl   $0x1f,%r12d
+	shrl   $0x1f,%edx
+	movl   %edx,%r15d
+	callq  <fe25519_cmov>
+	leaq   0x2f8(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x320(%rbx),%rsi
+	movl   %r15d,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x348(%rbx),%rsi
+	movl   %r12d,%edx
+	movq   %rbp,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x370(%rbx),%rsi
+	movl   %r12d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x398(%rbx),%rsi
+	movl   %r12d,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movq   0x30(%rbp),%rsi
+	movq   0x40(%rbp),%rdx
+	leaq   0x90(%rsp),%r12
+	movq   0x28(%rbp),%rdi
+	movq   0x38(%rbp),%rcx
+	movq   $0x0,0x30(%rsp)
+	leaq   0x40(%rsp),%rbx
+	movq   0x48(%rbp),%rax
+	movq   %rsi,0x48(%rsp)
+	movq   %rdi,0x40(%rsp)
+	movq   0x8(%rbp),%rsi
+	movq   0x0(%rbp),%rdi
+	movq   %rdx,0x58(%rsp)
+	movq   0x18(%rbp),%rdx
+	movq   %rcx,0x50(%rsp)
+	movq   %rax,0x60(%rsp)
+	movq   0x10(%rbp),%rcx
+	movq   0x20(%rbp),%rax
+	movq   %rdi,0x68(%rsp)
+	movq   %r12,%rdi
+	movq   %rsi,0x70(%rsp)
+	leaq   0x10(%rsp),%rsi
+	movq   %rdx,0x80(%rsp)
+	movq   %r13,%rdx
+	movq   %rcx,0x78(%rsp)
+	movq   %rax,0x88(%rsp)
+	movaps %xmm0,0x10(%rsp)
+	movaps %xmm0,0x20(%rsp)
+	callq  <fe25519_sub>
+	movl   0x8(%rsp),%r15d
+	movq   %rbx,%rsi
+	movq   %rbp,%rdi
+	movl   %r15d,%edx
+	callq  <fe25519_cmov>
+	leaq   0x68(%rsp),%rsi
+	movl   %r15d,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   %r15d,%edx
+	movq   %r12,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	addq   $0xc8,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_cmov8_cached>:
+	pushq  %r15
+	pxor   %xmm0,%xmm0
+	movq   %rdi,%r15
+	pushq  %r14
+	leaq   0x28(%rdi),%r14
+	pushq  %r13
+	leaq   0x50(%rdi),%r13
+	pushq  %r12
+	leaq   0x78(%rdi),%r12
+	pushq  %rbp
+	movsbq %dl,%rbp
+	movq   %rbp,%rax
+	sarq   $0x3f,%rbp
+	pushq  %rbx
+	movq   %rsi,%rbx
+	andl   %edx,%ebp
+	shrq   $0x3f,%rax
+	negl   %ebp
+	leal   (%rdx,%rbp,2),%ebp
+	subq   $0xe8,%rsp
+	movups %xmm0,0x8(%rdi)
+	movl   %ebp,%edx
+	movq   $0x1,(%rdi)
+	xorl   $0x1,%edx
+	movups %xmm0,0x18(%rdi)
+	movq   $0x1,0x28(%rdi)
+	movzbl %dl,%edx
+	movq   $0x1,0x50(%rdi)
+	subl   $0x1,%edx
+	movq   $0x0,0x98(%rdi)
+	shrl   $0x1f,%edx
+	movups %xmm0,0x30(%rdi)
+	movups %xmm0,0x40(%rdi)
+	movups %xmm0,0x58(%rdi)
+	movups %xmm0,0x68(%rdi)
+	movups %xmm0,0x78(%rdi)
+	movups %xmm0,0x88(%rdi)
+	movq   %rax,(%rsp)
+	movl   %edx,0xc(%rsp)
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x28(%rbx),%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x50(%rbx),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x78(%rbx),%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movl   %ebp,%edx
+	leaq   0xa0(%rbx),%rsi
+	movq   %r15,%rdi
+	xorl   $0x2,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,0xc(%rsp)
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0xc8(%rbx),%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0xf0(%rbx),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x118(%rbx),%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movl   %ebp,%edx
+	leaq   0x140(%rbx),%rsi
+	movq   %r15,%rdi
+	xorl   $0x3,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,0xc(%rsp)
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x168(%rbx),%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x190(%rbx),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x1b8(%rbx),%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movl   %ebp,%edx
+	leaq   0x1e0(%rbx),%rsi
+	movq   %r15,%rdi
+	xorl   $0x4,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,0xc(%rsp)
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x208(%rbx),%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x230(%rbx),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x258(%rbx),%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movl   %ebp,%edx
+	leaq   0x280(%rbx),%rsi
+	movq   %r15,%rdi
+	xorl   $0x5,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,0xc(%rsp)
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x2a8(%rbx),%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x2d0(%rbx),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x2f8(%rbx),%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movl   %ebp,%edx
+	leaq   0x320(%rbx),%rsi
+	movq   %r15,%rdi
+	xorl   $0x6,%edx
+	movzbl %dl,%edx
+	subl   $0x1,%edx
+	shrl   $0x1f,%edx
+	movl   %edx,0xc(%rsp)
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x348(%rbx),%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x370(%rbx),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x398(%rbx),%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movl   %ebp,%edx
+	movq   %r15,%rdi
+	xorl   $0x8,%ebp
+	xorl   $0x7,%edx
+	leaq   0x3c0(%rbx),%rsi
+	movzbl %bpl,%ebp
+	movzbl %dl,%edx
+	subl   $0x1,%ebp
+	subl   $0x1,%edx
+	shrl   $0x1f,%ebp
+	shrl   $0x1f,%edx
+	movl   %edx,0xc(%rsp)
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x3e8(%rbx),%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x410(%rbx),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   0xc(%rsp),%edx
+	leaq   0x438(%rbx),%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x460(%rbx),%rsi
+	movl   %ebp,%edx
+	movq   %r15,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x488(%rbx),%rsi
+	movl   %ebp,%edx
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x4b0(%rbx),%rsi
+	movl   %ebp,%edx
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	leaq   0x4d8(%rbx),%rsi
+	movl   %ebp,%edx
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movq   0x30(%r15),%rsi
+	movq   0x40(%r15),%rdx
+	leaq   0xb8(%rsp),%rbp
+	movq   0x28(%r15),%rdi
+	movq   0x38(%r15),%rcx
+	leaq   0x40(%rsp),%rbx
+	movaps %xmm0,0x10(%rsp)
+	movq   0x48(%r15),%rax
+	movq   %rsi,0x48(%rsp)
+	movq   %rdi,0x40(%rsp)
+	movq   0x8(%r15),%rsi
+	movq   (%r15),%rdi
+	movq   %rdx,0x58(%rsp)
+	movq   0x18(%r15),%rdx
+	movq   %rcx,0x50(%rsp)
+	movq   %rax,0x60(%rsp)
+	movq   0x10(%r15),%rcx
+	movq   0x20(%r15),%rax
+	movq   %rdi,0x68(%rsp)
+	movq   %rsi,0x70(%rsp)
+	movq   0x50(%r15),%rdi
+	movq   0x58(%r15),%rsi
+	movq   %rdx,0x80(%rsp)
+	movq   0x68(%r15),%rdx
+	movq   %rcx,0x78(%rsp)
+	movq   %rax,0x88(%rsp)
+	movq   0x60(%r15),%rcx
+	movq   0x70(%r15),%rax
+	movq   %rdi,0x90(%rsp)
+	movq   %rbp,%rdi
+	movq   %rsi,0x98(%rsp)
+	leaq   0x10(%rsp),%rsi
+	movq   %rdx,0xa8(%rsp)
+	movq   %r12,%rdx
+	movq   %rcx,0xa0(%rsp)
+	movq   %rax,0xb0(%rsp)
+	movaps %xmm0,0x20(%rsp)
+	movq   $0x0,0x30(%rsp)
+	callq  <fe25519_sub>
+	movl   (%rsp),%edx
+	movq   %rbx,%rsi
+	movq   %r15,%rdi
+	callq  <fe25519_cmov>
+	movl   (%rsp),%edx
+	leaq   0x68(%rsp),%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_cmov>
+	movl   (%rsp),%edx
+	leaq   0x90(%rsp),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_cmov>
+	movl   (%rsp),%edx
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	addq   $0xe8,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_mul_l>:
+	pushq  %r15
+	movq   %rdi,%r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	pushq  %rbx
+	subq   $0x738,%rsp
+	leaq   0x230(%rsp),%rax
+	leaq   0x50(%rsp),%rbx
+	movq   %rax,%rdi
+	leaq   0xc8(%rsp),%r14
+	movq   %rax,0x48(%rsp)
+	leaq   0xa0(%rsp),%r13
+	callq  <ge25519_p3_to_cached>
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	leaq   0x78(%rsp),%r12
+	callq  <ge25519_p3_dbl>
+	leaq   0x190(%rsp),%rbp
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_mul>
+	leaq   0x1b8(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	leaq   0x1e0(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	leaq   0x208(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	movq   0x48(%rsp),%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_add>
+	leaq   0xf0(%rsp),%rax
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	movq   %rax,%rdi
+	movq   %rax,0x8(%rsp)
+	callq  <fe25519_mul>
+	leaq   0x118(%rsp),%rcx
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	movq   %rcx,%rdi
+	movq   %rcx,0x30(%rsp)
+	callq  <fe25519_mul>
+	leaq   0x140(%rsp),%rsi
+	movq   %r14,%rdx
+	movq   %rsi,%r8
+	movq   %r13,%rsi
+	movq   %r8,%rdi
+	movq   %r8,0x38(%rsp)
+	callq  <fe25519_mul>
+	leaq   0x168(%rsp),%rsi
+	movq   %r12,%rdx
+	movq   %rsi,%r9
+	movq   %rbx,%rsi
+	movq   %r9,%rdi
+	movq   %r9,0x40(%rsp)
+	callq  <fe25519_mul>
+	leaq   0x2d0(%rsp),%rdx
+	movq   0x8(%rsp),%rsi
+	movq   %rdx,%rdi
+	movq   %rdx,0x10(%rsp)
+	callq  <ge25519_p3_to_cached>
+	movq   0x10(%rsp),%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_add>
+	movq   0x8(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	movq   0x30(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x38(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x40(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	leaq   0x370(%rsp),%rdx
+	movq   0x8(%rsp),%rsi
+	movq   %rdx,%rdi
+	movq   %rdx,0x10(%rsp)
+	callq  <ge25519_p3_to_cached>
+	movq   0x10(%rsp),%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_add>
+	movq   0x8(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	movq   0x30(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x38(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x40(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	leaq   0x410(%rsp),%rdx
+	movq   0x8(%rsp),%rsi
+	movq   %rdx,%rdi
+	movq   %rdx,0x10(%rsp)
+	callq  <ge25519_p3_to_cached>
+	movq   0x10(%rsp),%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_add>
+	movq   0x8(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	movq   0x30(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x38(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x40(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	leaq   0x4b0(%rsp),%rdx
+	movq   0x8(%rsp),%rsi
+	movq   %rdx,%rdi
+	movq   %rdx,0x10(%rsp)
+	callq  <ge25519_p3_to_cached>
+	movq   0x10(%rsp),%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_add>
+	movq   0x8(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	movq   0x30(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x38(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x40(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	leaq   0x550(%rsp),%rdx
+	movq   0x8(%rsp),%rsi
+	movq   %rdx,%rdi
+	movq   %rdx,0x10(%rsp)
+	callq  <ge25519_p3_to_cached>
+	movq   0x10(%rsp),%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_add>
+	movq   0x8(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	movq   0x30(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x38(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x40(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	leaq   0x5f0(%rsp),%rdx
+	movq   0x8(%rsp),%rsi
+	movq   %rdx,%rdi
+	movq   %rdx,0x10(%rsp)
+	callq  <ge25519_p3_to_cached>
+	movq   0x10(%rsp),%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_add>
+	movq   0x8(%rsp),%rbp
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_mul>
+	movq   0x30(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x38(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x40(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	leaq   0x690(%rsp),%rdi
+	movq   %rbp,%rsi
+	leaq   0x31669(%rip),%rbp        # <aslide.2+0xfc>
+	callq  <ge25519_p3_to_cached>
+	leaq   0x28(%r15),%rax
+	movq   %r15,%rdi
+	callq  <ge25519_p3_0>
+	movq   %rax,0x20(%rsp)
+	leaq   0x50(%r15),%rax
+	movq   %rax,0x10(%rsp)
+	leaq   0x78(%r15),%rax
+	movq   %rax,0x18(%rsp)
+	jmp    <ge25519_mul_l+0x43b>
+	nopl   (%rax)
+	jne    <ge25519_mul_l+0x4c0>
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	movq   %r15,%rdi
+	callq  <fe25519_mul>
+	movq   0x20(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x10(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x18(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	leaq   0x314f5(%rip),%rcx        # <aslide.2>
+	leaq   -0x1(%rbp),%rax
+	cmpq   %rcx,%rbp
+	je     <ge25519_mul_l+0x52e>
+	movq   %rax,%rbp
+	movq   %r15,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_p3_dbl>
+	movzbl 0x0(%rbp),%eax
+	testb  %al,%al
+	jle    <ge25519_mul_l+0x3e0>
+	movq   0x8(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	movb   %al,0x2f(%rsp)
+	callq  <fe25519_mul>
+	movq   0x30(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x38(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x40(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	movzbl 0x2f(%rsp),%eax
+	movq   0x8(%rsp),%rsi
+	movq   %rbx,%rdi
+	sarb   %al
+	movsbq %al,%rax
+	leaq   (%rax,%rax,4),%rdx
+	shlq   $0x5,%rdx
+	addq   0x48(%rsp),%rdx
+	callq  <ge25519_add>
+	jmpq   <ge25519_mul_l+0x3e6>
+	nopl   0x0(%rax)
+	movq   0x8(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	movb   %al,0x2f(%rsp)
+	callq  <fe25519_mul>
+	movq   0x30(%rsp),%rdi
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   0x38(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	callq  <fe25519_mul>
+	movq   0x40(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbx,%rsi
+	callq  <fe25519_mul>
+	movsbl 0x2f(%rsp),%eax
+	movq   0x8(%rsp),%rsi
+	movq   %rbx,%rdi
+	negl   %eax
+	sarl   %eax
+	cltq   
+	leaq   (%rax,%rax,4),%rdx
+	shlq   $0x5,%rdx
+	addq   0x48(%rsp),%rdx
+	callq  <ge25519_sub>
+	jmpq   <ge25519_mul_l+0x3e6>
+	addq   $0x738,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_elligator2>:
+	pushq  %r15
+	pxor   %xmm0,%xmm0
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	subq   $0x438,%rsp
+	movl   %edx,0x10(%rsp)
+	leaq   0x60(%rsp),%rbp
+	leaq   0x90(%rsp),%r12
+	movq   %rdi,0x8(%rsp)
+	movq   %rbp,%rdi
+	leaq   0xc0(%rsp),%r15
+	movq   %fs:0x28,%rax
+	movq   %rax,0x428(%rsp)
+	xorl   %eax,%eax
+	callq  <fe25519_sq2>
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	addq   $0x1,0x60(%rsp)
+	callq  <fe25519_invert>
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	movl   $0x76d06,%edx
+	callq  <fe25519_mul32.constprop.0>
+	leaq   0x360(%rsp),%rbp
+	movq   %r12,%rdx
+	movq   $0x0,0x380(%rsp)
+	movq   %rbp,%rsi
+	movaps %xmm0,0x360(%rsp)
+	movaps %xmm0,0x370(%rsp)
+	callq  <fe25519_sub>
+	movq   %r12,%rsi
+	movq   %r15,%rdi
+	callq  <fe25519_sq>
+	leaq   0xf0(%rsp),%rdi
+	movq   %r15,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movl   $0x76d06,%edx
+	movq   %r15,%rsi
+	movq   %r15,%rdi
+	movq   0x90(%rsp),%rcx
+	movq   0x98(%rsp),%rax
+	addq   0xf0(%rsp),%rcx
+	addq   0xf8(%rsp),%rax
+	movq   %rcx,0x18(%rsp)
+	movq   0xa0(%rsp),%r14
+	movq   %rax,(%rsp)
+	addq   0x100(%rsp),%r14
+	movq   0xa8(%rsp),%r13
+	movq   0xb0(%rsp),%rbx
+	addq   0x108(%rsp),%r13
+	addq   0x110(%rsp),%rbx
+	callq  <fe25519_mul32.constprop.0>
+	movq   (%rsp),%rax
+	movq   0x18(%rsp),%rcx
+	addq   0xd0(%rsp),%r14
+	addq   0xd8(%rsp),%r13
+	addq   0xe0(%rsp),%rbx
+	movq   %r14,0x40(%rsp)
+	leaq   0x120(%rsp),%r14
+	movq   %r13,0x48(%rsp)
+	leaq   0x30(%rsp),%r13
+	addq   0xc0(%rsp),%rcx
+	movq   %r14,%rdi
+	addq   0xc8(%rsp),%rax
+	movq   %r13,%rdx
+	movq   %r13,%rsi
+	movq   %rbx,0x50(%rsp)
+	leaq   0x150(%rsp),%rbx
+	movq   %rcx,0x30(%rsp)
+	movq   %rax,0x38(%rsp)
+	callq  <fe25519_mul>
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	movq   %rbx,%rdi
+	leaq   0x180(%rsp),%r13
+	movq   %rbx,0x20(%rsp)
+	leaq   0x1e0(%rsp),%r14
+	callq  <fe25519_mul>
+	movq   %rbx,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	leaq   0x1b0(%rsp),%rax
+	movq   %r13,%rdx
+	movq   %rbx,%rsi
+	movq   %rax,%r13
+	movq   %rax,%rdi
+	movq   %rax,0x18(%rsp)
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_sq>
+	movq   %r14,%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_sq>
+	movq   %r14,%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_sq>
+	movq   %r14,%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_sq>
+	leaq   0x210(%rsp),%rax
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	movq   %rax,%rdi
+	movq   %rax,0x28(%rsp)
+	leaq   0x240(%rsp),%r13
+	callq  <fe25519_mul>
+	movq   0x210(%rsp),%rax
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movq   %rax,0x240(%rsp)
+	movq   0x218(%rsp),%rax
+	movq   %rax,0x248(%rsp)
+	movq   0x220(%rsp),%rax
+	movq   %rax,0x250(%rsp)
+	movq   0x228(%rsp),%rax
+	movq   %rax,0x258(%rsp)
+	movq   0x230(%rsp),%rax
+	movq   %rax,0x260(%rsp)
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %rbx,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   0x240(%rsp),%rax
+	movl   $0xa,%ebx
+	movq   %rax,0x2c0(%rsp)
+	movq   0x248(%rsp),%rax
+	movq   %rax,0x2c8(%rsp)
+	movq   0x250(%rsp),%rax
+	movq   %rax,0x2d0(%rsp)
+	movq   0x258(%rsp),%rax
+	movq   %rax,0x2d8(%rsp)
+	movq   0x260(%rsp),%rax
+	movq   %rax,0x2e0(%rsp)
+	nopl   0x0(%rax)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x308>
+	leaq   0x2c0(%rsp),%rax
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0xa,%ebx
+	movq   %rax,%rdx
+	movq   %rax,(%rsp)
+	callq  <fe25519_mul>
+	nopw   0x0(%rax,%rax,1)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x340>
+	movq   (%rsp),%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0x1e,%ebx
+	callq  <fe25519_mul>
+	movq   0x240(%rsp),%rax
+	movq   %rax,0x360(%rsp)
+	movq   0x248(%rsp),%rax
+	movq   %rax,0x368(%rsp)
+	movq   0x250(%rsp),%rax
+	movq   %rax,0x370(%rsp)
+	movq   0x258(%rsp),%rax
+	movq   %rax,0x378(%rsp)
+	movq   0x260(%rsp),%rax
+	movq   %rax,0x380(%rsp)
+	nopl   0x0(%rax)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x3b8>
+	movq   %rbp,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0x3c,%ebx
+	callq  <fe25519_mul>
+	movq   0x240(%rsp),%rax
+	movq   %rax,0x360(%rsp)
+	movq   0x248(%rsp),%rax
+	movq   %rax,0x368(%rsp)
+	movq   0x250(%rsp),%rax
+	movq   %rax,0x370(%rsp)
+	movq   0x258(%rsp),%rax
+	movq   %rax,0x378(%rsp)
+	movq   0x260(%rsp),%rax
+	movq   %rax,0x380(%rsp)
+	nopl   0x0(%rax,%rax,1)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x430>
+	movq   %rbp,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0x78,%ebx
+	callq  <fe25519_mul>
+	movq   0x240(%rsp),%rax
+	movq   %rax,0x360(%rsp)
+	movq   0x248(%rsp),%rax
+	movq   %rax,0x368(%rsp)
+	movq   0x250(%rsp),%rax
+	movq   %rax,0x370(%rsp)
+	movq   0x258(%rsp),%rax
+	movq   %rax,0x378(%rsp)
+	movq   0x260(%rsp),%rax
+	movq   %rax,0x380(%rsp)
+	nopl   0x0(%rax,%rax,1)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x4a8>
+	movq   %rbp,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0xa,%ebx
+	callq  <fe25519_mul>
+	nopl   0x0(%rax,%rax,1)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x4d0>
+	movq   (%rsp),%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	pxor   %xmm0,%xmm0
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   0x20(%rsp),%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	leaq   0x400(%rsp),%rdi
+	movq   %r13,%rsi
+	callq  <fe25519_tobytes>
+	movq   0x18(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbp,%rsi
+	movzbl 0x401(%rsp),%ebx
+	movaps %xmm0,0x360(%rsp)
+	movq   $0x0,0x380(%rsp)
+	andl   $0x1,%ebx
+	movaps %xmm0,0x370(%rsp)
+	callq  <fe25519_sub>
+	movl   %ebx,%edx
+	movq   %rdi,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movl   %ebx,%edx
+	movq   %r15,%rdi
+	leaq   0x38b51(%rip),%rsi        # <curve25519_A>
+	movq   $0x0,0xe0(%rsp)
+	movaps %xmm0,0xc0(%rsp)
+	movaps %xmm0,0xd0(%rsp)
+	callq  <fe25519_cmov>
+	movq   %r15,%rdx
+	movq   %r12,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_sub>
+	movq   (%rsp),%rbx
+	movq   %r14,%rdx
+	movq   %r12,%rsi
+	movq   0x90(%rsp),%rax
+	movups %xmm0,0x1e8(%rsp)
+	movq   %rbx,%rdi
+	movups %xmm0,0x1f8(%rsp)
+	movq   $0x1,0x1e0(%rsp)
+	addq   $0x1,%rax
+	movq   %rax,0x210(%rsp)
+	movq   0x98(%rsp),%rax
+	movq   %rax,0x218(%rsp)
+	movq   0xa0(%rsp),%rax
+	movq   %rax,0x220(%rsp)
+	movq   0xa8(%rsp),%rax
+	movq   %rax,0x228(%rsp)
+	movq   0xb0(%rsp),%rax
+	movq   %rax,0x230(%rsp)
+	callq  <fe25519_sub>
+	movq   0x28(%rsp),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_invert>
+	movq   %r13,%rdx
+	movq   %rbx,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_mul>
+	movq   0x8(%rsp),%r15
+	movq   %rbp,%rsi
+	movq   %r15,%rdi
+	callq  <fe25519_tobytes>
+	movzbl 0x10(%rsp),%ecx
+	movq   %r15,%rsi
+	movq   %rbx,%rdi
+	orb    %cl,0x1f(%r15)
+	callq  <ge25519_frombytes>
+	testl  %eax,%eax
+	jne    <ge25519_elligator2.cold>
+	movq   (%rsp),%rsi
+	leaq   0x3d8(%rsp),%r14
+	movq   %rbp,%rdi
+	leaq   0x3b0(%rsp),%r12
+	leaq   0x388(%rsp),%r15
+	leaq   0x290(%rsp),%rbx
+	callq  <ge25519_p3_dbl>
+	movq   %r14,%rdx
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	leaq   0x268(%rsp),%r9
+	movq   %r12,%rdx
+	movq   %r15,%rsi
+	movq   %r9,%rdi
+	movq   %r9,0x10(%rsp)
+	callq  <fe25519_mul>
+	movq   %r14,%rdx
+	movq   %rbx,%rdi
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <ge25519_p2_dbl>
+	movq   %r14,%rdx
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   0x10(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %r15,%rsi
+	callq  <fe25519_mul>
+	movq   %r14,%rdx
+	movq   %rbx,%rdi
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <ge25519_p2_dbl>
+	movq   (%rsp),%rbx
+	movq   %r14,%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <fe25519_mul>
+	leaq   0x2e8(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %r15,%rsi
+	callq  <fe25519_mul>
+	leaq   0x310(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	leaq   0x338(%rsp),%rdi
+	movq   %rbp,%rsi
+	movq   %r15,%rdx
+	callq  <fe25519_mul>
+	movq   0x8(%rsp),%rdi
+	movq   %rbx,%rsi
+	callq  <ge25519_tobytes>
+	movq   0x428(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <ge25519_elligator2+0x7a9>
+	addq   $0x438,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<ge25519_elligator2>:
+	pushq  %r15
+	pxor   %xmm0,%xmm0
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	subq   $0x438,%rsp
+	movl   %edx,0x10(%rsp)
+	leaq   0x60(%rsp),%rbp
+	leaq   0x90(%rsp),%r12
+	movq   %rdi,0x8(%rsp)
+	movq   %rbp,%rdi
+	leaq   0xc0(%rsp),%r15
+	movq   %fs:0x28,%rax
+	movq   %rax,0x428(%rsp)
+	xorl   %eax,%eax
+	callq  <fe25519_sq2>
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	addq   $0x1,0x60(%rsp)
+	callq  <fe25519_invert>
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	movl   $0x76d06,%edx
+	callq  <fe25519_mul32.constprop.0>
+	leaq   0x360(%rsp),%rbp
+	movq   %r12,%rdx
+	movq   $0x0,0x380(%rsp)
+	movq   %rbp,%rsi
+	movaps %xmm0,0x360(%rsp)
+	movaps %xmm0,0x370(%rsp)
+	callq  <fe25519_sub>
+	movq   %r12,%rsi
+	movq   %r15,%rdi
+	callq  <fe25519_sq>
+	leaq   0xf0(%rsp),%rdi
+	movq   %r15,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movl   $0x76d06,%edx
+	movq   %r15,%rsi
+	movq   %r15,%rdi
+	movq   0x90(%rsp),%rcx
+	movq   0x98(%rsp),%rax
+	addq   0xf0(%rsp),%rcx
+	addq   0xf8(%rsp),%rax
+	movq   %rcx,0x18(%rsp)
+	movq   0xa0(%rsp),%r14
+	movq   %rax,(%rsp)
+	addq   0x100(%rsp),%r14
+	movq   0xa8(%rsp),%r13
+	movq   0xb0(%rsp),%rbx
+	addq   0x108(%rsp),%r13
+	addq   0x110(%rsp),%rbx
+	callq  <fe25519_mul32.constprop.0>
+	movq   (%rsp),%rax
+	movq   0x18(%rsp),%rcx
+	addq   0xd0(%rsp),%r14
+	addq   0xd8(%rsp),%r13
+	addq   0xe0(%rsp),%rbx
+	movq   %r14,0x40(%rsp)
+	leaq   0x120(%rsp),%r14
+	movq   %r13,0x48(%rsp)
+	leaq   0x30(%rsp),%r13
+	addq   0xc0(%rsp),%rcx
+	movq   %r14,%rdi
+	addq   0xc8(%rsp),%rax
+	movq   %r13,%rdx
+	movq   %r13,%rsi
+	movq   %rbx,0x50(%rsp)
+	leaq   0x150(%rsp),%rbx
+	movq   %rcx,0x30(%rsp)
+	movq   %rax,0x38(%rsp)
+	callq  <fe25519_mul>
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	movq   %rbx,%rdi
+	leaq   0x180(%rsp),%r13
+	movq   %rbx,0x20(%rsp)
+	leaq   0x1e0(%rsp),%r14
+	callq  <fe25519_mul>
+	movq   %rbx,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	leaq   0x1b0(%rsp),%rax
+	movq   %r13,%rdx
+	movq   %rbx,%rsi
+	movq   %rax,%r13
+	movq   %rax,%rdi
+	movq   %rax,0x18(%rsp)
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_sq>
+	movq   %r14,%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_sq>
+	movq   %r14,%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_sq>
+	movq   %r14,%rsi
+	movq   %r14,%rdi
+	callq  <fe25519_sq>
+	leaq   0x210(%rsp),%rax
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	movq   %rax,%rdi
+	movq   %rax,0x28(%rsp)
+	leaq   0x240(%rsp),%r13
+	callq  <fe25519_mul>
+	movq   0x210(%rsp),%rax
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movq   %rax,0x240(%rsp)
+	movq   0x218(%rsp),%rax
+	movq   %rax,0x248(%rsp)
+	movq   0x220(%rsp),%rax
+	movq   %rax,0x250(%rsp)
+	movq   0x228(%rsp),%rax
+	movq   %rax,0x258(%rsp)
+	movq   0x230(%rsp),%rax
+	movq   %rax,0x260(%rsp)
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %rbx,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   0x240(%rsp),%rax
+	movl   $0xa,%ebx
+	movq   %rax,0x2c0(%rsp)
+	movq   0x248(%rsp),%rax
+	movq   %rax,0x2c8(%rsp)
+	movq   0x250(%rsp),%rax
+	movq   %rax,0x2d0(%rsp)
+	movq   0x258(%rsp),%rax
+	movq   %rax,0x2d8(%rsp)
+	movq   0x260(%rsp),%rax
+	movq   %rax,0x2e0(%rsp)
+	nopl   0x0(%rax)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x308>
+	leaq   0x2c0(%rsp),%rax
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0xa,%ebx
+	movq   %rax,%rdx
+	movq   %rax,(%rsp)
+	callq  <fe25519_mul>
+	nopw   0x0(%rax,%rax,1)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x340>
+	movq   (%rsp),%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0x1e,%ebx
+	callq  <fe25519_mul>
+	movq   0x240(%rsp),%rax
+	movq   %rax,0x360(%rsp)
+	movq   0x248(%rsp),%rax
+	movq   %rax,0x368(%rsp)
+	movq   0x250(%rsp),%rax
+	movq   %rax,0x370(%rsp)
+	movq   0x258(%rsp),%rax
+	movq   %rax,0x378(%rsp)
+	movq   0x260(%rsp),%rax
+	movq   %rax,0x380(%rsp)
+	nopl   0x0(%rax)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x3b8>
+	movq   %rbp,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0x3c,%ebx
+	callq  <fe25519_mul>
+	movq   0x240(%rsp),%rax
+	movq   %rax,0x360(%rsp)
+	movq   0x248(%rsp),%rax
+	movq   %rax,0x368(%rsp)
+	movq   0x250(%rsp),%rax
+	movq   %rax,0x370(%rsp)
+	movq   0x258(%rsp),%rax
+	movq   %rax,0x378(%rsp)
+	movq   0x260(%rsp),%rax
+	movq   %rax,0x380(%rsp)
+	nopl   0x0(%rax,%rax,1)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x430>
+	movq   %rbp,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0x78,%ebx
+	callq  <fe25519_mul>
+	movq   0x240(%rsp),%rax
+	movq   %rax,0x360(%rsp)
+	movq   0x248(%rsp),%rax
+	movq   %rax,0x368(%rsp)
+	movq   0x250(%rsp),%rax
+	movq   %rax,0x370(%rsp)
+	movq   0x258(%rsp),%rax
+	movq   %rax,0x378(%rsp)
+	movq   0x260(%rsp),%rax
+	movq   %rax,0x380(%rsp)
+	nopl   0x0(%rax,%rax,1)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x4a8>
+	movq   %rbp,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	movl   $0xa,%ebx
+	callq  <fe25519_mul>
+	nopl   0x0(%rax,%rax,1)
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	subl   $0x1,%ebx
+	jne    <ge25519_elligator2+0x4d0>
+	movq   (%rsp),%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	pxor   %xmm0,%xmm0
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	movq   0x20(%rsp),%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_sq>
+	leaq   0x400(%rsp),%rdi
+	movq   %r13,%rsi
+	callq  <fe25519_tobytes>
+	movq   0x18(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %rbp,%rsi
+	movzbl 0x401(%rsp),%ebx
+	movaps %xmm0,0x360(%rsp)
+	movq   $0x0,0x380(%rsp)
+	andl   $0x1,%ebx
+	movaps %xmm0,0x370(%rsp)
+	callq  <fe25519_sub>
+	movl   %ebx,%edx
+	movq   %rdi,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_cmov>
+	movl   %ebx,%edx
+	movq   %r15,%rdi
+	leaq   0x38b51(%rip),%rsi        # <curve25519_A>
+	movq   $0x0,0xe0(%rsp)
+	movaps %xmm0,0xc0(%rsp)
+	movaps %xmm0,0xd0(%rsp)
+	callq  <fe25519_cmov>
+	movq   %r15,%rdx
+	movq   %r12,%rsi
+	movq   %r12,%rdi
+	callq  <fe25519_sub>
+	movq   (%rsp),%rbx
+	movq   %r14,%rdx
+	movq   %r12,%rsi
+	movq   0x90(%rsp),%rax
+	movups %xmm0,0x1e8(%rsp)
+	movq   %rbx,%rdi
+	movups %xmm0,0x1f8(%rsp)
+	movq   $0x1,0x1e0(%rsp)
+	addq   $0x1,%rax
+	movq   %rax,0x210(%rsp)
+	movq   0x98(%rsp),%rax
+	movq   %rax,0x218(%rsp)
+	movq   0xa0(%rsp),%rax
+	movq   %rax,0x220(%rsp)
+	movq   0xa8(%rsp),%rax
+	movq   %rax,0x228(%rsp)
+	movq   0xb0(%rsp),%rax
+	movq   %rax,0x230(%rsp)
+	callq  <fe25519_sub>
+	movq   0x28(%rsp),%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_invert>
+	movq   %r13,%rdx
+	movq   %rbx,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_mul>
+	movq   0x8(%rsp),%r15
+	movq   %rbp,%rsi
+	movq   %r15,%rdi
+	callq  <fe25519_tobytes>
+	movzbl 0x10(%rsp),%ecx
+	movq   %r15,%rsi
+	movq   %rbx,%rdi
+	orb    %cl,0x1f(%r15)
+	callq  <ge25519_frombytes>
+	testl  %eax,%eax
+	jne    <ge25519_elligator2.cold>
+	movq   (%rsp),%rsi
+	leaq   0x3d8(%rsp),%r14
+	movq   %rbp,%rdi
+	leaq   0x3b0(%rsp),%r12
+	leaq   0x388(%rsp),%r15
+	leaq   0x290(%rsp),%rbx
+	callq  <ge25519_p3_dbl>
+	movq   %r14,%rdx
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	leaq   0x268(%rsp),%r9
+	movq   %r12,%rdx
+	movq   %r15,%rsi
+	movq   %r9,%rdi
+	movq   %r9,0x10(%rsp)
+	callq  <fe25519_mul>
+	movq   %r14,%rdx
+	movq   %rbx,%rdi
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <ge25519_p2_dbl>
+	movq   %r14,%rdx
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   0x10(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %r15,%rsi
+	callq  <fe25519_mul>
+	movq   %r14,%rdx
+	movq   %rbx,%rdi
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <ge25519_p2_dbl>
+	movq   (%rsp),%rbx
+	movq   %r14,%rdx
+	movq   %rbp,%rsi
+	movq   %rbx,%rdi
+	callq  <fe25519_mul>
+	leaq   0x2e8(%rsp),%rdi
+	movq   %r12,%rdx
+	movq   %r15,%rsi
+	callq  <fe25519_mul>
+	leaq   0x310(%rsp),%rdi
+	movq   %r14,%rdx
+	movq   %r12,%rsi
+	callq  <fe25519_mul>
+	leaq   0x338(%rsp),%rdi
+	movq   %rbp,%rsi
+	movq   %r15,%rdx
+	callq  <fe25519_mul>
+	movq   0x8(%rsp),%rdi
+	movq   %rbx,%rsi
+	callq  <ge25519_tobytes>
+	movq   0x428(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <ge25519_elligator2+0x7a9>
+	addq   $0x438,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<_crypto_box_curve25519xchacha20poly1305_seal_nonce>:
+	pushq  %rbp
+	movl   $0x18,%ecx
+	movq   %rsp,%rbp
+	pushq  %r15
+	movq   %rsi,%r15
+	xorl   %esi,%esi
+	pushq  %r14
+	movq   %rdx,%r14
+	xorl   %edx,%edx
+	pushq  %r13
+	movq   %rdi,%r13
+	pushq  %r12
+	andq   $0xffffffffffffffc0,%rsp
+	subq   $0x1c0,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x1b8(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r12
+	movq   %r12,%rdi
+	callq  <crypto_generichash_init>
+	movl   $0x20,%edx
+	movq   %r15,%rsi
+	movq   %r12,%rdi
+	callq  <crypto_generichash_update>
+	movl   $0x20,%edx
+	movq   %r14,%rsi
+	movq   %r12,%rdi
+	callq  <crypto_generichash_update>
+	movl   $0x18,%edx
+	movq   %r13,%rsi
+	movq   %r12,%rdi
+	callq  <crypto_generichash_final>
+	movq   0x1b8(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <_crypto_box_curve25519xchacha20poly1305_seal_nonce+0x9a>
+	leaq   -0x20(%rbp),%rsp
+	xorl   %eax,%eax
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	popq   %rbp
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_curve25519_sandy2x>:
+	endbr64 
+	pushq  %r14
+	movq   %rsi,%rax
+	movq   %rdx,%rsi
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0x188,%rsp
+	movdqu 0x10(%rax),%xmm1
+	movdqu (%rax),%xmm0
+	movq   %fs:0x28,%rdx
+	movq   %rdx,0x178(%rsp)
+	xorl   %edx,%edx
+	leaq   0x60(%rsp),%r13
+	leaq   0x30(%rsp),%r14
+	movaps %xmm1,0x160(%rsp)
+	movzbl 0x16f(%rsp),%eax
+	movq   %r13,%rdi
+	leaq   0x150(%rsp),%r12
+	movaps %xmm0,0x150(%rsp)
+	andl   $0x7f,%eax
+	andb   $0xf8,0x150(%rsp)
+	orl    $0x40,%eax
+	movb   %al,0x16f(%rsp)
+	callq  <crypto_scalarmult_curve25519_sandy2x_fe_frombytes>
+	movq   %r13,%rdi
+	movq   %r12,%rsi
+	movq   %rsp,%r13
+	callq  <_crypto_scalarmult_curve25519_sandy2x_ladder>
+	movq   0x108(%rsp),%rax
+	movq   %r14,%rsi
+	movq   %r14,%rdi
+	shlq   $0x1a,%rax
+	addq   0x100(%rsp),%rax
+	movq   %rax,0x30(%rsp)
+	movq   0x118(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0x110(%rsp),%rax
+	movq   %rax,0x38(%rsp)
+	movq   0x128(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0x120(%rsp),%rax
+	movq   %rax,0x40(%rsp)
+	movq   0x138(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0x130(%rsp),%rax
+	movq   %rax,0x48(%rsp)
+	movq   0x148(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0x140(%rsp),%rax
+	movq   %rax,0x50(%rsp)
+	movq   0xb8(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0xb0(%rsp),%rax
+	movq   %rax,(%rsp)
+	movq   0xc8(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0xc0(%rsp),%rax
+	movq   %rax,0x8(%rsp)
+	movq   0xd8(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0xd0(%rsp),%rax
+	movq   %rax,0x10(%rsp)
+	movq   0xe8(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0xe0(%rsp),%rax
+	movq   %rax,0x18(%rsp)
+	movq   0xf8(%rsp),%rax
+	shlq   $0x1a,%rax
+	addq   0xf0(%rsp),%rax
+	movq   %rax,0x20(%rsp)
+	callq  <crypto_scalarmult_curve25519_sandy2x_fe51_invert>
+	movq   %r14,%rdx
+	movq   %r13,%rsi
+	movq   %r13,%rdi
+	callq  <_crypto_scalarmult_curve25519_sandy2x_fe51_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <_crypto_scalarmult_curve25519_sandy2x_fe51_pack>
+	movl   $0x20,%esi
+	movq   %r12,%rdi
+	callq  <sodium_memzero>
+	movq   0x178(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_scalarmult_curve25519_sandy2x+0x1da>
+	addq   $0x188,%rsp
+	xorl   %eax,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_sub>:
+	movabsq $0x7ffffffffffff,%rax
+	pushq  %rbx
+	movq   (%rdx),%r11
+	movq   %r11,%r8
+	shrq   $0x33,%r8
+	addq   0x8(%rdx),%r8
+	movq   %r8,%rcx
+	movq   %r8,%r10
+	shrq   $0x33,%rcx
+	addq   0x10(%rdx),%rcx
+	andq   %rax,%r10
+	movq   %rcx,%r8
+	andq   %rax,%rcx
+	shrq   $0x33,%r8
+	addq   0x18(%rdx),%r8
+	movq   %rcx,%r9
+	movq   %r8,%rcx
+	andq   %rax,%r8
+	shrq   $0x33,%rcx
+	addq   0x20(%rdx),%rcx
+	movabsq $0xfffffffffffda,%rdx
+	addq   (%rsi),%rdx
+	movq   %rcx,%rbx
+	shrq   $0x33,%rcx
+	andq   %rax,%rbx
+	andq   %r11,%rax
+	movq   0x8(%rsi),%r11
+	subq   %rax,%rdx
+	movabsq $0xffffffffffffe,%rax
+	addq   %rax,%r11
+	subq   %r10,%r11
+	movq   0x10(%rsi),%r10
+	addq   %rax,%r10
+	subq   %r9,%r10
+	movq   0x18(%rsi),%r9
+	addq   %rax,%r9
+	addq   0x20(%rsi),%rax
+	leaq   (%rcx,%rcx,8),%rsi
+	movq   %r11,0x8(%rdi)
+	leaq   (%rcx,%rsi,2),%rcx
+	subq   %rbx,%rax
+	subq   %r8,%r9
+	movq   %r10,0x10(%rdi)
+	subq   %rcx,%rdx
+	movq   %r9,0x18(%rdi)
+	popq   %rbx
+	movq   %rdx,(%rdi)
+	movq   %rax,0x20(%rdi)
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_cswap>:
+	movq   %rdi,%rcx
+	pushq  %r13
+	movq   %rsi,%rax
+	movl   %edx,%edx
+	movq   0x10(%rcx),%r10
+	movq   0x18(%rcx),%r8
+	pushq  %r12
+	negq   %rdx
+	movq   (%rcx),%r12
+	movq   0x20(%rcx),%r13
+	pushq  %rbp
+	pushq  %rbx
+	movq   0x8(%rcx),%rbx
+	movq   (%rsi),%rbp
+	movq   0x8(%rsi),%r11
+	movq   0x10(%rsi),%r9
+	movq   0x18(%rsi),%rdi
+	movq   0x20(%rsi),%rsi
+	xorq   %rbp,%r12
+	xorq   %r11,%rbx
+	xorq   %r9,%r10
+	xorq   %rdi,%r8
+	andq   %rdx,%r12
+	andq   %rdx,%rbx
+	xorq   %rsi,%r13
+	andq   %rdx,%r10
+	andq   %rdx,%r8
+	xorq   %r12,%rbp
+	andq   %r13,%rdx
+	movq   (%rcx),%r13
+	xorq   %rbx,%r11
+	xorq   %r10,%r9
+	xorq   %r8,%rdi
+	xorq   %rdx,%rsi
+	xorq   %r12,%r13
+	movq   %r13,(%rcx)
+	movq   0x8(%rcx),%r13
+	xorq   %rbx,%r13
+	popq   %rbx
+	movq   %r13,0x8(%rcx)
+	movq   0x10(%rcx),%r13
+	xorq   %r10,%r13
+	movq   %r13,0x10(%rcx)
+	movq   0x18(%rcx),%r13
+	xorq   %r8,%r13
+	movq   %r13,0x18(%rcx)
+	movq   0x20(%rcx),%r13
+	xorq   %rdx,%r13
+	movq   %r13,0x20(%rcx)
+	movq   %rbp,(%rax)
+	popq   %rbp
+	movq   %r11,0x8(%rax)
+	popq   %r12
+	movq   %r9,0x10(%rax)
+	movq   %rdi,0x18(%rax)
+	movq   %rsi,0x20(%rax)
+	popq   %r13
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_mul>:
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	movq   0x10(%rsi),%rdi
+	movq   0x8(%rdx),%rax
+	movq   0x18(%rsi),%r14
+	movq   0x20(%rsi),%r9
+	movq   0x8(%rsi),%rcx
+	movq   (%rsi),%r12
+	movq   0x18(%rdx),%r15
+	movq   %rax,-0x40(%rsp)
+	leaq   (%rdi,%rdi,8),%rax
+	movq   (%rdx),%rsi
+	movq   0x20(%rdx),%r13
+	movq   %r9,-0x10(%rsp)
+	movq   0x10(%rdx),%rbx
+	leaq   (%rdi,%rax,2),%rdx
+	leaq   (%r14,%r14,8),%rax
+	movq   %rdx,-0x28(%rsp)
+	leaq   (%r14,%rax,2),%rdx
+	leaq   (%r9,%r9,8),%rax
+	movq   %rbx,-0x18(%rsp)
+	leaq   (%r9,%rax,2),%rbx
+	movq   %r12,%rax
+	movq   %rdx,-0x38(%rsp)
+	mulq   %rsi
+	movq   %rax,%r10
+	leaq   (%rcx,%rcx,8),%rax
+	movq   %rdx,%r11
+	leaq   (%rcx,%rax,2),%r8
+	movq   %r8,%rax
+	mulq   %r13
+	movq   %rax,%r8
+	movq   -0x28(%rsp),%rax
+	movq   %rdx,%r9
+	mulq   %r15
+	addq   %rax,%r8
+	movq   -0x38(%rsp),%rax
+	adcq   %rdx,%r9
+	addq   %r10,%r8
+	adcq   %r11,%r9
+	mulq   -0x18(%rsp)
+	addq   %rax,%r8
+	movq   -0x40(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %rbx
+	addq   %r8,%rax
+	movq   %rax,%r10
+	movq   -0x40(%rsp),%rax
+	adcq   %r9,%rdx
+	movq   %rdx,%r11
+	mulq   %r12
+	movq   %rax,%r8
+	movq   %rsi,%rax
+	movq   %rdx,%r9
+	mulq   %rcx
+	addq   %rax,%r8
+	movq   -0x28(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %r13
+	addq   %rax,%r8
+	movq   -0x38(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %r15
+	addq   %rax,%r8
+	movq   -0x18(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %rbx
+	addq   %r8,%rax
+	movq   %rax,-0x28(%rsp)
+	movq   -0x18(%rsp),%rax
+	adcq   %r9,%rdx
+	movq   %rdx,-0x20(%rsp)
+	mulq   %r12
+	movq   %rax,%r8
+	movq   -0x40(%rsp),%rax
+	movq   %rdx,%r9
+	mulq   %rcx
+	addq   %rax,%r8
+	movq   %rsi,%rax
+	adcq   %rdx,%r9
+	mulq   %rdi
+	addq   %rax,%r8
+	movq   -0x38(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %r13
+	addq   %rax,%r8
+	movq   %r15,%rax
+	adcq   %rdx,%r9
+	mulq   %rbx
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   %rax,-0x38(%rsp)
+	movq   %r12,%rax
+	movq   %rdx,-0x30(%rsp)
+	mulq   %r15
+	movq   %rax,%r8
+	movq   -0x18(%rsp),%rax
+	movq   %rdx,%r9
+	mulq   %rcx
+	addq   %rax,%r8
+	movq   -0x40(%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   %rdi
+	addq   %rax,%r8
+	movq   %rsi,%rax
+	adcq   %rdx,%r9
+	mulq   %r14
+	addq   %rax,%r8
+	movq   %rbx,%rax
+	adcq   %rdx,%r9
+	mulq   %r13
+	addq   %rax,%r8
+	movq   %r12,%rax
+	adcq   %rdx,%r9
+	mulq   %r13
+	movq   %rax,%r12
+	movq   %r15,%rax
+	movq   %rdx,%r13
+	mulq   %rcx
+	movq   %rax,%rcx
+	movq   -0x18(%rsp),%rax
+	movq   %rdx,%rbx
+	addq   %r12,%rcx
+	adcq   %r13,%rbx
+	mulq   %rdi
+	addq   %rax,%rcx
+	movq   -0x40(%rsp),%rax
+	adcq   %rdx,%rbx
+	mulq   %r14
+	addq   %rax,%rcx
+	movq   -0x10(%rsp),%rax
+	adcq   %rdx,%rbx
+	mulq   %rsi
+	movq   %r11,%rsi
+	movq   %r10,%r11
+	addq   %rcx,%rax
+	movabsq $0x7ffffffffffff,%rcx
+	adcq   %rbx,%rdx
+	movq   %r10,%rbx
+	andq   %rcx,%r11
+	shrdq  $0x33,%rsi,%rbx
+	shrq   $0x33,%rsi
+	movq   %rsi,%rdi
+	movq   %rbx,%rsi
+	addq   -0x28(%rsp),%rsi
+	adcq   -0x20(%rsp),%rdi
+	movq   %rsi,%r10
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rcx,%r10
+	shrq   $0x33,%rdi
+	addq   -0x38(%rsp),%rsi
+	adcq   -0x30(%rsp),%rdi
+	movq   %rsi,%rbx
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rcx,%rbx
+	shrq   $0x33,%rdi
+	addq   %r8,%rsi
+	adcq   %r9,%rdi
+	movq   %rsi,%r14
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   %rsi,%rax
+	movq   %r14,%rsi
+	adcq   %rdi,%rdx
+	movq   %rax,%r12
+	andq   %rcx,%rsi
+	shrdq  $0x33,%rdx,%rax
+	movq   %rsi,0x18(%rbp)
+	leaq   (%rax,%rax,8),%rdx
+	leaq   (%rax,%rdx,2),%rdi
+	movq   %r12,%rax
+	addq   %r11,%rdi
+	andq   %rcx,%rax
+	movq   %rdi,%rdx
+	andq   %rcx,%rdi
+	movq   %rax,0x20(%rbp)
+	shrq   $0x33,%rdx
+	movq   %rdi,0x0(%rbp)
+	addq   %r10,%rdx
+	movq   %rdx,%rdi
+	shrq   $0x33,%rdx
+	addq   %rbx,%rdx
+	andq   %rcx,%rdi
+	popq   %rbx
+	movq   %rdi,0x8(%rbp)
+	movq   %rdx,0x10(%rbp)
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<fe25519_sq>:
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	movq   0x8(%rsi),%r8
+	movq   0x10(%rsi),%rdi
+	movq   0x18(%rsi),%rcx
+	leaq   (%r8,%r8,1),%rax
+	movq   (%rsi),%r9
+	movq   0x20(%rsi),%rsi
+	movq   %rax,-0x20(%rsp)
+	leaq   (%rdi,%rdi,8),%rax
+	leaq   (%rdi,%rax,2),%r10
+	leaq   (%r8,%r8,8),%rax
+	leaq   (%r8,%rax,2),%r12
+	addq   %r10,%r10
+	leaq   (%r9,%r9,1),%rbx
+	addq   %r12,%r12
+	movq   %r12,%rax
+	mulq   %rsi
+	movq   %rax,%r12
+	movq   %r10,%rax
+	movq   %rdx,%r13
+	mulq   %rcx
+	addq   %rax,%r12
+	movq   %r9,%rax
+	adcq   %rdx,%r13
+	mulq   %r9
+	movq   %r12,%r14
+	movq   %r13,%r15
+	addq   %rax,%r14
+	movq   %rbx,%rax
+	adcq   %rdx,%r15
+	mulq   %r8
+	movq   %rax,%r12
+	movq   %r10,%rax
+	movq   %rdx,%r13
+	mulq   %rsi
+	addq   %rax,%r12
+	leaq   (%rcx,%rcx,8),%rax
+	leaq   (%rcx,%rax,2),%r9
+	adcq   %rdx,%r13
+	movq   %r9,%rax
+	leaq   (%r9,%r9,1),%r10
+	mulq   %rcx
+	addq   %rax,%r12
+	movq   %r10,%rax
+	adcq   %rdx,%r13
+	mulq   %rsi
+	movq   %rax,%r10
+	movq   %rbx,%rax
+	movq   %rdx,%r11
+	mulq   %rdi
+	addq   %rax,%r10
+	movq   %r8,%rax
+	adcq   %rdx,%r11
+	mulq   %r8
+	movq   %rax,%r8
+	movq   %rdx,%r9
+	movq   %rcx,%rax
+	addq   %r10,%r8
+	adcq   %r11,%r9
+	mulq   %rbx
+	movq   %r8,-0x18(%rsp)
+	movq   %r9,-0x10(%rsp)
+	movq   %rax,%r8
+	movq   -0x20(%rsp),%rax
+	movq   %rdx,%r9
+	mulq   %rdi
+	addq   %rax,%r8
+	leaq   (%rsi,%rsi,8),%rax
+	leaq   (%rsi,%rax,2),%rax
+	adcq   %rdx,%r9
+	mulq   %rsi
+	addq   %rax,%r8
+	movq   %rsi,%rax
+	movq   %r14,%rsi
+	adcq   %rdx,%r9
+	mulq   %rbx
+	movq   %rax,%r10
+	movq   -0x20(%rsp),%rax
+	movq   %rdx,%r11
+	mulq   %rcx
+	movq   %rax,%rcx
+	movq   %rdx,%rbx
+	movq   %rdi,%rax
+	addq   %r10,%rcx
+	adcq   %r11,%rbx
+	mulq   %rdi
+	movq   %r14,%r11
+	movq   %r15,%rdi
+	addq   %rcx,%rax
+	movabsq $0x7ffffffffffff,%rcx
+	adcq   %rbx,%rdx
+	shrdq  $0x33,%r15,%rsi
+	andq   %rcx,%r11
+	shrq   $0x33,%rdi
+	addq   %r12,%rsi
+	adcq   %r13,%rdi
+	movq   %rsi,%r10
+	andq   %rcx,%r10
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   -0x18(%rsp),%rsi
+	adcq   -0x10(%rsp),%rdi
+	movq   %rsi,%rbx
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rcx,%rbx
+	shrq   $0x33,%rdi
+	addq   %r8,%rsi
+	adcq   %r9,%rdi
+	movq   %rsi,%r14
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   %rsi,%rax
+	movq   %r14,%rsi
+	adcq   %rdi,%rdx
+	movq   %rax,%r12
+	andq   %rcx,%rsi
+	shrdq  $0x33,%rdx,%rax
+	movq   %rsi,0x18(%rbp)
+	leaq   (%rax,%rax,8),%rdx
+	leaq   (%rax,%rdx,2),%rdi
+	movq   %r12,%rax
+	addq   %r11,%rdi
+	andq   %rcx,%rax
+	movq   %rdi,%rdx
+	andq   %rcx,%rdi
+	movq   %rax,0x20(%rbp)
+	shrq   $0x33,%rdx
+	movq   %rdi,0x0(%rbp)
+	addq   %r10,%rdx
+	movq   %rdx,%rdi
+	shrq   $0x33,%rdx
+	addq   %rbx,%rdx
+	andq   %rcx,%rdi
+	popq   %rbx
+	movq   %rdi,0x8(%rbp)
+	movq   %rdx,0x10(%rbp)
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_curve25519_ref10_base>:
+	endbr64 
+	pushq  %r13
+	xorl   %eax,%eax
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0x130,%rsp
+	nopl   (%rax)
+	movzbl (%rsi,%rax,1),%edx
+	movb   %dl,0x0(%rbp,%rax,1)
+	addq   $0x1,%rax
+	cmpq   $0x20,%rax
+	jne    <crypto_scalarmult_curve25519_ref10_base+0x18>
+	movzbl 0x1f(%rbp),%eax
+	andb   $0xf8,0x0(%rbp)
+	movq   %rbp,%rsi
+	leaq   0x60(%rsp),%r12
+	leaq   0x90(%rsp),%rdi
+	movq   %rsp,%r13
+	andl   $0x7f,%eax
+	orl    $0x40,%eax
+	movb   %al,0x1f(%rbp)
+	callq  <ge25519_scalarmult_base>
+	movq   0xc0(%rsp),%rsi
+	movq   0xd0(%rsp),%rdx
+	addq   0xe8(%rsp),%rsi
+	addq   0xf8(%rsp),%rdx
+	movq   0xb8(%rsp),%rdi
+	addq   0xe0(%rsp),%rdi
+	movq   %rsi,0x38(%rsp)
+	leaq   0xe0(%rsp),%rsi
+	movq   %rdi,0x30(%rsp)
+	movq   0xc8(%rsp),%rcx
+	movq   %r12,%rdi
+	addq   0xf0(%rsp),%rcx
+	movq   %rdx,0x48(%rsp)
+	leaq   0xb8(%rsp),%rdx
+	movq   0xd8(%rsp),%rax
+	addq   0x100(%rsp),%rax
+	movq   %rcx,0x40(%rsp)
+	movq   %rax,0x50(%rsp)
+	callq  <fe25519_sub>
+	movq   %r12,%rsi
+	callq  <fe25519_invert>
+	leaq   0x30(%rsp),%rsi
+	movq   %r12,%rdx
+	movq   %r13,%rdi
+	callq  <fe25519_mul>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <fe25519_tobytes>
+	addq   $0x130,%rsp
+	xorl   %eax,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_curve25519_ref10>:
+	endbr64 
+	pushq  %r14
+	xorl   %eax,%eax
+	movq   %rdx,%r9
+	xorl   %r14d,%r14d
+	pushq  %r13
+	movq   %rdx,%r13
+	pushq  %r12
+	movq   %rsi,%r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	leaq   0x1aa4b(%rip),%rbx        # <blacklist.0+0x1f>
+	leaq   -0x1f(%rbx),%r8
+	movl   $0x0,-0x7(%rsp)
+	leaq   -0x7(%rsp),%r10
+	movq   %rsp,%rdi
+	movb   $0x0,-0x1(%rsp)
+	movw   %ax,-0x3(%rsp)
+	xorl   %eax,%eax
+	nopl   0x0(%rax)
+	movzbl (%r9),%esi
+	movq   %r10,%r11
+	movq   %r8,%rcx
+	movq   %r10,%rdx
+	jmp    <crypto_scalarmult_curve25519_ref10+0x67>
+	nopw   0x0(%rax,%rax,1)
+	movzbl (%rdx),%r14d
+	movzbl (%rcx),%eax
+	xorl   %esi,%eax
+	addq   $0x1,%rdx
+	addq   $0x20,%rcx
+	orl    %r14d,%eax
+	movb   %al,-0x1(%rdx)
+	cmpq   %rdi,%rdx
+	jne    <crypto_scalarmult_curve25519_ref10+0x60>
+	addq   $0x1,%r8
+	movzbl -0x7(%rsp),%r14d
+	addq   $0x1,%r9
+	cmpq   %rbx,%r8
+	je     <crypto_scalarmult_curve25519_ref10+0x95>
+	movzbl (%r8),%eax
+	jmp    <crypto_scalarmult_curve25519_ref10+0x48>
+	movzbl 0x1f(%r13),%ecx
+	leaq   0x1a9ee(%rip),%rdx        # <blacklist.0+0x3f>
+	xorl   %eax,%eax
+	leaq   0xc0(%rdx),%rsi
+	andl   $0x7f,%ecx
+	jmp    <crypto_scalarmult_curve25519_ref10+0xb7>
+	nop
+	movzbl (%rdx),%eax
+	addq   $0x20,%rdx
+	xorl   %ecx,%eax
+	orb    %al,(%r10)
+	addq   $0x1,%r10
+	cmpq   %rdx,%rsi
+	jne    <crypto_scalarmult_curve25519_ref10+0xb0>
+	xorl   %edx,%edx
+	nopw   0x0(%rax,%rax,1)
+	movzbl (%r11),%eax
+	addq   $0x1,%r11
+	subl   $0x1,%eax
+	orl    %eax,%edx
+	cmpq   %rdi,%r11
+	jne    <crypto_scalarmult_curve25519_ref10+0xd0>
+	andb   $0x1,%dh
+	jne    <crypto_scalarmult_curve25519_ref10+0xfd>
+	popq   %rbx
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	jmpq   <crypto_scalarmult_curve25519_ref10.part.0>
+	popq   %rbx
+	movl   $0xffffffff,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_curve25519_ref10>:
+	endbr64 
+	pushq  %r14
+	xorl   %eax,%eax
+	movq   %rdx,%r9
+	xorl   %r14d,%r14d
+	pushq  %r13
+	movq   %rdx,%r13
+	pushq  %r12
+	movq   %rsi,%r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	leaq   0x1aa4b(%rip),%rbx        # <blacklist.0+0x1f>
+	leaq   -0x1f(%rbx),%r8
+	movl   $0x0,-0x7(%rsp)
+	leaq   -0x7(%rsp),%r10
+	movq   %rsp,%rdi
+	movb   $0x0,-0x1(%rsp)
+	movw   %ax,-0x3(%rsp)
+	xorl   %eax,%eax
+	nopl   0x0(%rax)
+	movzbl (%r9),%esi
+	movq   %r10,%r11
+	movq   %r8,%rcx
+	movq   %r10,%rdx
+	jmp    <crypto_scalarmult_curve25519_ref10+0x67>
+	nopw   0x0(%rax,%rax,1)
+	movzbl (%rdx),%r14d
+	movzbl (%rcx),%eax
+	xorl   %esi,%eax
+	addq   $0x1,%rdx
+	addq   $0x20,%rcx
+	orl    %r14d,%eax
+	movb   %al,-0x1(%rdx)
+	cmpq   %rdi,%rdx
+	jne    <crypto_scalarmult_curve25519_ref10+0x60>
+	addq   $0x1,%r8
+	movzbl -0x7(%rsp),%r14d
+	addq   $0x1,%r9
+	cmpq   %rbx,%r8
+	je     <crypto_scalarmult_curve25519_ref10+0x95>
+	movzbl (%r8),%eax
+	jmp    <crypto_scalarmult_curve25519_ref10+0x48>
+	movzbl 0x1f(%r13),%ecx
+	leaq   0x1a9ee(%rip),%rdx        # <blacklist.0+0x3f>
+	xorl   %eax,%eax
+	leaq   0xc0(%rdx),%rsi
+	andl   $0x7f,%ecx
+	jmp    <crypto_scalarmult_curve25519_ref10+0xb7>
+	nop
+	movzbl (%rdx),%eax
+	addq   $0x20,%rdx
+	xorl   %ecx,%eax
+	orb    %al,(%r10)
+	addq   $0x1,%r10
+	cmpq   %rdx,%rsi
+	jne    <crypto_scalarmult_curve25519_ref10+0xb0>
+	xorl   %edx,%edx
+	nopw   0x0(%rax,%rax,1)
+	movzbl (%r11),%eax
+	addq   $0x1,%r11
+	subl   $0x1,%eax
+	orl    %eax,%edx
+	cmpq   %rdi,%r11
+	jne    <crypto_scalarmult_curve25519_ref10+0xd0>
+	andb   $0x1,%dh
+	jne    <crypto_scalarmult_curve25519_ref10+0xfd>
+	popq   %rbx
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	jmpq   <crypto_scalarmult_curve25519_ref10.part.0>
+	popq   %rbx
+	movl   $0xffffffff,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<_crypto_scalarmult_ed25519>:
+	pushq  %r14
+	pushq  %r13
+	movl   %ecx,%r13d
+	pushq  %r12
+	movq   %rdx,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	pushq  %rbx
+	movq   %rdi,%rbx
+	movq   %rdx,%rdi
+	subq   $0x140,%rsp
+	callq  <ge25519_is_canonical>
+	testl  %eax,%eax
+	je     <_crypto_scalarmult_ed25519+0x108>
+	movq   %r12,%rdi
+	callq  <ge25519_has_small_order>
+	testl  %eax,%eax
+	jne    <_crypto_scalarmult_ed25519+0x108>
+	leaq   0xa0(%rsp),%r14
+	movq   %r12,%rsi
+	movq   %r14,%rdi
+	callq  <ge25519_frombytes>
+	testl  %eax,%eax
+	jne    <_crypto_scalarmult_ed25519+0x108>
+	movq   %r14,%rdi
+	callq  <ge25519_is_on_main_subgroup>
+	testl  %eax,%eax
+	je     <_crypto_scalarmult_ed25519+0x108>
+	xorl   %eax,%eax
+	nopl   0x0(%rax,%rax,1)
+	movzbl 0x0(%rbp,%rax,1),%edx
+	movb   %dl,(%rbx,%rax,1)
+	addq   $0x1,%rax
+	cmpq   $0x20,%rax
+	jne    <_crypto_scalarmult_ed25519+0x70>
+	movzbl 0x1f(%rbx),%eax
+	testl  %r13d,%r13d
+	jne    <_crypto_scalarmult_ed25519+0x100>
+	andl   $0x7f,%eax
+	movq   %rsp,%r12
+	movq   %r14,%rdx
+	movq   %rbx,%rsi
+	movb   %al,0x1f(%rbx)
+	movq   %r12,%rdi
+	callq  <ge25519_scalarmult>
+	movq   %r12,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_p3_tobytes>
+	movzbl (%rbx),%edx
+	leaq   0x1(%rbx),%rax
+	leaq   0x1f(%rbx),%rcx
+	xorl   $0x1,%edx
+	nopl   0x0(%rax,%rax,1)
+	orb    (%rax),%dl
+	addq   $0x1,%rax
+	cmpq   %rax,%rcx
+	jne    <_crypto_scalarmult_ed25519+0xc0>
+	movzbl 0x1f(%rbx),%eax
+	andl   $0x7f,%eax
+	orl    %edx,%eax
+	movzbl %al,%eax
+	subl   $0x1,%eax
+	js     <_crypto_scalarmult_ed25519+0x108>
+	movl   $0x20,%esi
+	movq   %rbp,%rdi
+	callq  <sodium_is_zero>
+	negl   %eax
+	sbbl   %eax,%eax
+	addq   $0x140,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	retq   
+	nopl   (%rax)
+	andb   $0xf8,(%rbx)
+	orl    $0x40,%eax
+	jmp    <_crypto_scalarmult_ed25519+0x8b>
+	movl   $0xffffffff,%eax
+	jmp    <_crypto_scalarmult_ed25519+0xed>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<_crypto_scalarmult_ed25519_base>:
+	pushq  %r12
+	xorl   %eax,%eax
+	pushq  %rbp
+	movq   %rsi,%rbp
+	pushq  %rbx
+	movq   %rdi,%rbx
+	subq   $0xa0,%rsp
+	nopl   0x0(%rax,%rax,1)
+	movzbl 0x0(%rbp,%rax,1),%ecx
+	movb   %cl,(%rbx,%rax,1)
+	addq   $0x1,%rax
+	cmpq   $0x20,%rax
+	jne    <_crypto_scalarmult_ed25519_base+0x18>
+	movzbl 0x1f(%rbx),%eax
+	testl  %edx,%edx
+	je     <_crypto_scalarmult_ed25519_base+0x38>
+	andb   $0xf8,(%rbx)
+	orl    $0x40,%eax
+	andl   $0x7f,%eax
+	movq   %rsp,%r12
+	movq   %rbx,%rsi
+	movb   %al,0x1f(%rbx)
+	movq   %r12,%rdi
+	callq  <ge25519_scalarmult_base>
+	movq   %r12,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_p3_tobytes>
+	movzbl (%rbx),%edx
+	leaq   0x1(%rbx),%rax
+	leaq   0x1f(%rbx),%rcx
+	xorl   $0x1,%edx
+	nopl   (%rax)
+	orb    (%rax),%dl
+	addq   $0x1,%rax
+	cmpq   %rax,%rcx
+	jne    <_crypto_scalarmult_ed25519_base+0x68>
+	movzbl 0x1f(%rbx),%eax
+	andl   $0x7f,%eax
+	orl    %edx,%eax
+	movzbl %al,%eax
+	subl   $0x1,%eax
+	js     <_crypto_scalarmult_ed25519_base+0xa1>
+	movl   $0x20,%esi
+	movq   %rbp,%rdi
+	callq  <sodium_is_zero>
+	negl   %eax
+	sbbl   %eax,%eax
+	addq   $0xa0,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	retq   
+	movl   $0xffffffff,%eax
+	jmp    <_crypto_scalarmult_ed25519_base+0x95>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_edwards25519sha512batch_keypair>:
+	endbr64 
+	pushq  %r13
+	pushq  %r12
+	movq   %rdi,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	movl   $0x20,%esi
+	movq   %rbp,%rdi
+	subq   $0xa0,%rsp
+	callq  <randombytes_buf>
+	movl   $0x20,%edx
+	movq   %rbp,%rsi
+	movq   %rbp,%rdi
+	callq  <crypto_hash_sha512>
+	movzbl 0x1f(%rbp),%eax
+	andb   $0xf8,0x0(%rbp)
+	movq   %rsp,%r13
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	andl   $0x7f,%eax
+	orl    $0x40,%eax
+	movb   %al,0x1f(%rbp)
+	callq  <ge25519_scalarmult_base>
+	movq   %r13,%rsi
+	movq   %r12,%rdi
+	callq  <ge25519_p3_tobytes>
+	addq   $0xa0,%rsp
+	xorl   %eax,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_keypair>:
+	endbr64 
+	pushq  %r12
+	movq   %rdi,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	movl   $0x20,%esi
+	movq   %rbp,%rdi
+	subq   $0x8,%rsp
+	callq  <randombytes_buf>
+	addq   $0x8,%rsp
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	popq   %rbp
+	popq   %r12
+	jmpq   <crypto_scalarmult_curve25519_base>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_keypair>:
+	endbr64 
+	pushq  %r13
+	movq   %rsi,%r13
+	movl   $0x20,%esi
+	pushq  %r12
+	movq   %rdi,%r12
+	pushq  %rbp
+	subq   $0x30,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x28(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%rbp
+	movq   %rbp,%rdi
+	callq  <randombytes_buf>
+	movq   %r12,%rdi
+	movq   %r13,%rsi
+	movq   %rbp,%rdx
+	callq  <crypto_sign_ed25519_seed_keypair>
+	movl   $0x20,%esi
+	movq   %rbp,%rdi
+	movl   %eax,%r12d
+	callq  <sodium_memzero>
+	movq   0x28(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_sign_ed25519_keypair+0x6e>
+	addq   $0x30,%rsp
+	movl   %r12d,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_open>:
+	endbr64 
+	pushq  %r14
+	movq   %rcx,%r9
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	movq   %rsi,%rbx
+	cmpq   $0x3f,%rcx
+	ja     <crypto_sign_ed25519_open+0x40>
+	movl   $0xffffffff,%r12d
+	testq  %rbx,%rbx
+	je     <crypto_sign_ed25519_open+0x2a>
+	movq   $0x0,(%rbx)
+	popq   %rbx
+	movl   %r12d,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	retq   
+	cs nopw 0x0(%rax,%rax,1)
+	leaq   -0x40(%r9),%r13
+	leaq   0x40(%rdx),%r14
+	movq   %r8,%rcx
+	movq   %rdi,%rbp
+	xorl   %r8d,%r8d
+	movq   %rdx,%rdi
+	movq   %r14,%rsi
+	movq   %r13,%rdx
+	callq  <_crypto_sign_ed25519_verify_detached>
+	movl   %eax,%r12d
+	testl  %eax,%eax
+	jne    <crypto_sign_ed25519_open+0x90>
+	testq  %rbx,%rbx
+	je     <crypto_sign_ed25519_open+0x6e>
+	movq   %r13,(%rbx)
+	testq  %rbp,%rbp
+	je     <crypto_sign_ed25519_open+0x2a>
+	movq   %r13,%rdx
+	movq   %r14,%rsi
+	movq   %rbp,%rdi
+	callq  <memmove@plt>
+	popq   %rbx
+	movl   %r12d,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	retq   
+	nopl   (%rax)
+	testq  %rbp,%rbp
+	je     <crypto_sign_ed25519_open+0x18>
+	movq   %r13,%rdx
+	xorl   %esi,%esi
+	movq   %rbp,%rdi
+	callq  <memset@plt>
+	jmpq   <crypto_sign_ed25519_open+0x18>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_seal_open>:
+	endbr64 
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	movq   %rdx,%rbx
+	subq   $0x20,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x18(%rsp)
+	xorl   %eax,%eax
+	cmpq   $0x2f,%rdx
+	jbe    <crypto_box_curve25519xchacha20poly1305_seal_open+0x80>
+	movq   %rsp,%r14
+	movq   %rsi,%rbp
+	movq   %rcx,%rdx
+	movq   %r8,%r13
+	movq   %rdi,%r12
+	movq   %r14,%rdi
+	callq  <_crypto_box_curve25519xchacha20poly1305_seal_nonce>
+	leaq   -0x20(%rbx),%rdx
+	leaq   0x20(%rbp),%rsi
+	movq   %r13,%r9
+	movq   %rbp,%r8
+	movq   %r14,%rcx
+	movq   %r12,%rdi
+	callq  <crypto_box_curve25519xchacha20poly1305_open_easy>
+	movq   0x18(%rsp),%rdx
+	subq   %fs:0x28,%rdx
+	jne    <crypto_box_curve25519xchacha20poly1305_seal_open+0x87>
+	addq   $0x20,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	retq   
+	cs nopw 0x0(%rax,%rax,1)
+	movl   $0xffffffff,%eax
+	jmp    <crypto_box_curve25519xchacha20poly1305_seal_open+0x59>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult>:
+	endbr64 
+	jmpq   <crypto_scalarmult_curve25519>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_seedbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_nonreducedscalarbytes>:
+	endbr64 
+	movl   $0x40,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_secretkeybytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_pk_to_curve25519>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	pushq  %rbx
+	subq   $0x148,%rsp
+	movq   %rdi,0x18(%rsp)
+	movq   %rsi,%rdi
+	callq  <ge25519_has_small_order>
+	testl  %eax,%eax
+	jne    <crypto_sign_ed25519_pk_to_curve25519+0x438>
+	leaq   0xa0(%rsp),%r12
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <ge25519_frombytes_negate_vartime>
+	movl   %eax,%r13d
+	testl  %eax,%eax
+	jne    <crypto_sign_ed25519_pk_to_curve25519+0x438>
+	movq   %r12,%rdi
+	callq  <ge25519_is_on_main_subgroup>
+	testl  %eax,%eax
+	je     <crypto_sign_ed25519_pk_to_curve25519+0x438>
+	movq   0xc8(%rsp),%r11
+	movq   0xd0(%rsp),%r10
+	movabsq $0x7ffffffffffff,%rbx
+	movabsq $0xfffffffffffdb,%rbp
+	movq   0xd8(%rsp),%r9
+	movq   0xe0(%rsp),%r8
+	movq   %r11,%rax
+	movq   0xe8(%rsp),%rdi
+	movq   %r11,%r12
+	movq   %r10,0x48(%rsp)
+	shrq   $0x33,%rax
+	andq   %rbx,%r12
+	movq   %r9,0x50(%rsp)
+	addq   %r10,%rax
+	subq   %r12,%rbp
+	movq   %rdi,0x60(%rsp)
+	movq   %rax,%rsi
+	andq   %rbx,%rax
+	movq   %r8,0x58(%rsp)
+	shrq   $0x33,%rsi
+	addq   %r9,%rsi
+	movq   %rsi,%rcx
+	andq   %rbx,%rsi
+	shrq   $0x33,%rcx
+	addq   %r8,%rcx
+	movq   %rcx,%rdx
+	andq   %rbx,%rcx
+	shrq   $0x33,%rdx
+	addq   %rdi,%rdx
+	leaq   0x70(%rsp),%rdi
+	movq   %rdx,%r12
+	andq   %rbx,%rdx
+	shrq   $0x33,%r12
+	leaq   (%r12,%r12,8),%r14
+	leaq   (%r12,%r14,2),%r12
+	subq   %r12,%rbp
+	movq   %rbp,0x70(%rsp)
+	movq   %rax,%rbp
+	movabsq $0xffffffffffffe,%rax
+	movq   %rax,%r12
+	subq   %rbp,%r12
+	movq   %rax,%rbp
+	subq   %rsi,%rbp
+	movq   %rax,%rsi
+	subq   %rdx,%rax
+	movq   %r12,0x78(%rsp)
+	subq   %rcx,%rsi
+	movq   %rax,0x90(%rsp)
+	leaq   0x1(%r11),%rax
+	movq   %rsi,0x88(%rsp)
+	movq   %rdi,%rsi
+	movq   %rbp,0x80(%rsp)
+	movq   %rax,0x40(%rsp)
+	callq  <fe25519_invert>
+	movq   0x50(%rsp),%r12
+	movq   0x58(%rsp),%r14
+	movq   0x60(%rsp),%rcx
+	movq   0x40(%rsp),%r15
+	leaq   (%r12,%r12,8),%rax
+	movq   0x70(%rsp),%rbp
+	movq   0x48(%rsp),%rsi
+	leaq   (%r12,%rax,2),%rax
+	movq   %rax,(%rsp)
+	leaq   (%r14,%r14,8),%rax
+	leaq   (%r14,%rax,2),%rdi
+	leaq   (%rcx,%rcx,8),%rax
+	leaq   (%rcx,%rax,2),%rcx
+	movq   %r15,%rax
+	mulq   %rbp
+	movq   %rax,%r10
+	leaq   (%rsi,%rsi,8),%rax
+	movq   %rdx,%r11
+	leaq   (%rsi,%rax,2),%r9
+	movq   %r9,%rax
+	mulq   0x90(%rsp)
+	movq   %rax,%r8
+	movq   %rdx,%r9
+	movq   (%rsp),%rax
+	mulq   0x88(%rsp)
+	addq   %rax,%r8
+	movq   %rdi,%rax
+	adcq   %rdx,%r9
+	addq   %r10,%r8
+	adcq   %r11,%r9
+	mulq   0x80(%rsp)
+	addq   %rax,%r8
+	movq   %rcx,%rax
+	adcq   %rdx,%r9
+	mulq   0x78(%rsp)
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   %rax,0x20(%rsp)
+	movq   %r15,%rax
+	movq   %rdx,0x28(%rsp)
+	mulq   0x78(%rsp)
+	movq   %rax,%r8
+	movq   %rbp,%rax
+	movq   %rdx,%r9
+	mulq   %rsi
+	addq   %rax,%r8
+	movq   (%rsp),%rax
+	adcq   %rdx,%r9
+	mulq   0x90(%rsp)
+	addq   %rax,%r8
+	movq   %rdi,%rax
+	adcq   %rdx,%r9
+	mulq   0x88(%rsp)
+	addq   %rax,%r8
+	movq   %rcx,%rax
+	adcq   %rdx,%r9
+	mulq   0x80(%rsp)
+	addq   %r8,%rax
+	adcq   %r9,%rdx
+	movq   %rax,(%rsp)
+	movq   %r15,%rax
+	movq   %rdx,0x8(%rsp)
+	mulq   0x80(%rsp)
+	movq   %rax,%r8
+	movq   %rdx,%r9
+	movq   %rsi,%rax
+	mulq   0x78(%rsp)
+	addq   %rax,%r8
+	movq   %rbp,%rax
+	adcq   %rdx,%r9
+	mulq   %r12
+	addq   %rax,%r8
+	movq   %rdi,%rax
+	adcq   %rdx,%r9
+	mulq   0x90(%rsp)
+	addq   %rax,%r8
+	movq   %rcx,%rax
+	adcq   %rdx,%r9
+	mulq   0x88(%rsp)
+	movq   %rax,%r10
+	movq   %rdx,%r11
+	movq   %r15,%rax
+	addq   %r8,%r10
+	adcq   %r9,%r11
+	mulq   0x88(%rsp)
+	movq   %r10,0x30(%rsp)
+	movq   %r11,0x38(%rsp)
+	movq   %rax,%r8
+	movq   %rdx,%r9
+	movq   %rsi,%rax
+	mulq   0x80(%rsp)
+	addq   %rax,%r8
+	movq   %r12,%rax
+	adcq   %rdx,%r9
+	mulq   0x78(%rsp)
+	addq   %rax,%r8
+	movq   %rbp,%rax
+	adcq   %rdx,%r9
+	mulq   %r14
+	addq   %rax,%r8
+	movq   %rcx,%rax
+	adcq   %rdx,%r9
+	mulq   0x90(%rsp)
+	addq   %rax,%r8
+	movq   %r15,%rax
+	adcq   %rdx,%r9
+	mulq   0x90(%rsp)
+	movq   %rax,%r10
+	movq   %rdx,%r11
+	movq   %rsi,%rax
+	mulq   0x88(%rsp)
+	movq   %rax,%rsi
+	movq   %rdx,%rdi
+	movq   %r12,%rax
+	addq   %r10,%rsi
+	adcq   %r11,%rdi
+	mulq   0x80(%rsp)
+	addq   %rax,%rsi
+	movq   %r14,%rax
+	adcq   %rdx,%rdi
+	mulq   0x78(%rsp)
+	addq   %rax,%rsi
+	movq   %rbp,%rax
+	movq   0x28(%rsp),%rbp
+	adcq   %rdx,%rdi
+	mulq   0x60(%rsp)
+	addq   %rsi,%rax
+	adcq   %rdi,%rdx
+	movq   0x20(%rsp),%rdi
+	movq   %rdi,%rcx
+	shrdq  $0x33,%rbp,%rdi
+	andq   %rbx,%rcx
+	shrq   $0x33,%rbp
+	movq   %rdi,%rsi
+	addq   (%rsp),%rsi
+	movq   %rcx,%r10
+	movq   %rbp,%rdi
+	movq   %rsi,%rcx
+	adcq   0x8(%rsp),%rdi
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rbx,%rcx
+	shrq   $0x33,%rdi
+	addq   0x30(%rsp),%rsi
+	adcq   0x38(%rsp),%rdi
+	movq   %rsi,%r11
+	shrdq  $0x33,%rdi,%rsi
+	andq   %rbx,%r11
+	shrq   $0x33,%rdi
+	addq   %r8,%rsi
+	adcq   %r9,%rdi
+	movq   %rsi,%r14
+	shrdq  $0x33,%rdi,%rsi
+	shrq   $0x33,%rdi
+	addq   %rsi,%rax
+	movq   %r14,%rsi
+	adcq   %rdi,%rdx
+	movq   %rax,(%rsp)
+	andq   %rbx,%rsi
+	shrdq  $0x33,%rdx,%rax
+	movq   %rdx,0x8(%rsp)
+	leaq   (%rax,%rax,8),%rdx
+	movq   %rsi,0x58(%rsp)
+	leaq   0x40(%rsp),%rsi
+	leaq   (%rax,%rdx,2),%rdi
+	movq   (%rsp),%rax
+	addq   %r10,%rdi
+	movq   %rdi,%rdx
+	andq   %rbx,%rdi
+	andq   %rbx,%rax
+	shrq   $0x33,%rdx
+	movq   %rdi,0x40(%rsp)
+	movq   0x18(%rsp),%rdi
+	addq   %rcx,%rdx
+	movq   %rax,0x60(%rsp)
+	movq   %rdx,%rcx
+	shrq   $0x33,%rdx
+	andq   %rbx,%rcx
+	addq   %r11,%rdx
+	movq   %rcx,0x48(%rsp)
+	movq   %rdx,0x50(%rsp)
+	callq  <fe25519_tobytes>
+	addq   $0x148,%rsp
+	movl   %r13d,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	nopw   0x0(%rax,%rax,1)
+	movl   $0xffffffff,%r13d
+	jmp    <crypto_sign_ed25519_pk_to_curve25519+0x41d>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_sealbytes>:
+	endbr64 
+	movl   $0x30,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_scalarbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_open_easy>:
+	endbr64 
+	pushq  %r15
+	movq   %rdx,%rax
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	movq   %rcx,%rbx
+	subq   $0x68,%rsp
+	movq   %fs:0x28,%rcx
+	movq   %rcx,0x58(%rsp)
+	xorl   %ecx,%ecx
+	cmpq   $0xf,%rdx
+	jbe    <crypto_box_curve25519xchacha20poly1305_open_easy+0xd0>
+	movq   %r8,%rdx
+	leaq   0x30(%rsp),%r8
+	movq   %rsi,%r13
+	movq   %rdi,%rbp
+	movq   %r9,%rsi
+	movq   %r8,%rdi
+	movq   %r8,0x8(%rsp)
+	leaq   -0x10(%rax),%r12
+	callq  <crypto_scalarmult_curve25519>
+	leaq   0x10(%r13),%r14
+	movq   0x8(%rsp),%r8
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_open_easy+0xd0>
+	leaq   0x10(%rsp),%r15
+	xorl   %ecx,%ecx
+	movq   %r8,%rdx
+	leaq   0x264fe(%rip),%rsi        # <zero.0>
+	movq   %r15,%rdi
+	callq  <crypto_core_hchacha20>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_open_easy+0xd0>
+	movq   %r12,%rcx
+	movq   %r14,%rsi
+	movq   %rbp,%rdi
+	movq   %r15,%r9
+	movq   %rbx,%r8
+	movq   %r13,%rdx
+	callq  <crypto_secretbox_xchacha20poly1305_open_detached>
+	movl   $0x20,%esi
+	movq   %r15,%rdi
+	movl   %eax,%r12d
+	callq  <sodium_memzero>
+	movq   0x58(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_box_curve25519xchacha20poly1305_open_easy+0xd8>
+	addq   $0x68,%rsp
+	movl   %r12d,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	nopw   0x0(%rax,%rax,1)
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_box_curve25519xchacha20poly1305_open_easy+0xa5>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalar_random>:
+	endbr64 
+	pushq  %rbx
+	movq   %rdi,%rbx
+	nopl   0x0(%rax,%rax,1)
+	movq   %rbx,%rdi
+	movl   $0x20,%esi
+	callq  <randombytes_buf>
+	andb   $0x1f,0x1f(%rbx)
+	movq   %rbx,%rdi
+	callq  <sc25519_is_canonical>
+	testl  %eax,%eax
+	je     <crypto_core_ed25519_scalar_random+0x10>
+	movl   $0x20,%esi
+	movq   %rbx,%rdi
+	callq  <sodium_is_zero>
+	testl  %eax,%eax
+	jne    <crypto_core_ed25519_scalar_random+0x10>
+	popq   %rbx
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_from_uniform>:
+	endbr64 
+	subq   $0x8,%rsp
+	callq  <ge25519_from_uniform>
+	xorl   %eax,%eax
+	addq   $0x8,%rsp
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalar_negate>:
+	endbr64 
+	pushq  %rbp
+	pxor   %xmm0,%xmm0
+	movl   $0x40,%edx
+	pushq  %rbx
+	movq   %rdi,%rbx
+	subq   $0x98,%rsp
+	movdqu (%rsi),%xmm1
+	movdqu 0x10(%rsi),%xmm2
+	movq   %fs:0x28,%rax
+	movq   %rax,0x88(%rsp)
+	xorl   %eax,%eax
+	movaps %xmm0,(%rsp)
+	leaq   0x40(%rsp),%r8
+	movq   %rsp,%rbp
+	movaps %xmm0,0x10(%rsp)
+	movq   %r8,%rsi
+	movq   %rbp,%rdi
+	movaps %xmm0,0x60(%rsp)
+	movaps %xmm0,0x70(%rsp)
+	movdqa 0x34a22(%rip),%xmm0        # <stream_avx2_xor_ic+0xc50>
+	movaps %xmm1,0x40(%rsp)
+	movaps %xmm0,0x20(%rsp)
+	movdqa 0x34a20(%rip),%xmm0        # <stream_avx2_xor_ic+0xc60>
+	movaps %xmm2,0x50(%rsp)
+	movaps %xmm0,0x30(%rsp)
+	callq  <sodium_sub>
+	movq   %rbp,%rdi
+	callq  <sc25519_reduce>
+	movdqa (%rsp),%xmm3
+	movdqa 0x10(%rsp),%xmm4
+	movups %xmm3,(%rbx)
+	movups %xmm4,0x10(%rbx)
+	movq   0x88(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_core_ed25519_scalar_negate+0xb6>
+	addq   $0x98,%rsp
+	popq   %rbx
+	popq   %rbp
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_verify_detached>:
+	endbr64 
+	xorl   %r8d,%r8d
+	jmpq   <_crypto_sign_ed25519_verify_detached>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ristretto255>:
+	endbr64 
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	movq   %rsi,%rbx
+	movq   %rdx,%rsi
+	subq   $0x148,%rsp
+	leaq   0xa0(%rsp),%r13
+	movq   %r13,%rdi
+	callq  <ristretto255_frombytes>
+	testl  %eax,%eax
+	jne    <crypto_scalarmult_ristretto255+0x81>
+	xorl   %eax,%eax
+	movzbl (%rbx,%rax,1),%edx
+	movb   %dl,0x0(%rbp,%rax,1)
+	addq   $0x1,%rax
+	cmpq   $0x20,%rax
+	jne    <crypto_scalarmult_ristretto255+0x30>
+	andb   $0x7f,0x1f(%rbp)
+	movq   %rsp,%r12
+	movq   %r13,%rdx
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <ge25519_scalarmult>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	callq  <ristretto255_p3_tobytes>
+	movl   $0x20,%esi
+	movq   %rbp,%rdi
+	callq  <sodium_is_zero>
+	negl   %eax
+	sbbl   %eax,%eax
+	addq   $0x148,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+	movl   $0xffffffff,%eax
+	jmp    <crypto_scalarmult_ristretto255+0x73>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_beforenm>:
+	endbr64 
+	pushq  %r12
+	movq   %rsi,%r8
+	movq   %rdx,%rsi
+	pushq  %rbp
+	movq   %r8,%rdx
+	movq   %rdi,%rbp
+	subq   $0x38,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x28(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r12
+	movq   %r12,%rdi
+	callq  <crypto_scalarmult_curve25519>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xsalsa20poly1305_beforenm+0x68>
+	xorl   %ecx,%ecx
+	movq   %r12,%rdx
+	leaq   0x271fe(%rip),%rsi        # <zero.0>
+	movq   %rbp,%rdi
+	callq  <crypto_core_hsalsa20>
+	movq   0x28(%rsp),%rdx
+	subq   %fs:0x28,%rdx
+	jne    <crypto_box_curve25519xsalsa20poly1305_beforenm+0x6f>
+	addq   $0x38,%rsp
+	popq   %rbp
+	popq   %r12
+	retq   
+	nopw   0x0(%rax,%rax,1)
+	movl   $0xffffffff,%eax
+	jmp    <crypto_box_curve25519xsalsa20poly1305_beforenm+0x4a>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ed25519_base>:
+	endbr64 
+	movl   $0x1,%edx
+	jmpq   <_crypto_scalarmult_ed25519_base>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519ph_statebytes>:
+	endbr64 
+	movl   $0xd0,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_boxzerobytes>:
+	endbr64 
+	movl   $0x10,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_edwards25519sha512batch_open>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	leaq   -0x40(%rcx),%r14
+	pushq  %r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	subq   $0x458,%rsp
+	movq   %rdi,0x8(%rsp)
+	movq   %fs:0x28,%rax
+	movq   %rax,0x448(%rsp)
+	xorl   %eax,%eax
+	movq   $0x0,(%rsi)
+	cmpq   $0xffffffffffffffbf,%r14
+	ja     <crypto_sign_edwards25519sha512batch_open+0x1c0>
+	movq   %rdx,%rbp
+	movq   %rcx,%rbx
+	testb  $0xe0,-0x1(%rdx,%rcx,1)
+	jne    <crypto_sign_edwards25519sha512batch_open+0x1c0>
+	movq   %r8,%rdi
+	movq   %rsi,%r12
+	movq   %r8,%r13
+	callq  <ge25519_has_small_order>
+	testl  %eax,%eax
+	jne    <crypto_sign_edwards25519sha512batch_open+0x1c0>
+	leaq   0x1e0(%rsp),%r15
+	movq   %r13,%rsi
+	movq   %r15,%rdi
+	callq  <ge25519_frombytes_negate_vartime>
+	testl  %eax,%eax
+	jne    <crypto_sign_edwards25519sha512batch_open+0x1c0>
+	movq   %rbp,%rdi
+	callq  <ge25519_has_small_order>
+	testl  %eax,%eax
+	jne    <crypto_sign_edwards25519sha512batch_open+0x1c0>
+	leaq   0x280(%rsp),%r13
+	movq   %rbp,%rsi
+	movq   %r13,%rdi
+	callq  <ge25519_frombytes_negate_vartime>
+	testl  %eax,%eax
+	jne    <crypto_sign_edwards25519sha512batch_open+0x1c0>
+	leaq   0xa0(%rsp),%r9
+	movq   %r15,%rsi
+	subq   $0x20,%rbx
+	movq   %r9,%rdi
+	leaq   0x400(%rsp),%r15
+	movq   %r9,0x18(%rsp)
+	callq  <ge25519_p3_to_cached>
+	movq   %rbx,%rdx
+	movq   %rbp,%rsi
+	movq   %r15,%rdi
+	callq  <crypto_hash_sha512>
+	movq   %r15,%rdi
+	callq  <sc25519_reduce>
+	leaq   0x320(%rsp),%r8
+	movq   %r13,%rdx
+	movq   %r15,%rsi
+	movq   %r8,%rdi
+	movq   %r8,0x10(%rsp)
+	leaq   0x140(%rsp),%r15
+	callq  <ge25519_scalarmult>
+	movq   0x18(%rsp),%rdx
+	movq   0x10(%rsp),%rsi
+	movq   %r15,%rdi
+	callq  <ge25519_add>
+	leaq   0x20(%rsp),%r8
+	movq   %r15,%rsi
+	leaq   0x3c0(%rsp),%r15
+	movq   %r8,%rdi
+	movq   %r8,0x10(%rsp)
+	callq  <ge25519_p1p1_to_p2>
+	movq   0x10(%rsp),%rsi
+	movq   %r15,%rdi
+	callq  <ge25519_tobytes>
+	leaq   0x0(%rbp,%rbx,1),%rsi
+	movq   %r13,%rdi
+	leaq   0x3e0(%rsp),%rbx
+	addb   $0x80,0x3df(%rsp)
+	callq  <ge25519_scalarmult_base>
+	movq   %r13,%rsi
+	movq   %rbx,%rdi
+	callq  <ge25519_p3_tobytes>
+	movq   %rbx,%rsi
+	movq   %r15,%rdi
+	callq  <crypto_verify_32>
+	movl   %eax,%r13d
+	testl  %eax,%eax
+	jne    <crypto_sign_edwards25519sha512batch_open+0x1c0>
+	movq   %r14,(%r12)
+	movq   0x8(%rsp),%rdi
+	leaq   0x20(%rbp),%rsi
+	movq   %r14,%rdx
+	callq  <memmove@plt>
+	movq   0x448(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_sign_edwards25519sha512batch_open+0x1c8>
+	addq   $0x458,%rsp
+	movl   %r13d,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	nop
+	movl   $0xffffffff,%r13d
+	jmp    <crypto_sign_edwards25519sha512batch_open+0x197>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalar_mul>:
+	endbr64 
+	jmpq   <sc25519_mul>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_easy_afternm>:
+	endbr64 
+	cmpq   $0xffffffffffffffef,%rdx
+	ja     <crypto_box_curve25519xchacha20poly1305_easy_afternm+0x25>
+	movq   %rdi,%r11
+	movq   %r8,%r9
+	leaq   0x10(%rdi),%rdi
+	movq   %rcx,%r8
+	movq   %rdx,%rcx
+	movq   %rsi,%rdx
+	movq   %r11,%rsi
+	jmpq   <crypto_secretbox_xchacha20poly1305_detached>
+	pushq  %rax
+	callq  <sodium_misuse>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_detached>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	movq   %rcx,%r14
+	pushq  %r13
+	movq   %rdx,%r13
+	movq   %r9,%rdx
+	pushq  %r12
+	movq   %rsi,%r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	movq   %r8,%rbx
+	subq   $0x68,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x58(%rsp)
+	xorl   %eax,%eax
+	leaq   0x30(%rsp),%r8
+	movq   0xa0(%rsp),%rsi
+	movq   %r8,%rdi
+	movq   %r8,0x8(%rsp)
+	callq  <crypto_scalarmult_curve25519>
+	movq   0x8(%rsp),%r8
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_detached+0xc0>
+	leaq   0x10(%rsp),%r15
+	xorl   %ecx,%ecx
+	movq   %r8,%rdx
+	leaq   0x26808(%rip),%rsi        # <zero.0>
+	movq   %r15,%rdi
+	callq  <crypto_core_hchacha20>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_detached+0xc0>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	movq   %r15,%r9
+	movq   %rbx,%r8
+	movq   %r14,%rcx
+	movq   %r13,%rdx
+	callq  <crypto_secretbox_xchacha20poly1305_detached>
+	movl   $0x20,%esi
+	movq   %r15,%rdi
+	movl   %eax,%r12d
+	callq  <sodium_memzero>
+	movq   0x58(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_box_curve25519xchacha20poly1305_detached+0xc8>
+	addq   $0x68,%rsp
+	movl   %r12d,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	nopl   (%rax)
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_box_curve25519xchacha20poly1305_detached+0x9b>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ristretto255_scalarbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_hashbytes>:
+	endbr64 
+	movl   $0x40,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_open_detached_afternm>:
+	endbr64 
+	jmpq   <crypto_secretbox_xchacha20poly1305_open_detached>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_secretkeybytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_sk_to_curve25519>:
+	endbr64 
+	pushq  %rbp
+	movl   $0x20,%edx
+	pushq  %rbx
+	movq   %rdi,%rbx
+	subq   $0x58,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x48(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%rbp
+	movq   %rbp,%rdi
+	callq  <crypto_hash_sha512>
+	movzbl 0x1f(%rsp),%eax
+	andb   $0xf8,(%rsp)
+	movq   %rbp,%rdi
+	movdqa (%rsp),%xmm0
+	movl   $0x40,%esi
+	andl   $0x7f,%eax
+	orl    $0x40,%eax
+	movups %xmm0,(%rbx)
+	movb   %al,0x1f(%rsp)
+	movdqa 0x10(%rsp),%xmm1
+	movups %xmm1,0x10(%rbx)
+	callq  <sodium_memzero>
+	movq   0x48(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_sign_ed25519_sk_to_curve25519+0x78>
+	addq   $0x58,%rsp
+	xorl   %eax,%eax
+	popq   %rbx
+	popq   %rbp
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_noncebytes>:
+	endbr64 
+	movl   $0x18,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalar_reduce>:
+	endbr64 
+	pushq  %rbp
+	pushq  %rbx
+	movq   %rdi,%rbx
+	subq   $0x58,%rsp
+	movdqu (%rsi),%xmm0
+	movdqu 0x10(%rsi),%xmm1
+	movq   %fs:0x28,%rax
+	movq   %rax,0x48(%rsp)
+	xorl   %eax,%eax
+	movdqu 0x20(%rsi),%xmm2
+	movdqu 0x30(%rsi),%xmm3
+	movq   %rsp,%rbp
+	movq   %rbp,%rdi
+	movaps %xmm0,(%rsp)
+	movaps %xmm1,0x10(%rsp)
+	movaps %xmm2,0x20(%rsp)
+	movaps %xmm3,0x30(%rsp)
+	callq  <sc25519_reduce>
+	movdqa (%rsp),%xmm4
+	movl   $0x40,%esi
+	movq   %rbp,%rdi
+	movdqa 0x10(%rsp),%xmm5
+	movups %xmm4,(%rbx)
+	movups %xmm5,0x10(%rbx)
+	callq  <sodium_memzero>
+	movq   0x48(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_core_ed25519_scalar_reduce+0x84>
+	addq   $0x58,%rsp
+	popq   %rbx
+	popq   %rbp
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_sk_to_pk>:
+	endbr64 
+	subq   $0x8,%rsp
+	addq   $0x20,%rsi
+	movl   $0x20,%edx
+	callq  <memmove@plt>
+	xorl   %eax,%eax
+	addq   $0x8,%rsp
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_edwards25519sha512batch>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	movq   %r8,%r14
+	pushq  %r13
+	movq   %rdx,%r13
+	pushq  %r12
+	pushq  %rbp
+	pushq  %rbx
+	movq   %rcx,%rbx
+	subq   $0x308,%rsp
+	movq   %rdi,(%rsp)
+	leaq   0x220(%rsp),%rbp
+	leaq   0x160(%rsp),%r12
+	movq   %rsi,0x18(%rsp)
+	movq   %rbp,%rdi
+	leaq   0x1e0(%rsp),%r15
+	movq   %fs:0x28,%rax
+	movq   %rax,0x2f8(%rsp)
+	xorl   %eax,%eax
+	callq  <crypto_hash_sha512_init>
+	leaq   0x20(%r14),%rsi
+	movl   $0x20,%edx
+	movq   %rbp,%rdi
+	callq  <crypto_hash_sha512_update>
+	movq   %rbx,%rdx
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <crypto_hash_sha512_update>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	callq  <crypto_hash_sha512_final>
+	leaq   0x20(%rsp),%r11
+	movq   %r14,%rsi
+	movq   %r11,%rdi
+	movq   %r11,0x8(%rsp)
+	callq  <ge25519_scalarmult_base>
+	leaq   0x200(%rsp),%r10
+	movq   0x8(%rsp),%rsi
+	movq   %r10,%rdi
+	movq   %r10,0x10(%rsp)
+	callq  <ge25519_p3_tobytes>
+	movq   %r12,%rdi
+	callq  <sc25519_reduce>
+	leaq   0xc0(%rsp),%r11
+	movq   %r12,%rsi
+	movq   %r11,%rdi
+	movq   %r11,0x8(%rsp)
+	callq  <ge25519_scalarmult_base>
+	movq   0x8(%rsp),%rsi
+	movq   %r15,%rdi
+	callq  <ge25519_p3_tobytes>
+	movq   %rbp,%rdi
+	callq  <crypto_hash_sha512_init>
+	movq   %r15,%rsi
+	movl   $0x20,%edx
+	movq   %rbp,%rdi
+	callq  <crypto_hash_sha512_update>
+	movq   %rbx,%rdx
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <crypto_hash_sha512_update>
+	leaq   0x1a0(%rsp),%r15
+	movq   %rbp,%rdi
+	movq   %r15,%rsi
+	callq  <crypto_hash_sha512_final>
+	movq   %r15,%rdi
+	callq  <sc25519_reduce>
+	movq   0x10(%rsp),%rdi
+	movq   %r14,%rcx
+	movq   %r12,%rdx
+	movq   %r15,%rsi
+	callq  <sc25519_muladd>
+	movl   $0x40,%esi
+	movq   %r15,%rdi
+	callq  <sodium_memzero>
+	movq   (%rsp),%r14
+	movq   %rbx,%rdx
+	movq   %r13,%rsi
+	leaq   0x20(%r14),%rdi
+	callq  <memmove@plt>
+	movq   0x18(%rsp),%r9
+	leaq   0x20(%r14,%rbx,1),%rax
+	movdqa 0x1e0(%rsp),%xmm0
+	movdqa 0x1f0(%rsp),%xmm1
+	addq   $0x40,%rbx
+	movdqa 0x200(%rsp),%xmm2
+	movdqa 0x210(%rsp),%xmm3
+	movups %xmm0,(%r14)
+	movups %xmm1,0x10(%r14)
+	movups %xmm2,(%rax)
+	movups %xmm3,0x10(%rax)
+	movq   %rbx,(%r9)
+	movq   0x2f8(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_sign_edwards25519sha512batch+0x1c0>
+	addq   $0x308,%rsp
+	xorl   %eax,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_sub>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	movq   %rdx,%r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0x320,%rsp
+	movq   %rsp,%r13
+	movq   %r13,%rdi
+	callq  <ge25519_frombytes>
+	testl  %eax,%eax
+	jne    <crypto_core_ed25519_sub+0xc0>
+	movq   %r13,%rdi
+	callq  <ge25519_is_on_curve>
+	testl  %eax,%eax
+	je     <crypto_core_ed25519_sub+0xc0>
+	leaq   0xa0(%rsp),%r14
+	movq   %r12,%rsi
+	movq   %r14,%rdi
+	callq  <ge25519_frombytes>
+	movl   %eax,%r12d
+	testl  %eax,%eax
+	jne    <crypto_core_ed25519_sub+0xc0>
+	movq   %r14,%rdi
+	callq  <ge25519_is_on_curve>
+	testl  %eax,%eax
+	je     <crypto_core_ed25519_sub+0xc0>
+	leaq   0x280(%rsp),%r15
+	movq   %r14,%rsi
+	leaq   0x1e0(%rsp),%r14
+	movq   %r15,%rdi
+	callq  <ge25519_p3_to_cached>
+	movq   %r13,%rsi
+	movq   %r15,%rdx
+	movq   %r14,%rdi
+	callq  <ge25519_sub>
+	leaq   0x140(%rsp),%r13
+	movq   %r14,%rsi
+	movq   %r13,%rdi
+	callq  <ge25519_p1p1_to_p3>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <ge25519_p3_tobytes>
+	addq   $0x320,%rsp
+	movl   %r12d,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	xchgw  %ax,%ax
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_core_ed25519_sub+0xaa>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_noncebytes>:
+	endbr64 
+	movl   $0x18,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_seed_keypair>:
+	endbr64 
+	pushq  %r13
+	pushq  %r12
+	movq   %rdx,%r12
+	movl   $0x20,%edx
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	movq   %rsi,%rbx
+	movq   %r12,%rsi
+	movq   %rbx,%rdi
+	subq   $0xa8,%rsp
+	callq  <crypto_hash_sha512>
+	movzbl 0x1f(%rbx),%eax
+	andb   $0xf8,(%rbx)
+	movq   %rsp,%r13
+	movq   %rbx,%rsi
+	movq   %r13,%rdi
+	andl   $0x7f,%eax
+	orl    $0x40,%eax
+	movb   %al,0x1f(%rbx)
+	callq  <ge25519_scalarmult_base>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <ge25519_p3_tobytes>
+	movq   %r12,%rsi
+	movq   %rbx,%rdi
+	movl   $0x20,%edx
+	callq  <memmove@plt>
+	leaq   0x20(%rbx),%rdi
+	movq   %rbp,%rsi
+	movl   $0x20,%edx
+	callq  <memmove@plt>
+	addq   $0xa8,%rsp
+	xorl   %eax,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_seal>:
+	endbr64 
+	pushq  %rbp
+	movq   %rsp,%rbp
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	movq   %rcx,%r12
+	pushq  %rbx
+	andq   $0xffffffffffffffc0,%rsp
+	subq   $0x240,%rsp
+	movq   %rdi,0x18(%rsp)
+	leaq   0x60(%rsp),%rbx
+	leaq   0x40(%rsp),%r15
+	movq   %rsi,0x10(%rsp)
+	movq   %r15,%rdi
+	movq   %rbx,%rsi
+	movq   %rdx,0x8(%rsp)
+	movq   %fs:0x28,%rax
+	movq   %rax,0x238(%rsp)
+	xorl   %eax,%eax
+	callq  <crypto_box_curve25519xchacha20poly1305_keypair>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_seal+0x138>
+	movl   $0x18,%ecx
+	xorl   %edx,%edx
+	leaq   0x20(%rsp),%r14
+	xorl   %esi,%esi
+	leaq   0x80(%rsp),%r13
+	movq   %r13,%rdi
+	callq  <crypto_generichash_init>
+	movq   %r13,%rdi
+	movl   $0x20,%edx
+	movq   %r15,%rsi
+	callq  <crypto_generichash_update>
+	movq   %r12,%rsi
+	movq   %r13,%rdi
+	movl   $0x20,%edx
+	callq  <crypto_generichash_update>
+	movq   %r13,%rdi
+	movl   $0x18,%edx
+	movq   %r14,%rsi
+	callq  <crypto_generichash_final>
+	movq   0x18(%rsp),%r13
+	movq   %r12,%r8
+	movq   %rbx,%r9
+	movq   0x8(%rsp),%rdx
+	movq   0x10(%rsp),%rsi
+	movq   %r14,%rcx
+	leaq   0x20(%r13),%rdi
+	callq  <crypto_box_curve25519xchacha20poly1305_easy>
+	movdqa 0x40(%rsp),%xmm0
+	movl   $0x20,%esi
+	movq   %rbx,%rdi
+	movdqa 0x50(%rsp),%xmm1
+	movl   %eax,%r12d
+	movups %xmm0,0x0(%r13)
+	movups %xmm1,0x10(%r13)
+	callq  <sodium_memzero>
+	movl   $0x20,%esi
+	movq   %r15,%rdi
+	callq  <sodium_memzero>
+	movl   $0x18,%esi
+	movq   %r14,%rdi
+	callq  <sodium_memzero>
+	movq   0x238(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_box_curve25519xchacha20poly1305_seal+0x140>
+	leaq   -0x28(%rbp),%rsp
+	movl   %r12d,%eax
+	popq   %rbx
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	popq   %rbp
+	retq   
+	nopw   0x0(%rax,%rax,1)
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_box_curve25519xchacha20poly1305_seal+0x10d>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_random>:
+	endbr64 
+	pushq  %r12
+	movl   $0x20,%esi
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0x38,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x28(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r12
+	movq   %r12,%rdi
+	callq  <randombytes_buf>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	callq  <ge25519_from_uniform>
+	movq   0x28(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_core_ed25519_random+0x51>
+	addq   $0x38,%rsp
+	popq   %rbp
+	popq   %r12
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ed25519>:
+	endbr64 
+	movl   $0x1,%ecx
+	jmpq   <_crypto_scalarmult_ed25519>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_seed_keypair>:
+	endbr64 
+	pushq  %r13
+	pushq  %r12
+	movq   %rdi,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	movq   %rdx,%rsi
+	movl   $0x20,%edx
+	subq   $0x50,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x48(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r13
+	movq   %r13,%rdi
+	callq  <crypto_hash_sha512>
+	movdqa (%rsp),%xmm0
+	movl   $0x40,%esi
+	movq   %r13,%rdi
+	movdqa 0x10(%rsp),%xmm1
+	movups %xmm0,0x0(%rbp)
+	movups %xmm1,0x10(%rbp)
+	callq  <sodium_memzero>
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <crypto_scalarmult_curve25519_base>
+	movq   0x48(%rsp),%rdx
+	subq   %fs:0x28,%rdx
+	jne    <crypto_box_curve25519xchacha20poly1305_seed_keypair+0x7b>
+	addq   $0x50,%rsp
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalar_sub>:
+	endbr64 
+	pushq  %r13
+	pushq  %r12
+	movq   %rsi,%r12
+	movq   %rdx,%rsi
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0x30,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x28(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r13
+	movq   %r13,%rdi
+	callq  <crypto_core_ed25519_scalar_negate>
+	movq   %r13,%rdx
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	callq  <crypto_core_ed25519_scalar_add>
+	movq   0x28(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_core_ed25519_scalar_sub+0x59>
+	addq   $0x30,%rsp
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_open_afternm>:
+	endbr64 
+	jmpq   <crypto_secretbox_xsalsa20poly1305_open>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_easy>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	movq   %rdx,%r12
+	pushq  %rbp
+	pushq  %rbx
+	subq   $0x68,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x58(%rsp)
+	xorl   %eax,%eax
+	cmpq   $0xffffffffffffffef,%rdx
+	ja     <crypto_box_curve25519xchacha20poly1305_easy+0xd0>
+	movq   %r8,%rdx
+	leaq   0x30(%rsp),%r8
+	movq   %rdi,%rbp
+	movq   %rsi,%r13
+	leaq   0x10(%rdi),%r14
+	movq   %r9,%rsi
+	movq   %r8,%rdi
+	movq   %r8,0x8(%rsp)
+	movq   %rcx,%rbx
+	callq  <crypto_scalarmult_curve25519>
+	movq   0x8(%rsp),%r8
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_easy+0xc8>
+	leaq   0x10(%rsp),%r15
+	xorl   %ecx,%ecx
+	movq   %r8,%rdx
+	leaq   0x26702(%rip),%rsi        # <zero.0>
+	movq   %r15,%rdi
+	callq  <crypto_core_hchacha20>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_easy+0xc8>
+	movq   %r12,%rcx
+	movq   %rbp,%rsi
+	movq   %r14,%rdi
+	movq   %r15,%r9
+	movq   %rbx,%r8
+	movq   %r13,%rdx
+	callq  <crypto_secretbox_xchacha20poly1305_detached>
+	movl   $0x20,%esi
+	movq   %r15,%rdi
+	movl   %eax,%r12d
+	callq  <sodium_memzero>
+	movq   0x58(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_box_curve25519xchacha20poly1305_easy+0xd5>
+	addq   $0x68,%rsp
+	movl   %r12d,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	nopl   0x0(%rax,%rax,1)
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_box_curve25519xchacha20poly1305_easy+0xa1>
+	callq  <sodium_misuse>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ed25519_bytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_publickeybytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalar_complement>:
+	endbr64 
+	pushq  %rbp
+	pxor   %xmm0,%xmm0
+	movl   $0x40,%edx
+	pushq  %rbx
+	movq   %rdi,%rbx
+	subq   $0x98,%rsp
+	movdqu (%rsi),%xmm1
+	movdqu 0x10(%rsi),%xmm2
+	movq   %fs:0x28,%rax
+	movq   %rax,0x88(%rsp)
+	xorl   %eax,%eax
+	movaps %xmm0,(%rsp)
+	leaq   0x40(%rsp),%r8
+	movq   %rsp,%rbp
+	movaps %xmm0,0x10(%rsp)
+	movq   %r8,%rsi
+	movq   %rbp,%rdi
+	movaps %xmm0,0x60(%rsp)
+	movaps %xmm0,0x70(%rsp)
+	movdqa 0x34962(%rip),%xmm0        # <stream_avx2_xor_ic+0xc50>
+	movaps %xmm1,0x40(%rsp)
+	movaps %xmm0,0x20(%rsp)
+	movdqa 0x34960(%rip),%xmm0        # <stream_avx2_xor_ic+0xc60>
+	movaps %xmm2,0x50(%rsp)
+	movaps %xmm0,0x30(%rsp)
+	movb   $0x1,(%rsp)
+	callq  <sodium_sub>
+	movq   %rbp,%rdi
+	callq  <sc25519_reduce>
+	movdqa (%rsp),%xmm3
+	movdqa 0x10(%rsp),%xmm4
+	movups %xmm3,(%rbx)
+	movups %xmm4,0x10(%rbx)
+	movq   0x88(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_core_ed25519_scalar_complement+0xba>
+	addq   $0x98,%rsp
+	popq   %rbx
+	popq   %rbp
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_detached_afternm>:
+	endbr64 
+	jmpq   <crypto_secretbox_xchacha20poly1305_detached>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ed25519_base_noclamp>:
+	endbr64 
+	xorl   %edx,%edx
+	jmpq   <_crypto_scalarmult_ed25519_base>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519ph_final_verify>:
+	endbr64 
+	pushq  %r13
+	pushq  %r12
+	movq   %rdx,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	subq   $0x50,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x48(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r13
+	movq   %r13,%rsi
+	callq  <crypto_hash_sha512_final>
+	movl   $0x40,%edx
+	movq   %r12,%rcx
+	movq   %r13,%rsi
+	movl   $0x1,%r8d
+	movq   %rbp,%rdi
+	callq  <_crypto_sign_ed25519_verify_detached>
+	movq   0x48(%rsp),%rdx
+	subq   %fs:0x28,%rdx
+	jne    <crypto_sign_ed25519ph_final_verify+0x61>
+	addq   $0x50,%rsp
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_open>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	movq   %rcx,%r14
+	pushq  %r13
+	movq   %rdx,%r13
+	movq   %r8,%rdx
+	pushq  %r12
+	movq   %rsi,%r12
+	movq   %r9,%rsi
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	subq   $0x58,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x48(%rsp)
+	xorl   %eax,%eax
+	leaq   0x20(%rsp),%rbx
+	movq   %rbx,%rdi
+	callq  <crypto_scalarmult_curve25519>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xsalsa20poly1305_open+0xb0>
+	movq   %rsp,%r15
+	xorl   %ecx,%ecx
+	leaq   0x2708f(%rip),%rsi        # <zero.0>
+	movq   %rbx,%rdx
+	movq   %r15,%rdi
+	callq  <crypto_core_hsalsa20>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xsalsa20poly1305_open+0xb0>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	movq   %r15,%r8
+	movq   %r14,%rcx
+	movq   %r13,%rdx
+	callq  <crypto_secretbox_xsalsa20poly1305_open>
+	movl   $0x20,%esi
+	movq   %r15,%rdi
+	movl   %eax,%r12d
+	callq  <sodium_memzero>
+	movq   0x48(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_box_curve25519xsalsa20poly1305_open+0xb8>
+	addq   $0x58,%rsp
+	movl   %r12d,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	cs nopw 0x0(%rax,%rax,1)
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_box_curve25519xsalsa20poly1305_open+0x84>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_is_valid_point>:
+	endbr64 
+	pushq  %r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0xa8,%rsp
+	callq  <ge25519_is_canonical>
+	testl  %eax,%eax
+	jne    <crypto_core_ed25519_is_valid_point+0x30>
+	xorl   %eax,%eax
+	addq   $0xa8,%rsp
+	popq   %rbp
+	popq   %r12
+	retq   
+	nopw   0x0(%rax,%rax,1)
+	movq   %rbp,%rdi
+	callq  <ge25519_has_small_order>
+	testl  %eax,%eax
+	jne    <crypto_core_ed25519_is_valid_point+0x1a>
+	movq   %rsp,%r12
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <ge25519_frombytes>
+	testl  %eax,%eax
+	jne    <crypto_core_ed25519_is_valid_point+0x1a>
+	movq   %r12,%rdi
+	callq  <ge25519_is_on_curve>
+	testl  %eax,%eax
+	je     <crypto_core_ed25519_is_valid_point+0x1a>
+	movq   %r12,%rdi
+	callq  <ge25519_is_on_main_subgroup>
+	testl  %eax,%eax
+	setne  %al
+	movzbl %al,%eax
+	jmp    <crypto_core_ed25519_is_valid_point+0x1c>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_seedbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_macbytes>:
+	endbr64 
+	movl   $0x10,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519>:
+	endbr64 
+	pushq  %r13
+	leaq   0x40(%rdi),%r10
+	movq   %r8,%r13
+	pushq  %r12
+	movq   %rsi,%r12
+	movq   %rdx,%rsi
+	movq   %rcx,%rdx
+	pushq  %rbp
+	movq   %rdi,%rbp
+	movq   %r10,%rdi
+	pushq  %rbx
+	movq   %rcx,%rbx
+	subq   $0x18,%rsp
+	callq  <memmove@plt>
+	xorl   %r9d,%r9d
+	leaq   0x8(%rsp),%rsi
+	movq   %r13,%r8
+	movq   %rbx,%rcx
+	movq   %rax,%rdx
+	movq   %rbp,%rdi
+	callq  <_crypto_sign_ed25519_detached>
+	testl  %eax,%eax
+	jne    <crypto_sign_ed25519+0x70>
+	cmpq   $0x40,0x8(%rsp)
+	jne    <crypto_sign_ed25519+0x70>
+	testq  %r12,%r12
+	je     <crypto_sign_ed25519+0x5e>
+	addq   $0x40,%rbx
+	movq   %rbx,(%r12)
+	addq   $0x18,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+	nopl   0x0(%rax)
+	testq  %r12,%r12
+	je     <crypto_sign_ed25519+0x7d>
+	movq   $0x0,(%r12)
+	leaq   0x40(%rbx),%rdx
+	xorl   %esi,%esi
+	movq   %rbp,%rdi
+	callq  <memset@plt>
+	movl   $0xffffffff,%eax
+	jmp    <crypto_sign_ed25519+0x5e>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_sk_to_seed>:
+	endbr64 
+	subq   $0x8,%rsp
+	movl   $0x20,%edx
+	callq  <memmove@plt>
+	xorl   %eax,%eax
+	addq   $0x8,%rsp
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_open_detached>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	movq   %rcx,%r14
+	pushq  %r13
+	movq   %rdx,%r13
+	movq   %r9,%rdx
+	pushq  %r12
+	movq   %rsi,%r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	movq   %r8,%rbx
+	subq   $0x68,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x58(%rsp)
+	xorl   %eax,%eax
+	leaq   0x30(%rsp),%r8
+	movq   0xa0(%rsp),%rsi
+	movq   %r8,%rdi
+	movq   %r8,0x8(%rsp)
+	callq  <crypto_scalarmult_curve25519>
+	movq   0x8(%rsp),%r8
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_open_detached+0xc0>
+	leaq   0x10(%rsp),%r15
+	xorl   %ecx,%ecx
+	movq   %r8,%rdx
+	leaq   0x26618(%rip),%rsi        # <zero.0>
+	movq   %r15,%rdi
+	callq  <crypto_core_hchacha20>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_open_detached+0xc0>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	movq   %r15,%r9
+	movq   %rbx,%r8
+	movq   %r14,%rcx
+	movq   %r13,%rdx
+	callq  <crypto_secretbox_xchacha20poly1305_open_detached>
+	movl   $0x20,%esi
+	movq   %r15,%rdi
+	movl   %eax,%r12d
+	callq  <sodium_memzero>
+	movq   0x58(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_box_curve25519xchacha20poly1305_open_detached+0xc8>
+	addq   $0x68,%rsp
+	movl   %r12d,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	nopl   (%rax)
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_box_curve25519xchacha20poly1305_open_detached+0x9b>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_open_easy_afternm>:
+	endbr64 
+	movq   %rsi,%r10
+	movq   %rcx,%rax
+	movq   %r8,%r9
+	cmpq   $0xf,%rdx
+	jbe    <crypto_box_curve25519xchacha20poly1305_open_easy_afternm+0x30>
+	leaq   -0x10(%rdx),%rcx
+	leaq   0x10(%rsi),%rsi
+	movq   %rax,%r8
+	movq   %r10,%rdx
+	jmpq   <crypto_secretbox_xchacha20poly1305_open_detached>
+	cs nopw 0x0(%rax,%rax,1)
+	movl   $0xffffffff,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ed25519_scalarbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_seedbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_messagebytes_max>:
+	endbr64 
+	movq   $0xffffffffffffffbf,%rax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalarbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_beforenmbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_keypair>:
+	endbr64 
+	pushq  %r12
+	movq   %rdi,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	movl   $0x20,%esi
+	movq   %rbp,%rdi
+	subq   $0x8,%rsp
+	callq  <randombytes_buf>
+	addq   $0x8,%rsp
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	popq   %rbp
+	popq   %r12
+	jmpq   <crypto_scalarmult_curve25519_base>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_macbytes>:
+	endbr64 
+	movl   $0x10,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_curve25519>:
+	endbr64 
+	pushq  %rbx
+	movq   %rdi,%rbx
+	subq   $0x10,%rsp
+	movq   0x246c5(%rip),%rax        # <implementation>
+	movb   $0x0,0xf(%rsp)
+	callq  *(%rax)
+	testl  %eax,%eax
+	jne    <crypto_scalarmult_curve25519+0x4e>
+	movq   %rbx,%rdi
+	leaq   0x20(%rbx),%rdx
+	nopl   (%rax)
+	movzbl 0xf(%rsp),%eax
+	addq   $0x1,%rdi
+	orb    -0x1(%rdi),%al
+	movb   %al,0xf(%rsp)
+	cmpq   %rdx,%rdi
+	jne    <crypto_scalarmult_curve25519+0x28>
+	movzbl 0xf(%rsp),%eax
+	subl   $0x1,%eax
+	sarl   $0x1f,%eax
+	addq   $0x10,%rsp
+	popq   %rbx
+	retq   
+	movl   $0xffffffff,%eax
+	jmp    <crypto_scalarmult_curve25519+0x48>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_from_hash>:
+	endbr64 
+	subq   $0x8,%rsp
+	callq  <ge25519_from_hash>
+	xorl   %eax,%eax
+	addq   $0x8,%rsp
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_messagebytes_max>:
+	endbr64 
+	movq   $0xffffffffffffffef,%rax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalar_add>:
+	endbr64 
+	pushq  %r12
+	pxor   %xmm0,%xmm0
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0x98,%rsp
+	movdqu (%rsi),%xmm1
+	movdqu (%rdx),%xmm3
+	movdqu 0x10(%rsi),%xmm2
+	movdqu 0x10(%rdx),%xmm4
+	movq   %rsp,%r12
+	leaq   0x40(%rsp),%r8
+	movq   %fs:0x28,%rax
+	movq   %rax,0x88(%rsp)
+	xorl   %eax,%eax
+	movq   %r8,%rsi
+	movq   %r12,%rdi
+	movl   $0x20,%edx
+	movaps %xmm0,0x20(%rsp)
+	movaps %xmm0,0x30(%rsp)
+	movaps %xmm0,0x60(%rsp)
+	movaps %xmm0,0x70(%rsp)
+	movaps %xmm1,(%rsp)
+	movaps %xmm2,0x10(%rsp)
+	movaps %xmm3,0x40(%rsp)
+	movaps %xmm4,0x50(%rsp)
+	callq  <sodium_add>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	callq  <crypto_core_ed25519_scalar_reduce>
+	movq   0x88(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_core_ed25519_scalar_add+0xa2>
+	addq   $0x98,%rsp
+	popq   %rbp
+	popq   %r12
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_publickeybytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_seed_keypair>:
+	endbr64 
+	pushq  %r13
+	pushq  %r12
+	movq   %rdi,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	movq   %rdx,%rsi
+	movl   $0x20,%edx
+	subq   $0x50,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x48(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r13
+	movq   %r13,%rdi
+	callq  <crypto_hash_sha512>
+	movdqa (%rsp),%xmm0
+	movl   $0x40,%esi
+	movq   %r13,%rdi
+	movdqa 0x10(%rsp),%xmm1
+	movups %xmm0,0x0(%rbp)
+	movups %xmm1,0x10(%rbp)
+	callq  <sodium_memzero>
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <crypto_scalarmult_curve25519_base>
+	movq   0x48(%rsp),%rdx
+	subq   %fs:0x28,%rdx
+	jne    <crypto_box_curve25519xsalsa20poly1305_seed_keypair+0x7b>
+	addq   $0x50,%rsp
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519ph_init>:
+	endbr64 
+	subq   $0x8,%rsp
+	callq  <crypto_hash_sha512_init>
+	xorl   %eax,%eax
+	addq   $0x8,%rsp
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_afternm>:
+	endbr64 
+	jmpq   <crypto_secretbox_xsalsa20poly1305>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_beforenm>:
+	endbr64 
+	pushq  %r12
+	movq   %rsi,%r8
+	movq   %rdx,%rsi
+	pushq  %rbp
+	movq   %r8,%rdx
+	movq   %rdi,%rbp
+	subq   $0x38,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x28(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r12
+	movq   %r12,%rdi
+	callq  <crypto_scalarmult_curve25519>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xchacha20poly1305_beforenm+0x68>
+	xorl   %ecx,%ecx
+	movq   %r12,%rdx
+	leaq   0x268be(%rip),%rsi        # <zero.0>
+	movq   %rbp,%rdi
+	callq  <crypto_core_hchacha20>
+	movq   0x28(%rsp),%rdx
+	subq   %fs:0x28,%rdx
+	jne    <crypto_box_curve25519xchacha20poly1305_beforenm+0x6f>
+	addq   $0x38,%rsp
+	popq   %rbp
+	popq   %r12
+	retq   
+	nopw   0x0(%rax,%rax,1)
+	movl   $0xffffffff,%eax
+	jmp    <crypto_box_curve25519xchacha20poly1305_beforenm+0x4a>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_zerobytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_messagebytes_max>:
+	endbr64 
+	movq   $0xffffffffffffffef,%rax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_bytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_add>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	pushq  %r13
+	pushq  %r12
+	movq   %rdx,%r12
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0x320,%rsp
+	movq   %rsp,%r13
+	movq   %r13,%rdi
+	callq  <ge25519_frombytes>
+	testl  %eax,%eax
+	jne    <crypto_core_ed25519_add+0xc0>
+	movq   %r13,%rdi
+	callq  <ge25519_is_on_curve>
+	testl  %eax,%eax
+	je     <crypto_core_ed25519_add+0xc0>
+	leaq   0xa0(%rsp),%r14
+	movq   %r12,%rsi
+	movq   %r14,%rdi
+	callq  <ge25519_frombytes>
+	movl   %eax,%r12d
+	testl  %eax,%eax
+	jne    <crypto_core_ed25519_add+0xc0>
+	movq   %r14,%rdi
+	callq  <ge25519_is_on_curve>
+	testl  %eax,%eax
+	je     <crypto_core_ed25519_add+0xc0>
+	leaq   0x280(%rsp),%r15
+	movq   %r14,%rsi
+	leaq   0x1e0(%rsp),%r14
+	movq   %r15,%rdi
+	callq  <ge25519_p3_to_cached>
+	movq   %r13,%rsi
+	movq   %r15,%rdx
+	movq   %r14,%rdi
+	callq  <ge25519_add>
+	leaq   0x140(%rsp),%r13
+	movq   %r14,%rsi
+	movq   %r13,%rdi
+	callq  <ge25519_p1p1_to_p3>
+	movq   %r13,%rsi
+	movq   %rbp,%rdi
+	callq  <ge25519_p3_tobytes>
+	addq   $0x320,%rsp
+	movl   %r12d,%eax
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	xchgw  %ax,%ax
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_core_ed25519_add+0xaa>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ristretto255_base>:
+	endbr64 
+	pushq  %r12
+	xorl   %eax,%eax
+	pushq  %rbp
+	movq   %rdi,%rbp
+	subq   $0xa8,%rsp
+	nopl   0x0(%rax,%rax,1)
+	movzbl (%rsi,%rax,1),%edx
+	movb   %dl,0x0(%rbp,%rax,1)
+	addq   $0x1,%rax
+	cmpq   $0x20,%rax
+	jne    <crypto_scalarmult_ristretto255_base+0x18>
+	andb   $0x7f,0x1f(%rbp)
+	movq   %rsp,%r12
+	movq   %rbp,%rsi
+	movq   %r12,%rdi
+	callq  <ge25519_scalarmult_base>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	callq  <ristretto255_p3_tobytes>
+	movq   %rbp,%rdi
+	movl   $0x20,%esi
+	callq  <sodium_is_zero>
+	negl   %eax
+	sbbl   %eax,%eax
+	addq   $0xa8,%rsp
+	popq   %rbp
+	popq   %r12
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xchacha20poly1305_beforenmbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_uniformbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_scalar_invert>:
+	endbr64 
+	pushq  %rbp
+	movq   %rsi,%rbp
+	callq  <sc25519_invert>
+	movq   %rbp,%rdi
+	movl   $0x20,%esi
+	callq  <sodium_is_zero>
+	popq   %rbp
+	negl   %eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_core_ed25519_bytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ristretto255_bytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_bytes>:
+	endbr64 
+	movl   $0x40,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_primitive>:
+	endbr64 
+	leaq   0x1aa15(%rip),%rax        # <blacklist.0+0xe0>
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_secretkeybytes>:
+	endbr64 
+	movl   $0x40,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519ph_update>:
+	endbr64 
+	jmpq   <crypto_hash_sha512_update>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_curve25519_bytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305>:
+	endbr64 
+	pushq  %r15
+	pushq  %r14
+	movq   %rcx,%r14
+	pushq  %r13
+	movq   %rdx,%r13
+	movq   %r8,%rdx
+	pushq  %r12
+	movq   %rsi,%r12
+	movq   %r9,%rsi
+	pushq  %rbp
+	movq   %rdi,%rbp
+	pushq  %rbx
+	subq   $0x58,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x48(%rsp)
+	xorl   %eax,%eax
+	leaq   0x20(%rsp),%rbx
+	movq   %rbx,%rdi
+	callq  <crypto_scalarmult_curve25519>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xsalsa20poly1305+0xb0>
+	movq   %rsp,%r15
+	xorl   %ecx,%ecx
+	leaq   0x2714f(%rip),%rsi        # <zero.0>
+	movq   %rbx,%rdx
+	movq   %r15,%rdi
+	callq  <crypto_core_hsalsa20>
+	testl  %eax,%eax
+	jne    <crypto_box_curve25519xsalsa20poly1305+0xb0>
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	movq   %r15,%r8
+	movq   %r14,%rcx
+	movq   %r13,%rdx
+	callq  <crypto_secretbox_xsalsa20poly1305>
+	movl   $0x20,%esi
+	movq   %r15,%rdi
+	movl   %eax,%r12d
+	callq  <sodium_memzero>
+	movq   0x48(%rsp),%rax
+	subq   %fs:0x28,%rax
+	jne    <crypto_box_curve25519xsalsa20poly1305+0xb8>
+	addq   $0x58,%rsp
+	movl   %r12d,%eax
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	popq   %r14
+	popq   %r15
+	retq   
+	cs nopw 0x0(%rax,%rax,1)
+	movl   $0xffffffff,%r12d
+	jmp    <crypto_box_curve25519xsalsa20poly1305+0x84>
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519ph_final_create>:
+	endbr64 
+	pushq  %r13
+	pushq  %r12
+	movq   %rdx,%r12
+	pushq  %rbp
+	movq   %rsi,%rbp
+	pushq  %rbx
+	movq   %rcx,%rbx
+	subq   $0x58,%rsp
+	movq   %fs:0x28,%rax
+	movq   %rax,0x48(%rsp)
+	xorl   %eax,%eax
+	movq   %rsp,%r13
+	movq   %r13,%rsi
+	callq  <crypto_hash_sha512_final>
+	movq   %r13,%rdx
+	movq   %rbx,%r8
+	movl   $0x40,%ecx
+	movl   $0x1,%r9d
+	movq   %r12,%rsi
+	movq   %rbp,%rdi
+	callq  <_crypto_sign_ed25519_detached>
+	movq   0x48(%rsp),%rdx
+	subq   %fs:0x28,%rdx
+	jne    <crypto_sign_ed25519ph_final_create+0x69>
+	addq   $0x58,%rsp
+	popq   %rbx
+	popq   %rbp
+	popq   %r12
+	popq   %r13
+	retq   
+	callq  <__stack_chk_fail@plt>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_sign_ed25519_detached>:
+	endbr64 
+	xorl   %r9d,%r9d
+	jmpq   <_crypto_sign_ed25519_detached>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_base>:
+	endbr64 
+	jmpq   <crypto_scalarmult_curve25519_base>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_curve25519_base>:
+	endbr64 
+	jmpq   *0x2467e(%rip)        # <crypto_scalarmult_curve25519_ref10_implementation+0x8>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_curve25519_scalarbytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_scalarmult_ed25519_noclamp>:
+	endbr64 
+	xorl   %ecx,%ecx
+	jmpq   <_crypto_scalarmult_ed25519>
+
+bap_ld_scalar_mult.o:     file format elf64-x86-64
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+<crypto_box_curve25519xsalsa20poly1305_publickeybytes>:
+	endbr64 
+	movl   $0x20,%eax
+	retq   
