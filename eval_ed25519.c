@@ -62,8 +62,8 @@ main(int argc, char** argv)
   assert(times &&
 	 "Couldn't allocate array for benchmark times in eval_ed25519.c");
 
-  uint64_t start_time = 0;
-  uint64_t end_time = 0;
+  volatile uint64_t start_time = 0;
+  volatile uint64_t end_time = 0;
 
   // main loop
   for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
