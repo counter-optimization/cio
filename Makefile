@@ -11,13 +11,32 @@ EVAL_ED25519=eval_ed25519.o
 ED25519_MSG_LEN=100
 ED25519_NUM_ITER=1000
 
-.PHONY: clean libsodium eval_prereqs
+EVAL_START_TIME=$$(date +%F-%H:%M:%S-%Z)
+EVAL_DIR=eval-$(EVAL_START_TIME)
 
-all: eval_ed25519
+TZ='America/Los_Angeles'
+
+.PHONY: clean eval_prereqs run_eval build_eval
+
+all: dbuildall_eval
+
+run_eval: build_eval
+	mkdir $(EVAL_DIR)
+	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN) &>> $(EVAL_DIR)/libsodium-ed25519.log
+
+build_eval: eval_ed25519 eval_aesni256gcm eval_argon2id eval_chacha20poly1305
 
 eval_ed25519: eval_prereqs
-	$(CC) $(EVAL_ED25519) $(LIBSODIUM_AR) -o $@
-	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN)
+	:
+
+eval_aesni256gcm: eval_prereqs
+	:
+
+eval_argon2id: eval_prereqs
+	:
+
+eval_chacha20poly1305: eval_prereqs
+	:
 
 eval_prereqs: libsodium
 
