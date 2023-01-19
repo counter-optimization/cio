@@ -9,6 +9,7 @@
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define MSG_SIZE_ARG_IDX 2
 
+extern int sodium_init(void);
 extern size_t crypto_sign_secretkeybytes(void);
 extern size_t crypto_sign_publickeybytes(void);
 extern size_t crypto_sign_bytes(void);
@@ -30,6 +31,14 @@ main(int argc, char** argv)
 
   // seed non-crypto-secure PRNG, for generating message contents
   srand(EVAL_UTIL_H_SEED);
+
+  // init libsodium, must be called before other libsodium functions are called
+  const int sodium_init_success = 0;
+  const int sodium_already_initd = 1;
+  int sodium_init_result = sodium_init();
+  assert((sodium_init_success == sodium_init_result ||
+	  sodium_already_initd == sodium_init_result) &&
+	 "Error initializing lib sodium");
 
   // parse args
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
