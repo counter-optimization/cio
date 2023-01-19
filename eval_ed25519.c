@@ -109,6 +109,9 @@ main(int argc, char** argv)
   // output the timer results
   printf("eval_ed25519 cycle counts for %d iterations\n", num_iter);
   for (int ii = 0; ii < num_iter; ++ii) {
+    printf("%d\n", ii);
     printf("%" PRIu64 "\n", times[ii]);
   }
+
+  return 0;
 }

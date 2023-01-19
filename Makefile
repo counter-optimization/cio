@@ -6,6 +6,7 @@ CC=$(OUR_CC) # default to our fork of llvm's clang
 LIBSODIUM_DIR=./libsodium
 LIBSODIUM_AR=$(LIBSODIUM_DIR)/src/libsodium/.libs/libsodium.a
 LIBSODIUM_TARGET_RELEASE_TAG=1.0.18-RELEASE
+LIBSODIUM_BUILT=libsodium.built
 
 EVAL_ED25519=eval_ed25519.o
 ED25519_MSG_LEN=100
@@ -18,15 +19,16 @@ TZ='America/Los_Angeles'
 
 .PHONY: clean eval_prereqs run_eval build_eval
 
-all: dbuildall_eval
+all: build_eval
 
 run_eval: build_eval
 	mkdir $(EVAL_DIR)
 	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN) &> $(EVAL_DIR)/libsodium-ed25519.log
+	echo done
 
 build_eval: eval_ed25519 eval_aesni256gcm eval_argon2id eval_chacha20poly1305
 
-eval_ed25519: eval_prereqs
+eval_ed25519: eval_prereqs $(EVAL_ED25519)
 	$(CC) $(EVAL_ED25519) $(LIBSODIUM_AR) -o $@
 
 eval_aesni256gcm: eval_prereqs
@@ -38,9 +40,9 @@ eval_argon2id: eval_prereqs
 eval_chacha20poly1305: eval_prereqs
 	:
 
-eval_prereqs: libsodium
+eval_prereqs: | $(LIBSODIUM_BUILT)
 
-libsodium:
+libsodium.built:
 	git submodule init -- $(LIBSODIUM_DIR)
 	git submodule update --remote -- $(LIBSODIUM_DIR)
 	git submodule foreach 'git fetch --tags'
@@ -48,6 +50,7 @@ libsodium:
 	  	git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
 		./configure CC=$(CC)
 	$(MAKE) -C $(LIBSODIUM_DIR)
+	touch $(LIBSODIUM_BUILT)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -55,4 +58,5 @@ libsodium:
 clean:
 	-rm *.o
 	-rm eval_ed25519
+	-rm $(LIBSODIUM_BUILT)
 	-$(MAKE) -C $(LIBSODIUM_DIR) clean
