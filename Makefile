@@ -22,12 +22,12 @@ all: dbuildall_eval
 
 run_eval: build_eval
 	mkdir $(EVAL_DIR)
-	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN) &>> $(EVAL_DIR)/libsodium-ed25519.log
+	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN) &> $(EVAL_DIR)/libsodium-ed25519.log
 
 build_eval: eval_ed25519 eval_aesni256gcm eval_argon2id eval_chacha20poly1305
 
 eval_ed25519: eval_prereqs
-	:
+	$(CC) $(EVAL_ED25519) $(LIBSODIUM_AR) -o $@
 
 eval_aesni256gcm: eval_prereqs
 	:
