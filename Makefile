@@ -11,13 +11,15 @@ EVAL_ED25519=eval_ed25519.o
 ED25519_MSG_LEN=100
 ED25519_NUM_ITER=1000
 
-.PHONY: clean libsodium 
+.PHONY: clean libsodium eval_prereqs
 
 all: eval_ed25519
 
-eval_ed25519: $(EVAL_ED25519)
+eval_ed25519: eval_prereqs
 	$(CC) $(EVAL_ED25519) $(LIBSODIUM_AR) -o $@
 	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN)
+
+eval_prereqs: libsodium
 
 libsodium:
 	git submodule init -- $(LIBSODIUM_DIR)
@@ -34,3 +36,4 @@ libsodium:
 clean:
 	-rm *.o
 	-rm eval_ed25519
+	-$(MAKE) -C $(LIBSODIUM_DIR) clean
