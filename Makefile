@@ -14,7 +14,8 @@ EVAL_ED25519=eval_ed25519.o
 ED25519_MSG_LEN=100
 ED25519_NUM_ITER=1000
 
-EVAL_AESNI256GCM=eval_aesni256gcm.o
+EVAL_AESNI256GCM_ENCRYPT=eval_aesni256gcm_encrypt.o
+EVAL_AESNI256GCM_DECRYPT=eval_aesni256gcm_decrypt.o
 AESNI256GCM_MSG_LEN=100
 AESNI256GCM_AD_LEN=100
 AESNI256GCM_NUM_ITER=1000
@@ -34,17 +35,24 @@ all: build_eval
 run_eval: build_eval
 	mkdir $(EVAL_DIR)
 	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN) > $(EVAL_DIR)/libsodium-ed25519.log 2>&1
-	./eval_aesni256gcm  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_MSG_LEN) $(AESNI256GCM_AD_LEN) > $(EVAL_DIR)/libsodium-aesni256gcm.log 2>&1
-	./eval_argon2id  $(ARGON2ID_NUM_ITER) $(ARGON2ID_PASSWD_LEN) $(ARGON2ID_OUT_LEN) > $(EVAL_DIR)/libsodium-argon2id.log 2>&1
+	./eval_aesni256gcm_encrypt  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_MSG_LEN) $(AESNI256GCM_AD_LEN) \
+		> $(EVAL_DIR)/libsodium-aesni256gcm-encrypt.log 2>&1
+	./eval_aesni256gcm_decrypt  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_MSG_LEN) $(AESNI256GCM_AD_LEN) \
+		> $(EVAL_DIR)/libsodium-aesni256gcm-decrypt.log 2>&1
+	./eval_argon2id  $(ARGON2ID_NUM_ITER) $(ARGON2ID_PASSWD_LEN) $(ARGON2ID_OUT_LEN) \
+		> $(EVAL_DIR)/libsodium-argon2id.log 2>&1
 	echo done
 
-build_eval: eval_ed25519 eval_aesni256gcm eval_argon2id eval_chacha20poly1305
+build_eval: eval_ed25519 eval_aesni256gcm_encrypt eval_aesni256gcm_decrypt eval_argon2id eval_chacha20poly1305
 
 eval_ed25519: eval_prereqs $(EVAL_ED25519)
 	$(CC) $(EVAL_ED25519) $(LIBSODIUM_AR) -o $@
 
-eval_aesni256gcm: eval_prereqs $(EVAL_AESNI256GCM)
-	$(CC) $(EVAL_AESNI256GCM) $(LIBSODIUM_AR) -o $@
+eval_aesni256gcm_encrypt: eval_prereqs $(EVAL_AESNI256GCM_ENCRYPT)
+	$(CC) $(EVAL_AESNI256GCM_ENCRYPT) $(LIBSODIUM_AR) -o $@
+
+eval_aesni256gcm_decrypt: eval_prereqs $(EVAL_AESNI256GCM_DECRYPT)
+	$(CC) $(EVAL_AESNI256GCM_DECRYPT) $(LIBSODIUM_AR) -o $@
 
 eval_argon2id: eval_prereqs $(EVAL_ARGON2ID)
 	$(CC) $(EVAL_ARGON2ID) $(LIBSODIUM_AR) -o $@
@@ -70,7 +78,8 @@ libsodium.built:
 clean_eval:
 	-rm *.o
 	-rm eval_ed25519
-	-rm eval_aesni256gcm
+	-rm eval_aesni256gcm_encrypt
+	-rm eval_aesni256gcm_decrypt
 	-rm eval_argon2id
 
 clean: clean_eval

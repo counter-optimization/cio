@@ -61,36 +61,33 @@ main(int argc, char** argv)
 
   // allocate space for message
   unsigned char* msg = malloc(msg_sz);
-  assert(msg && "Couldn't allocate msg bytes in eval_aesni-256gcm.c");
+  assert(msg && "Couldn't allocate msg bytes in eval_aesni256gcm_decrypt.c");
 
   // allocate space for additional data
   unsigned char* additional_data = malloc(additional_data_sz);
-  assert(additional_data && "Couldn't allocate msg bytes in eval_aesni-256gcm.c");
+  assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_decrypt.c");
 
   // allocate space for decrypted message
   unsigned char* decrypted_msg = malloc(msg_sz);
-  assert(decrypted_msg && "Couldn't allocate decrypted_msg bytes in eval_aesni-256gcm.c");
+  assert(decrypted_msg && "Couldn't allocate decrypted_msg bytes in eval_aesni256gcm_decrypt.c");
 
   // allocate space for ciphertext
   unsigned long long ciphertext_sz = msg_sz + crypto_aead_aes256gcm_abytes();
   unsigned char* ciphertext = malloc(ciphertext_sz);
-  assert(msg && "Couldn't allocate ciphertext bytes in eval_aesni-256gcm.c");
+  assert(msg && "Couldn't allocate ciphertext bytes in eval_aesni256gcm_decrypt.c");
 
   // allocate space for key
   unsigned char* key = malloc(crypto_aead_aes256gcm_keybytes());
-  assert(key && "Couldn't allocate key bytes in eval_aesni-256gcm.c");
+  assert(key && "Couldn't allocate key bytes in eval_aesni256gcm_decrypt.c");
 
   // allocate space for nonce
   unsigned char* nonce = malloc(crypto_aead_aes256gcm_npubbytes());
-  assert(nonce && "Couldn't allocate key bytes in eval_aesni-256gcm.c");
+  assert(nonce && "Couldn't allocate key bytes in eval_aesni256gcm_decrypt.c");
 
   // allocate space for timer reads
-  uint64_t* encrypt_times = calloc(num_iter, sizeof(uint64_t));
-  assert(encrypt_times &&
-	 "Couldn't allocate array for encrypt benchmark times in eval_aesni-256gcm.c");
-  uint64_t* decrypt_times = calloc(num_iter, sizeof(uint64_t));
-  assert(decrypt_times &&
-	 "Couldn't allocate array for decrypt benchmark times in eval_aesni-256gcm.c");
+  uint64_t* times = calloc(num_iter, sizeof(uint64_t));
+  assert(times &&
+	 "Couldn't allocate array for benchmark times in eval_aesni256gcm_decrypt.c");
 
   volatile uint64_t start_time = 0;
   volatile uint64_t end_time = 0;
@@ -105,18 +102,11 @@ main(int argc, char** argv)
     // generate message
     ciocc_eval_rand_fill_buf(msg, msg_sz);
 
-    // start counting cycles
-    start_time = START_CYCLE_TIMER;
-
     // encrypt message
     int encrypt_result = crypto_aead_aes256gcm_encrypt(ciphertext, &ciphertext_sz,
           msg, msg_sz, additional_data, additional_data_sz, NULL, nonce, key);
 
     assert(-1 != encrypt_result);
-
-    // stop counting cycles
-    end_time = STOP_CYCLE_TIMER;
-    encrypt_times[cur_iter] = end_time - start_time;
 
     // start counting cycles
     start_time = START_CYCLE_TIMER;
@@ -130,22 +120,18 @@ main(int argc, char** argv)
 
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
-    decrypt_times[cur_iter] = end_time - start_time;
+
+    times[cur_iter] = end_time - start_time;
 
     // verify decrypted message is same as original for sanity check
     int cmp_result = strncmp((const char*)msg, (const char*)decrypted_msg, msg_sz);
     assert(0 == cmp_result &&
-          "in eval_aes256gcm.c, error validating decrypted msg = msg");
+          "in eval_aesni256gcm_decrypt.c, error validating decrypted msg = msg");
   }
 
   // output the timer results
-  printf("eval_aes256gcm encrypt cycle counts for %d iterations\n", num_iter);
+  printf("eval_aesni256gcm_decrypt cycle counts for %d iterations\n", num_iter);
   for (int ii = 0; ii < num_iter; ++ii) {
-    printf("%" PRIu64 "\n", encrypt_times[ii]);
-  }
-
-  printf("eval_aes256gcm decrypt cycle counts for %d iterations\n", num_iter);
-  for (int ii = 0; ii < num_iter; ++ii) {
-    printf("%" PRIu64 "\n", decrypt_times[ii]);
+    printf("%" PRIu64 "\n", times[ii]);
   }
 }
