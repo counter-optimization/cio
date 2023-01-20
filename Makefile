@@ -61,9 +61,11 @@ libsodium.built:
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-clean:
+clean_eval:
 	-rm *.o
 	-rm eval_ed25519
 	-rm eval_aesni256gcm
+
+clean: clean_eval
 	-rm $(LIBSODIUM_BUILT)
 	-$(MAKE) -C $(LIBSODIUM_DIR) clean
