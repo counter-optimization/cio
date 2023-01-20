@@ -14,6 +14,11 @@ EVAL_ED25519=eval_ed25519.o
 ED25519_MSG_LEN=100
 ED25519_NUM_ITER=1000
 
+EVAL_AESNI256GCM=eval_aesni256gcm.o
+AESNI256GCM_MSG_LEN=100
+AESNI256GCM_AD_LEN=100
+AESNI256GCM_NUM_ITER=1000
+
 EVAL_START_TIME=$$(date +%F-%H:%M:%S-%Z)
 EVAL_DIR=$(EVAL_START_TIME)-eval
 
@@ -24,6 +29,7 @@ all: build_eval
 run_eval: build_eval
 	mkdir $(EVAL_DIR)
 	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN) > $(EVAL_DIR)/libsodium-ed25519.log 2>&1
+	./eval_aesni256gcm  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_MSG_LEN) $(AESNI256GCM_AD_LEN) > $(EVAL_DIR)/libsodium-aesni256gcm.log 2>&1
 	echo done
 
 build_eval: eval_ed25519 eval_aesni256gcm eval_argon2id eval_chacha20poly1305
@@ -31,8 +37,8 @@ build_eval: eval_ed25519 eval_aesni256gcm eval_argon2id eval_chacha20poly1305
 eval_ed25519: eval_prereqs $(EVAL_ED25519)
 	$(CC) $(EVAL_ED25519) $(LIBSODIUM_AR) -o $@
 
-eval_aesni256gcm: eval_prereqs
-	:
+eval_aesni256gcm: eval_prereqs $(EVAL_AESNI256GCM)
+	$(CC) $(EVAL_AESNI256GCM) $(LIBSODIUM_AR) -o $@
 
 eval_argon2id: eval_prereqs
 	:
@@ -58,5 +64,6 @@ libsodium.built:
 clean:
 	-rm *.o
 	-rm eval_ed25519
+	-rm eval_aesni256gcm
 	-rm $(LIBSODIUM_BUILT)
 	-$(MAKE) -C $(LIBSODIUM_DIR) clean
