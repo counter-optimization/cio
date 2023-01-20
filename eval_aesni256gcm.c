@@ -48,13 +48,22 @@ main(int argc, char** argv)
   unsigned long long msg_sz = strtol(argv[MSG_SIZE_ARG_IDX], (char**) NULL, 10);
   unsigned long long additional_data_sz = strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
 
+  // init libsodium, must be called before other libsodium functions are called
+  const int sodium_init_success = 0;
+  const int sodium_already_initd = 1;
+  int sodium_init_result = sodium_init();
+  assert((sodium_init_success == sodium_init_result ||
+	  sodium_already_initd == sodium_init_result) &&
+	 "Error initializing lib sodium");
+
   // Make sure AES is available
-  sodium_init();
   assert(crypto_aead_aes256gcm_is_available() && "AES not available on this CPU");
 
-  // allocate space for message and additional data
+  // allocate space for message
   unsigned char* msg = malloc(msg_sz);
   assert(msg && "Couldn't allocate msg bytes in eval_aesni-256gcm.c");
+
+  // allocate space for additional data
   unsigned char* additional_data = malloc(additional_data_sz);
   assert(additional_data && "Couldn't allocate msg bytes in eval_aesni-256gcm.c");
 
