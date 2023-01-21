@@ -6,7 +6,7 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 3
+#define EXPECTED_ARGC 4
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define MSG_SIZE_ARG_IDX 2
 #define AD_SIZE_ARG_IDX 3
@@ -30,7 +30,9 @@ int
 main(int argc, char** argv)
 {
   if (argc != EXPECTED_ARGC) {
-    printf("Usage: %s <num_benchmark_iterations> <size_of_message>\n", argv[0]);
+    printf("Usage: %s <num_benchmark_iterations>"
+	   " <size_of_message>"
+	   " <size_of_associated_data>\n", argv[0]);
     exit(-1);
   }
 
@@ -102,23 +104,23 @@ main(int argc, char** argv)
         /*additional data=*/additional_data,
         /*additional data sz=*/additional_data_sz, NULL, nonce, privk);
 
-    assert(-1 != encrypt_result); // -1 on err, 0 on ok
-    
     // start counting cycles
     start_time = START_CYCLE_TIMER;
 
-	int decrypt_result = crypto_aead_aes256gcm_decrypt(decrypted_msg, &msg_sz,
-          NULL, ciphertext, ciphertext_sz, additional_data, additional_data_sz,
-          nonce, privk);
+    assert(-1 != encrypt_result); // -1 on err, 0 on ok
 
-    assert(-1 != decrypt_result);
+    int decrypt_result = crypto_aead_aes256gcm_decrypt(decrypted_msg, &msg_sz,
+						       NULL, ciphertext,
+						       ciphertext_sz, additional_data,
+						       additional_data_sz,
+						       nonce, privk);
 
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
 
     times[cur_iter] = end_time - start_time;
 
-    int cmp_result = strncmp((const char*)msg, (const char*)decrypted_msg, msg_sz);
+    int cmp_result = memcmp(msg, decrypted_msg, msg_sz);
     assert(0 == cmp_result &&
           "in eval-chacha20-poly1305-decrypt.c, error validating decrypted msg = msg");
   }

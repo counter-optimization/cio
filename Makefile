@@ -7,6 +7,7 @@ TZ='America/Los_Angeles'
 
 LIBSODIUM_DIR=./libsodium
 LIBSODIUM_AR=$(LIBSODIUM_DIR)/src/libsodium/.libs/libsodium.a
+LIBSODIUM_AR ::= $(shell find $(LIBSODIUM_DIR) -name 'libsodium.a' -o -name 'libsodium.ar')
 LIBSODIUM_TARGET_RELEASE_TAG=1.0.18-RELEASE
 LIBSODIUM_BUILT=libsodium.built
 
@@ -31,7 +32,7 @@ CHACHA20_POLY1305_MSG_LEN=100
 CHACHA20_POLY1305_AD_LEN=100
 CHACHA20_POLY1305_NUM_ITER=1000
 
-EVAL_START_TIME=$$(date +%F-%H:%M:%S-%Z)
+EVAL_START_TIME ::= $(shell date +%F-%H:%M:%S-%Z)
 EVAL_DIR=$(EVAL_START_TIME)-eval
 
 .PHONY: clean eval_prereqs run_eval build_eval
@@ -73,7 +74,7 @@ eval_chacha20_poly1305_decrypt: eval_prereqs $(EVAL_CHACHA20_POLY1305_DECRYPT)
 eval_argon2id: eval_prereqs $(EVAL_ARGON2ID)
 	$(CC) $(EVAL_ARGON2ID) $(LIBSODIUM_AR) -o $@
 
-eval_prereqs: | $(LIBSODIUM_BUILT)
+eval_prereqs: $(LIBSODIUM_BUILT)
 
 libsodium.built:
 	git submodule init -- $(LIBSODIUM_DIR)

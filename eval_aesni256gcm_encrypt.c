@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <assert.h> 
+#include <assert.h>
+#include <string.h>
 
 #include "eval_util.h"
 
@@ -124,7 +125,7 @@ main(int argc, char** argv)
 
     assert(-1 != decrypt_result);
 
-    int cmp_result = strncmp((const char*)msg, (const char*)decrypted_msg, msg_sz);
+    int cmp_result = memcmp(msg, decrypted_msg, msg_sz);
     assert(0 == cmp_result &&
           "in eval_aesni256gcm_encrypt.c, error validating decrypted msg = msg");
   }
