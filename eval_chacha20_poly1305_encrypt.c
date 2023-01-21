@@ -11,6 +11,7 @@
 #define MSG_SIZE_ARG_IDX 2
 #define AD_SIZE_ARG_IDX 3
 
+extern int sodium_init();
 extern size_t crypto_aead_chacha20poly1305_ietf_npubbytes(void);
 extern size_t crypto_aead_chacha20poly1305_ietf_keybytes(void);
 extern size_t crypto_aead_chacha20poly1305_ietf_abytes(void);
@@ -43,6 +44,14 @@ main(int argc, char** argv)
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
+
+  // init libsodium, must be called before other libsodium functions are called
+  const int sodium_init_success = 0;
+  const int sodium_already_initd = 1;
+  int sodium_init_result = sodium_init();
+  assert((sodium_init_success == sodium_init_result ||
+	  sodium_already_initd == sodium_init_result) &&
+	 "Error initializing lib sodium");
 
   unsigned long long msg_sz = strtol(argv[MSG_SIZE_ARG_IDX], (char**) NULL, 10);
   unsigned long long additional_data_sz = strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);

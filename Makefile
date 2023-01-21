@@ -3,8 +3,6 @@ CFLAGS=-O0 -Werror -std=c18 # for the eval code, don't optimize anything
 OUR_CC=$(HOME)/llvm-project/build/bin/clang
 CC=$(OUR_CC) # default to our fork of llvm's clang
 
-TZ='America/Los_Angeles'
-
 LIBSODIUM_DIR=./libsodium
 LIBSODIUM_AR=$(LIBSODIUM_DIR)/src/libsodium/.libs/libsodium.a
 LIBSODIUM_AR ::= $(shell find $(LIBSODIUM_DIR) -name 'libsodium.a' -o -name 'libsodium.ar')
@@ -32,8 +30,12 @@ CHACHA20_POLY1305_MSG_LEN=100
 CHACHA20_POLY1305_AD_LEN=100
 CHACHA20_POLY1305_NUM_ITER=1000
 
-EVAL_START_TIME ::= $(shell date +%F-%H:%M:%S-%Z)
+EVAL_START_TIME ::= $(shell TZ='America/Los_Angeles' date +%F-%H:%M:%S-%Z)
 EVAL_DIR=$(EVAL_START_TIME)-eval
+FILE_WHICH_CC_FOR_EVAL_BUILD=$(EVAL_DIR)/eval-cc.txt
+FILE_WHICH_CFLAGS_FOR_EVAL_BUILD=$(EVAL_DIR)/eval-cflags.txt
+FILE_WHICH_CC_FOR_LIBSODIUM_BUILD=$(EVAL_DIR)/libna-cc.txt #todo
+FILE_WHICH_CFLAGS_FOR_LIBSODIUM_BUILD=$(EVAL_DIR)/libna-cflags.txt #todo
 
 .PHONY: clean eval_prereqs run_eval build_eval
 
@@ -41,6 +43,12 @@ all: build_eval
 
 run_eval: build_eval
 	mkdir $(EVAL_DIR)
+	cp Makefile $(EVAL_DIR)
+	cp *.c $(EVAL_DIR)
+	echo "$(CC)" > $(FILE_WHICH_CC_FOR_EVAL_BUILD)
+	echo "$(CFLAGS)" > $(FILE_WHICH_CFLAGS_FOR_EVAL_BUILD)
+	echo "$(CC)" > $(FILE_WHICH_CC_FOR_LIBSODIUM_BUILD) #todo
+	echo "$(CFLAGS)" > $(FILE_WHICH_CFLAGS_FOR_LIBSODIUM_BUILD) #todo
 	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_MSG_LEN) > $(EVAL_DIR)/libsodium-ed25519.log 2>&1
 	./eval_chacha20_poly1305_encrypt $(CHACHA20_POLY1305_NUM_ITER) $(CHACHA20_POLY1305_MSG_LEN) $(CHACHA20_POLY1305_AD_LEN) \
 		> $(EVAL_DIR)/libsodium-chacha20-poly1305-encrypt.log 2>&1
@@ -80,10 +88,11 @@ libsodium.built:
 	git submodule init -- $(LIBSODIUM_DIR)
 	git submodule update --remote -- $(LIBSODIUM_DIR)
 	git submodule foreach 'git fetch --tags'
+	# todo, set cflags,cc for libna build
 	cd $(LIBSODIUM_DIR); \
 	  	git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
 		./configure CC=$(CC)
-	$(MAKE) -C $(LIBSODIUM_DIR)
+	$(MAKE) -C $(LIBSODIUM_DIR) 
 	touch $(LIBSODIUM_BUILT)
 
 %.o: %.c
