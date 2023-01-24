@@ -60,6 +60,7 @@ run_eval: build_eval
 		> $(EVAL_DIR)/libsodium-aesni256gcm-decrypt.log 2>&1
 	./eval_argon2id  $(ARGON2ID_NUM_ITER) $(ARGON2ID_PASSWD_LEN) $(ARGON2ID_OUT_LEN) \
 		> $(EVAL_DIR)/libsodium-argon2id.log 2>&1
+	python3 process_eval_data.py $(EVAL_DIR)
 	echo done
 
 build_eval: eval_ed25519 eval_aesni256gcm_encrypt eval_aesni256gcm_decrypt eval_argon2id eval_chacha20_poly1305_encrypt eval_chacha20_poly1305_decrypt
