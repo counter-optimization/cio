@@ -160,9 +160,17 @@ else
     CC_SS_FLAGS="-mllvm --x86-ss"
 fi
 
-# make clean # commented out for development, uncomment me later
+make clean
 
-# ./configure CC=$CC # commented out for development, uncomment me later
+pushd .
+cd $TARGET_DIR; ./configure CC=$CC
+CONFIG_RES=$?
+popd
+
+if [[ $CONFIG_RES -ne 0 ]]; then
+    echo "Error running ./configure in $TARGET_DIR. $TOOLNAME exiting."
+    exit 5
+fi
 
 # make the dir to hold all of the build artifacts
 echo -n "Creating ${TOOLNAME} build dir ${BUILD_DIR}..."
@@ -174,8 +182,15 @@ mkdir $BUILD_DIR
 echo done
 
 echo -n "Running target\'s makefile..."
-make --directory=$TARGET_DIR CC=$CC -j ${NUM_MAKE_JOB_SLOTS}
+make -C $TARGET_DIR CC=$CC -j ${NUM_MAKE_JOB_SLOTS}
+COMPILE_PASS_RES=$?
+# echo compile_pass_res is $COMPILE_PASS_RES
 echo done
+
+if [[ $COMPILE_PASS_RES -ne 0 ]]; then
+    echo "Error running $TOOLNAME initial compilation pass. $TOOLNAME exiting."
+    exit 6
+fi
 
 if [[ $IS_LIBSODIUM -eq 1 ]]; then
     echo 'init sodium_init' > $CONFIG_FILE
@@ -184,7 +199,13 @@ fi
 # put all per-function secret csv contents into one big  csv file
 echo -n "Gathering all per-function secret csv files into ${ALL_SECRETS_CSV}..."
 find $TARGET_DIR -name '*secrets.csv' -a ! -empty | xargs -I '{}' cat '{}' >> $CONFIG_FILE
+GATHER_SECRETS_RES=$?
 echo done
+
+if [[ $GATHER_SECRETS_RES -ne 0 ]]; then
+    echo "Error gathering all per-function secret csv files into one. $TOOLNAME exiting."
+    exit 7
+fi
 
 # echo -n "Cleaning up per-function secret csv files..."
 # find . -name '*secrets.csv' -a ! -path "*${BUILD_DIR}*" -delete
@@ -193,8 +214,13 @@ echo done
 # put all the object files into one big object file
 echo -n "Gathering all intermediate object files into ${BIG_OBJ}..."
 find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -z muldefs -o $BIG_OBJ -lc
+BUILD_BIG_OBJ_RES=$?
 echo done
 
+if [[ $BUILD_BIG_OBJ_RES -ne 0 ]]; then
+    echo "Error jamming all separate object files into one for use by checker. $TOOLNAME exiting."
+    exit 8
+fi
 
 echo "Starting checker on ${BIG_OBJ} using secrets file ${ALL_SECRETS_CSV}"
 echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
@@ -205,8 +231,8 @@ echo -n Cleaning up build artifacts from compilation,checking pass...
 make --directory=$TARGET_DIR clean
 echo done
 
-# TODO, this should be llc with just our passes...
-# have to play nice with the crypto lib's CFLAGS.
+# TODO, this should be llc with just our passes which would get rid of our
+# need to have to play nice with the crypto lib's CFLAGS.
 # ideally, they would use `override CFLAGS += ...`
 # instead of `CFLAGS=...`, so then we can use the comamnd
 # line to append to their CFLAGS, but instead, we have to
@@ -216,19 +242,27 @@ grep -E 'override CFLAGS' ${TARGET_DIR}/Makefile
 NO_OVERRIDE=$?
 if [[ NO_OVERRIDE -eq 0 ]]; then
     # has override, we are fine
-    FINAL_CFLAGS=$CC_SS_FLAGS $CC_CS_FLAGS $EXTRA_CFLAGS
+    FINAL_CFLAGS="$CC_SS_FLAGS $CC_CS_FLAGS $EXTRA_CFLAGS"
 else
     # get the cflags manually
     # awk: find the line of their makefile that starts with CFLAGS\s*= or CFLAGS= and grab the stuff after
-    THEIR_CFLAGS=$(awk -F"( = )|(=)| " '$1 ~ /^CFLAGS$/ { ORS=" "; for (i = 3; i <= NF; i++) print $i }' ${TARGET_DIR}/Makefile)
-    FINAL_CFLAGS=$CC_SS_FLAGS $CC_CS_FLAGS $THEIR_CFLAGS $EXTRA_CFLAGS
+    # THEIR_CFLAGS=$(awk -F"( = )|(=)| " '$1 ~ /^CFLAGS$/ { ORS=" "; for (i = 3; i <= NF; i++) print $i }' ${TARGET_DIR}/Makefile)
+    THEIR_CFLAGS=$(awk '$1 ~ /^CFLAGS$/ { ORS=" "; for (i = 3; i <= NF; i++) print $i }' ${TARGET_DIR}/Makefile)
+    FINAL_CFLAGS="$CC_SS_FLAGS $CC_CS_FLAGS $THEIR_CFLAGS $EXTRA_CFLAGS"
 fi
 
 echo -n Running mitigation pass...
 echo -n TODO, this should be llc with just our passes...
 echo final_cflags are $FINAL_CFLAGS
-make --environment-overrides --directory=$TARGET_DIR CC=$CC CFLAGS=$FINAL_CFLAGS -j $NUM_MAKE_JOB_SLOTS
+export CFLAGS=$FINAL_CFLAGS
+make --environment-overrides --directory=$TARGET_DIR CC=$CC -j $NUM_MAKE_JOB_SLOTS
+MITIGATION_PASS_RES=$?
 echo done
+
+if [[ $MITIGATION_PASS_RES -ne 0 ]]; then
+    echo "Error applying mitigation transforms in $TARGET_DIR. $TOOLNAME exiting."
+    exit 9
+fi
 
 echo -n Running verification pass...
 echo TODO

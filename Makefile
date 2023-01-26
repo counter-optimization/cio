@@ -3,6 +3,12 @@ CFLAGS=-O0 -Werror -std=c18 # for the eval code, don't optimize anything
 OUR_CC=$(HOME)/llvm-project/build/bin/clang
 CC=$(OUR_CC) # default to our fork of llvm's clang
 
+NUM_MAKE_JOB_SLOTS=8
+
+CHECKER_DIR=./checker
+CHECKER_PLUGIN_PATH=$(CHECKER_DIR)/bap/interval
+CHECKER_BUILT=checker.built
+
 LIBSODIUM_DIR=./libsodium
 LIBSODIUM_AR=$(LIBSODIUM_DIR)/src/libsodium/.libs/libsodium.a
 # LIBSODIUM_AR ::= $(shell find $(LIBSODIUM_DIR) -name 'libsodium.a' -o -name 'libsodium.ar')
@@ -83,18 +89,35 @@ eval_chacha20_poly1305_decrypt: eval_prereqs $(EVAL_CHACHA20_POLY1305_DECRYPT)
 eval_argon2id: eval_prereqs $(EVAL_ARGON2ID)
 	$(CC) $(EVAL_ARGON2ID) $(LIBSODIUM_AR) -o $@
 
-eval_prereqs: $(LIBSODIUM_BUILT)
+eval_prereqs: $(LIBSODIUM_BUILT) $(CHECKER_BUILT)
 
-libsodium.built:
+$(LIBSODIUM_BUILT):
 	git submodule init -- $(LIBSODIUM_DIR)
 	git submodule update --remote -- $(LIBSODIUM_DIR)
 	git submodule foreach 'git fetch --tags'
+	cd $(LIBSODIUM_DIR); git checkout $(LIBSODIUM_TARGET_RELEASE_TAG)
 	# todo, set cflags,cc for libna build
-	cd $(LIBSODIUM_DIR); \
-	  	git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
-		./configure CC=$(CC)
-	$(MAKE) -C $(LIBSODIUM_DIR) 
+	bash -x cio --cc $(CC) \
+		 -j $(NUM_MAKE_JOB_SLOTS) \
+		 --checker-plugin-path $(CHECKER_PLUGIN_PATH) \
+		 --is-libsodium \
+		 --ss \
+	         --cs \
+		 --config-file crypto_pwhash.uarch_checker.config \
+		 --crypto-dir $(LIBSODIUM_DIR)
+	# cd $(LIBSODIUM_DIR); \
+	#   	git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
+	# 	./configure CC=$(CC)
+	# $(MAKE) -C $(LIBSODIUM_DIR) 
 	touch $(LIBSODIUM_BUILT)
+
+checker: $(CHECKER_BUILT)
+
+$(CHECKER_BUILT):
+	git submodule init -- $(CHECKER_DIR)
+	git submodule update --remote -- $(CHECKER_DIR)
+	$(MAKE) -e -C $(CHECKER_PLUGIN_PATH) BAPBUILD_JOB_SLOTS=$(NUM_MAKE_JOB_SLOTS) debug
+	touch $(CHECKER_BUILT)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -110,4 +133,6 @@ clean_eval:
 
 clean: clean_eval
 	-rm $(LIBSODIUM_BUILT)
+	-rm $(CHECKER_BUILT)
 	-$(MAKE) -C $(LIBSODIUM_DIR) clean
+	-$(MAKE) -C $(CHECKER_PLUGIN_PATH) clean
