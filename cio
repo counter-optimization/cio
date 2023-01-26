@@ -1,0 +1,235 @@
+#!/bin/bash
+
+# SET BY USER
+CC=`realpath ~/llvm-project/build/bin/clang`
+CHECKER_PLUGIN_PATH=`realpath ~/checker/bap/interval/`
+
+# cio defaults
+TOOLNAME=cio
+BUILD_DIR=`realpath ./${TOOLNAME}-build`
+NORMAL_MAKE_LOG=`realpath ${BUILD_DIR}/normal.make.log`
+BIG_OBJ=`realpath ${BUILD_DIR}/jammed.together.o`
+ALL_SECRETS_CSV=`realpath ${BUILD_DIR}/secrets.csv`
+CHECKER_ALERTS_CSV=`realpath ${BUILD_DIR}/checker.alerts.csv`
+NUM_MAKE_JOB_SLOTS=8
+
+EXTRA_CFLAGS=""
+EXTRA_CHECKER_FLAGS=""
+
+IS_LIBSODIUM=0
+
+MITIGATE_SS=0
+MITIGATE_CS=0
+
+function usage
+{
+    echo "Usage: $TOOLNAME [ -h | --help (displays this message) ]
+			   [ -c | --cc <path to c compiler> ]
+    	 	 	   [ -p | --checker-plugin-path <path to dir with uarch_checker.plugin> ]
+			   [ -o | --big-obj <path where $TOOLNAME puts jammed together obj file> ]
+			   [ -b | --build-dir <path where $TOOLNAME stores intermeiate build artifacts> ]
+			   [ -p | --cflags \"<~double quoted string~ of extra cflags for CC>\" ]
+			   [ -e | --checker-flags \"<~double quoted string~ of extra flags for uarch_checker>\" ]
+			   [ -j <num make job slots> ]
+			   [ --is-libsodium <run libsodium init> ]
+			   [ --ss (do silent store checks and mitigations) ]
+			   [ --cs (do comp simp checks and mitigaitons) ]
+			   -f | --config-file <path to uarch checker config file for checking>
+			   -t | --crypto-dir <path to the crypto lib project that has the root makefile>
+			  
+	       	 --config-file and crypto_project_dir_root are required arguments. If they are not passed,
+                 the defaults of ${CC} and $(pwd) are used respectively."
+    exit 2
+}
+
+PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs" -n $TOOLNAME -- "$@")
+
+if [[ $? -ne 0 ]]; then
+       echo "Error parsing args"
+       usage
+fi
+
+# echo $PARSED_ARGS
+
+eval set -- "$PARSED_ARGS"
+unset PARSED_ARGS
+
+while true; do
+    case "$1" in
+	'-h' | '--help')
+	    usage
+	    ;;
+	'-j')
+	    NUM_MAKE_JOB_SLOTS=$2
+	    shift 2
+	    continue
+	    ;;
+	'--is-libsodium')
+	    IS_LIBSODIUM=1
+	    shift
+	    continue
+	    ;;
+	'--ss')
+	    MITIGATE_SS=1
+	    shift
+	    continue
+	    ;;
+	'--cs')
+	    MITIGATE_CS=1
+	    shift
+	    continue
+	    ;;
+	'--cc')
+	    echo CC opt
+	    CC=$2
+	    shift 2
+	    continue
+	    ;;
+	'--checker-plugin-path')
+	    CHECKER_PLUGIN_PATH=$2
+	    shift 2
+	    continue
+	    ;;
+	'--build-dir')
+	    BUILD_DIR=$2
+	    shift 2
+	    continue
+	    ;;
+	'--big-obj')
+	    BIG_OBJ=$2
+	    shift 2
+	    continue
+	    ;;
+	'--config-file')
+	    CONFIG_FILE=$2
+	    shift 2
+	    continue
+	    ;;
+	'--checker-flags')
+	    EXTRA_CHECKER_FLAGS=$2
+	    shift 2
+	    continue
+	    ;;
+	'--cflags')
+	    EXTRA_CFLAGS=$2
+	    shift 2
+	    continue
+	    ;;
+	'--crypto-dir')
+	    TARGET_DIR=$2
+	    shift 2
+	    continue
+	    ;;
+	'--')
+	    shift
+	    break
+	    ;;
+	*)
+	    echo "Unknown option $1"
+	    usage
+	    ;;
+    esac
+    shift
+done
+
+# check if bap is installed for the checkers
+HAS_BAP=$(which bap)
+if [[ $? -ne 0 ]]; then
+    echo Looks like bap is not installed or available on your path.
+    echo To install bap:
+    echo -e "\t1. Install the OCaml package manager, opam, using the system package manager, then run the following commands:"
+    echo -e "\t2. opam switch create bap-alpha --repos default,bap=git+https://github.com/BinaryAnalysisPlatform/opam-repository#testing 4.11.2+flambda"
+    echo -e "\t3. opam install bap"
+    echo -e '\t4. eval $(opam env)'
+    exit 3
+fi
+
+if [[ MITIGATE_CS -eq 0 ]]; then
+    CHECKER_CS_FLAGS=""
+    CC_CS_FLAGS=""
+else
+    CHECKER_CS_FLAGS="--uarch-checker-cs"
+    CC_CS_FLAGS="-mllvm --x86-cs"
+fi
+
+if [[ MITIGATE_SS -eq 0 ]]; then
+    CHECKER_SS_FLAGS=""
+    CC_SS_FLAGS=""
+else
+    CHECKER_SS_FLAGS="--uarch-checker-ss"
+    CC_SS_FLAGS="-mllvm --x86-ss"
+fi
+
+# make clean # commented out for development, uncomment me later
+
+# ./configure CC=$CC # commented out for development, uncomment me later
+
+# make the dir to hold all of the build artifacts
+echo -n "Creating ${TOOLNAME} build dir ${BUILD_DIR}..."
+if [[ -e $BUILD_DIR ]]; then
+    echo -n it already exists, removing old build dir first...
+    rm -r $BUILD_DIR
+fi
+mkdir $BUILD_DIR
+echo done
+
+echo -n "Running target\'s makefile..."
+make --directory=$TARGET_DIR CC=$CC -j ${NUM_MAKE_JOB_SLOTS}
+echo done
+
+if [[ $IS_LIBSODIUM -eq 1 ]]; then
+    echo 'init sodium_init' > $CONFIG_FILE
+fi
+
+# put all per-function secret csv contents into one big  csv file
+echo -n "Gathering all per-function secret csv files into ${ALL_SECRETS_CSV}..."
+find $TARGET_DIR -name '*secrets.csv' -a ! -empty | xargs -I '{}' cat '{}' >> $CONFIG_FILE
+echo done
+
+# echo -n "Cleaning up per-function secret csv files..."
+# find . -name '*secrets.csv' -a ! -path "*${BUILD_DIR}*" -delete
+# echo done
+
+# put all the object files into one big object file
+echo -n "Gathering all intermediate object files into ${BIG_OBJ}..."
+find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -z muldefs -o $BIG_OBJ -lc
+echo done
+
+
+echo "Starting checker on ${BIG_OBJ} using secrets file ${ALL_SECRETS_CSV}"
+echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
+bap --plugin-path=$CHECKER_PLUGIN_PATH --pass=uarch-checker --no-optimization --bil-optimization=0 --uarch-checker-output-csv-file=$CHECKER_ALERTS_CSV $CHECKER_CS_FLAGS $CHECKER_SS_FLAGS --uarch-checker-config-file=$CONFIG_FILE $BIG_OBJ &>/dev/null
+echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
+
+echo -n Cleaning up build artifacts from compilation,checking pass...
+make --directory=$TARGET_DIR clean
+echo done
+
+# TODO, this should be llc with just our passes...
+# have to play nice with the crypto lib's CFLAGS.
+# ideally, they would use `override CFLAGS += ...`
+# instead of `CFLAGS=...`, so then we can use the comamnd
+# line to append to their CFLAGS, but instead, we have to
+# check if they use override or not and handle each case separately
+# IMPORTANT: iirc, if both SS and CS flags are specified to the compiler, then SS must come before the CS flags
+grep -E 'override CFLAGS' ${TARGET_DIR}/Makefile
+NO_OVERRIDE=$?
+if [[ NO_OVERRIDE -eq 0 ]]; then
+    # has override, we are fine
+    FINAL_CFLAGS=$CC_SS_FLAGS $CC_CS_FLAGS $EXTRA_CFLAGS
+else
+    # get the cflags manually
+    # awk: find the line of their makefile that starts with CFLAGS\s*= or CFLAGS= and grab the stuff after
+    THEIR_CFLAGS=$(awk -F"( = )|(=)| " '$1 ~ /^CFLAGS$/ { ORS=" "; for (i = 3; i <= NF; i++) print $i }' ${TARGET_DIR}/Makefile)
+    FINAL_CFLAGS=$CC_SS_FLAGS $CC_CS_FLAGS $THEIR_CFLAGS $EXTRA_CFLAGS
+fi
+
+echo -n Running mitigation pass...
+echo -n TODO, this should be llc with just our passes...
+echo final_cflags are $FINAL_CFLAGS
+make --environment-overrides --directory=$TARGET_DIR CC=$CC CFLAGS=$FINAL_CFLAGS -j $NUM_MAKE_JOB_SLOTS
+echo done
+
+echo -n Running verification pass...
+echo TODO
+echo done

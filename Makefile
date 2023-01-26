@@ -5,7 +5,7 @@ CC=$(OUR_CC) # default to our fork of llvm's clang
 
 LIBSODIUM_DIR=./libsodium
 LIBSODIUM_AR=$(LIBSODIUM_DIR)/src/libsodium/.libs/libsodium.a
-LIBSODIUM_AR ::= $(shell find $(LIBSODIUM_DIR) -name 'libsodium.a' -o -name 'libsodium.ar')
+# LIBSODIUM_AR ::= $(shell find $(LIBSODIUM_DIR) -name 'libsodium.a' -o -name 'libsodium.ar')
 LIBSODIUM_TARGET_RELEASE_TAG=1.0.18-RELEASE
 LIBSODIUM_BUILT=libsodium.built
 
