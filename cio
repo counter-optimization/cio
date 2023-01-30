@@ -79,43 +79,43 @@ while true; do
 	    shift
 	    continue
 	    ;;
-	'--cc')
+	'-c' | '--cc')
 	    echo CC opt
 	    CC=$2
 	    shift 2
 	    continue
 	    ;;
-	'--checker-plugin-path')
+	'-p' | '--checker-plugin-path')
 	    CHECKER_PLUGIN_PATH=$2
 	    shift 2
 	    continue
 	    ;;
-	'--build-dir')
+	'-b' | '--build-dir')
 	    BUILD_DIR=$2
 	    shift 2
 	    continue
 	    ;;
-	'--big-obj')
+	'-o' | '--big-obj')
 	    BIG_OBJ=$2
 	    shift 2
 	    continue
 	    ;;
-	'--config-file')
+	'-f' | '--config-file')
 	    CONFIG_FILE=$2
 	    shift 2
 	    continue
 	    ;;
-	'--checker-flags')
+	'-e' | '--checker-flags')
 	    EXTRA_CHECKER_FLAGS=$2
 	    shift 2
 	    continue
 	    ;;
-	'--cflags')
+	'-p' | '--cflags')
 	    EXTRA_CFLAGS=$2
 	    shift 2
 	    continue
 	    ;;
-	'--crypto-dir')
+	'-t' | '--crypto-dir')
 	    TARGET_DIR=$2
 	    shift 2
 	    continue
