@@ -55,13 +55,13 @@ def gen_cycle_curves(eval_dir, subdir):
 
             # Plot
             fig, ax = plt.subplots()
-            ax.clear()
             ax.plot(cycles_data)
             # ax.set_ylim(bottom=lower_bound, top=upper_bound)
             ax.set_title(title)
             ax.set_ylabel('Cycles')
             ax.set_xlabel('Iteration')
             fig.savefig(os.path.join(eval_dir, subdir, f'{lib}-{fn}-cycles.png'))
+            plt.close()
 
 
 def get_avg_cycles(eval_dir, subdir, test_case):
@@ -114,7 +114,7 @@ def gen_overhead_plot(eval_dir, baseline, ablations, out_dir):
         ax.bar(fn_ohs.keys(), fn_ohs.values())
         print(fn_ohs)
         fig.savefig(os.path.join(out_dir, f'{fn}-plot.png'))
-        ax.clear()
+        plt.close()
 
 
 def main():
@@ -138,7 +138,8 @@ def main():
     # Generate cycle overhead plot
     out_dir = args.out if args.out is not None else args.eval_dir
     gen_overhead_plot(args.eval_dir, args.baseline_dir, args.ablations, out_dir)
-    gen_cycle_curves(args.eval_dir, args.baseline_dir)
+    for subdir in args.ablations + [args.baseline_dir]:
+        gen_cycle_curves(args.eval_dir, subdir)
 
 
 if __name__ == "__main__":
