@@ -107,10 +107,10 @@ main(int argc, char** argv)
     int pwhash_result = crypto_pwhash(out, out_sz, (const char*)passwd, passwd_sz,
           salt, opslimit, memlimit, alg);
 
-    assert(-1 != pwhash_result); // -1 on err, 0 on ok
-    
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
+
+    assert(-1 != pwhash_result); // -1 on err, 0 on ok
 
     times[cur_iter] = end_time - start_time;
 

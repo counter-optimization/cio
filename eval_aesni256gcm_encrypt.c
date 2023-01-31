@@ -111,10 +111,10 @@ main(int argc, char** argv)
     int encrypt_result = crypto_aead_aes256gcm_encrypt(ciphertext, &ciphertext_sz,
           msg, msg_sz, additional_data, additional_data_sz, NULL, nonce, key);
 
-    assert(-1 != encrypt_result);
-
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
+
+    assert(-1 != encrypt_result);
     
     times[cur_iter] = end_time - start_time;
 

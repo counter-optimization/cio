@@ -117,10 +117,10 @@ main(int argc, char** argv)
           NULL, ciphertext, ciphertext_sz, additional_data, additional_data_sz,
           nonce, key);
 
-    assert(-1 != decrypt_result);
-
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
+
+    assert(-1 != decrypt_result);
 
     times[cur_iter] = end_time - start_time;
 

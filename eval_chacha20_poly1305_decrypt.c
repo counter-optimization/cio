@@ -113,10 +113,10 @@ main(int argc, char** argv)
         /*additional data=*/additional_data,
         /*additional data sz=*/additional_data_sz, NULL, nonce, privk);
 
+    assert(-1 != encrypt_result); // -1 on err, 0 on ok
+
     // start counting cycles
     start_time = START_CYCLE_TIMER;
-
-    assert(-1 != encrypt_result); // -1 on err, 0 on ok
 
     int decrypt_result = crypto_aead_aes256gcm_decrypt(decrypted_msg, &msg_sz,
 						       NULL, ciphertext,
