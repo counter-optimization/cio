@@ -106,7 +106,7 @@ $(LIBSODIUM_BUILT).$(MITIGATIONS_STR):
 		 --checker-plugin-path $(CHECKER_PLUGIN_PATH) \
 		 --is-libsodium \
 		 $(MITIGATIONS) \
-		 --config-file crypto_pwhash.uarch_checker.config \
+		 --config-file libsodium.uarch_checker.config \
 		 --crypto-dir $(LIBSODIUM_DIR)
 	# cd $(LIBSODIUM_DIR); \
 	#   	git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
