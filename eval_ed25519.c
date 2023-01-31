@@ -93,10 +93,10 @@ main(int argc, char** argv)
 				  /*msg sz=*/ msg_sz,
 				  /*secret key=*/ privk);
 
-    assert(-1 != sign_result); // -1 on err, 0 on ok
-    
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
+
+    assert(-1 != sign_result); // -1 on err, 0 on ok
 
     times[cur_iter] = end_time - start_time;
 
