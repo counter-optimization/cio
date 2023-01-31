@@ -4,3 +4,6 @@
 [submodule "checker"]
 	path = checker
 	url = git@github.com:flandini/checker
+[submodule "llvm-project"]
+	path = llvm-project
+	url = git@github.com:Flandini/llvm-project.git
