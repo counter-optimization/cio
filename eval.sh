@@ -128,16 +128,16 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # ss then cs
-make MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    run_eval
+# make MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
+#     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+#     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+#     run_eval
 
-if [[ $? -ne 0 ]]; then
-       echo "Error running ss-cs mitigations"
-       exit -1
-fi
+# if [[ $? -ne 0 ]]; then
+#        echo "Error running ss-cs mitigations"
+#        exit -1
+# fi
 
 # generate plots
 python3 process_eval_data.py $EVAL_DIR $BASELINE_DIR \
-    $CS_DIR $SS_DIR $CS_SS_DIR $SS_CS_DIR
+    $CS_DIR $SS_DIR $CS_SS_DIR
