@@ -1,3 +1,5 @@
 *~
 *.o
-libsodium.built
+libsodium.built.*
+checker.built
+__pycache__
