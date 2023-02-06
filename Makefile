@@ -99,9 +99,9 @@ $(LIBSODIUM_BUILT).$(MITIGATIONS_STR):
 	git submodule init -- $(LIBSODIUM_DIR)
 	git submodule update --remote -- $(LIBSODIUM_DIR)
 	git submodule foreach 'git fetch --tags'
-	cd $(LIBSODIUM_DIR); git checkout $(LIBSODIUM_TARGET_RELEASE_TAG)
+	cd $(LIBSODIUM_DIR); git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); git apply ../chacha20_impl_renames.patch
 	# todo, set cflags,cc for libna build
-	bash -x cio --cc $(CC) \
+	cio --cc $(CC) \
 		 -j $(NUM_MAKE_JOB_SLOTS) \
 		 --checker-plugin-path $(CHECKER_PLUGIN_PATH) \
 		 --is-libsodium \
