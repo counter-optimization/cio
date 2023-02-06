@@ -1,0 +1,386 @@
+diff --git a/src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-avx2.c b/src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-avx2.c
+index f63e0552..8f2f37fd 100644
+--- a/src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-avx2.c
++++ b/src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-avx2.c
+@@ -34,7 +34,7 @@ typedef struct chacha_ctx {
+ } chacha_ctx;
+ 
+ static void
+-chacha_keysetup(chacha_ctx *ctx, const uint8_t *k)
++chacha_keysetup_avx2(chacha_ctx *ctx, const uint8_t *k)
+ {
+     ctx->input[0]  = 0x61707865;
+     ctx->input[1]  = 0x3320646e;
+@@ -51,7 +51,7 @@ chacha_keysetup(chacha_ctx *ctx, const uint8_t *k)
+ }
+ 
+ static void
+-chacha_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
++chacha_ivsetup_avx2(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ {
+     ctx->input[12] = counter == NULL ? 0 : LOAD32_LE(counter + 0);
+     ctx->input[13] = counter == NULL ? 0 : LOAD32_LE(counter + 4);
+@@ -60,7 +60,7 @@ chacha_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ }
+ 
+ static void
+-chacha_ietf_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
++chacha_ietf_ivsetup_avx2(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ {
+     ctx->input[12] = counter == NULL ? 0 : LOAD32_LE(counter);
+     ctx->input[13] = LOAD32_LE(iv + 0);
+@@ -69,7 +69,7 @@ chacha_ietf_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ }
+ 
+ static void
+-chacha20_encrypt_bytes(chacha_ctx *ctx, const uint8_t *m, uint8_t *c,
++chacha20_encrypt_bytes_avx2(chacha_ctx *ctx, const uint8_t *m, uint8_t *c,
+                        unsigned long long bytes)
+ {
+     uint32_t * const x = &ctx->input[0];
+@@ -84,8 +84,8 @@ chacha20_encrypt_bytes(chacha_ctx *ctx, const uint8_t *m, uint8_t *c,
+ }
+ 
+ static int
+-stream_ref(unsigned char *c, unsigned long long clen, const unsigned char *n,
+-           const unsigned char *k)
++stream_ref_avx2(unsigned char *c, unsigned long long clen, const unsigned char *n,
++		const unsigned char *k)
+ {
+     struct chacha_ctx ctx;
+ 
+@@ -93,17 +93,17 @@ stream_ref(unsigned char *c, unsigned long long clen, const unsigned char *n,
+         return 0;
+     }
+     COMPILER_ASSERT(crypto_stream_chacha20_KEYBYTES == 256 / 8);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ivsetup(&ctx, n, NULL);
++    chacha_keysetup_avx2(&ctx, k);
++    chacha_ivsetup_avx2(&ctx, n, NULL);
+     memset(c, 0, clen);
+-    chacha20_encrypt_bytes(&ctx, c, c, clen);
++    chacha20_encrypt_bytes_avx2(&ctx, c, c, clen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+ }
+ 
+ static int
+-stream_ietf_ext_ref(unsigned char *c, unsigned long long clen,
++stream_ietf_ext_ref_avx2(unsigned char *c, unsigned long long clen,
+                     const unsigned char *n, const unsigned char *k)
+ {
+     struct chacha_ctx ctx;
+@@ -112,17 +112,17 @@ stream_ietf_ext_ref(unsigned char *c, unsigned long long clen,
+         return 0;
+     }
+     COMPILER_ASSERT(crypto_stream_chacha20_KEYBYTES == 256 / 8);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ietf_ivsetup(&ctx, n, NULL);
++    chacha_keysetup_avx2(&ctx, k);
++    chacha_ietf_ivsetup_avx2(&ctx, n, NULL);
+     memset(c, 0, clen);
+-    chacha20_encrypt_bytes(&ctx, c, c, clen);
++    chacha20_encrypt_bytes_avx2(&ctx, c, c, clen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+ }
+ 
+ static int
+-stream_ref_xor_ic(unsigned char *c, const unsigned char *m,
++stream_ref_xor_ic_avx2(unsigned char *c, const unsigned char *m,
+                   unsigned long long mlen, const unsigned char *n, uint64_t ic,
+                   const unsigned char *k)
+ {
+@@ -138,18 +138,18 @@ stream_ref_xor_ic(unsigned char *c, const unsigned char *m,
+     ic_low  = (uint32_t) ic;
+     STORE32_LE(&ic_bytes[0], ic_low);
+     STORE32_LE(&ic_bytes[4], ic_high);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ivsetup(&ctx, n, ic_bytes);
+-    chacha20_encrypt_bytes(&ctx, m, c, mlen);
++    chacha_keysetup_avx2(&ctx, k);
++    chacha_ivsetup_avx2(&ctx, n, ic_bytes);
++    chacha20_encrypt_bytes_avx2(&ctx, m, c, mlen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+ }
+ 
+ static int
+-stream_ietf_ext_ref_xor_ic(unsigned char *c, const unsigned char *m,
+-                           unsigned long long mlen, const unsigned char *n,
+-                           uint32_t ic, const unsigned char *k)
++stream_ietf_ext_ref_xor_ic_avx2(unsigned char *c, const unsigned char *m,
++				unsigned long long mlen, const unsigned char *n,
++				uint32_t ic, const unsigned char *k)
+ {
+     struct chacha_ctx ctx;
+     uint8_t           ic_bytes[4];
+@@ -158,9 +158,9 @@ stream_ietf_ext_ref_xor_ic(unsigned char *c, const unsigned char *m,
+         return 0;
+     }
+     STORE32_LE(ic_bytes, ic);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ietf_ivsetup(&ctx, n, ic_bytes);
+-    chacha20_encrypt_bytes(&ctx, m, c, mlen);
++    chacha_keysetup_avx2(&ctx, k);
++    chacha_ietf_ivsetup_avx2(&ctx, n, ic_bytes);
++    chacha20_encrypt_bytes_avx2(&ctx, m, c, mlen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+@@ -168,10 +168,10 @@ stream_ietf_ext_ref_xor_ic(unsigned char *c, const unsigned char *m,
+ 
+ struct crypto_stream_chacha20_implementation
+     crypto_stream_chacha20_dolbeau_avx2_implementation = {
+-        SODIUM_C99(.stream =) stream_ref,
+-        SODIUM_C99(.stream_ietf_ext =) stream_ietf_ext_ref,
+-        SODIUM_C99(.stream_xor_ic =) stream_ref_xor_ic,
+-        SODIUM_C99(.stream_ietf_ext_xor_ic =) stream_ietf_ext_ref_xor_ic
++        SODIUM_C99(.stream =) stream_ref_avx2,
++        SODIUM_C99(.stream_ietf_ext =) stream_ietf_ext_ref_avx2,
++        SODIUM_C99(.stream_xor_ic =) stream_ref_xor_ic_avx2,
++        SODIUM_C99(.stream_ietf_ext_xor_ic =) stream_ietf_ext_ref_xor_ic_avx2
+     };
+ 
+ #endif
+diff --git a/src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-ssse3.c b/src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-ssse3.c
+index 6f5d3851..30c1fb25 100644
+--- a/src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-ssse3.c
++++ b/src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-ssse3.c
+@@ -29,7 +29,7 @@ typedef struct chacha_ctx {
+ } chacha_ctx;
+ 
+ static void
+-chacha_keysetup(chacha_ctx *ctx, const uint8_t *k)
++chacha_keysetup_ssse3(chacha_ctx *ctx, const uint8_t *k)
+ {
+     ctx->input[0]  = 0x61707865;
+     ctx->input[1]  = 0x3320646e;
+@@ -46,7 +46,7 @@ chacha_keysetup(chacha_ctx *ctx, const uint8_t *k)
+ }
+ 
+ static void
+-chacha_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
++chacha_ivsetup_ssse3(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ {
+     ctx->input[12] = counter == NULL ? 0 : LOAD32_LE(counter + 0);
+     ctx->input[13] = counter == NULL ? 0 : LOAD32_LE(counter + 4);
+@@ -55,7 +55,7 @@ chacha_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ }
+ 
+ static void
+-chacha_ietf_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
++chacha_ietf_ivsetup_ssse3(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ {
+     ctx->input[12] = counter == NULL ? 0 : LOAD32_LE(counter);
+     ctx->input[13] = LOAD32_LE(iv + 0);
+@@ -64,7 +64,7 @@ chacha_ietf_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ }
+ 
+ static void
+-chacha20_encrypt_bytes(chacha_ctx *ctx, const uint8_t *m, uint8_t *c,
++chacha20_encrypt_bytes_ssse3(chacha_ctx *ctx, const uint8_t *m, uint8_t *c,
+                        unsigned long long bytes)
+ {
+     uint32_t * const x = &ctx->input[0];
+@@ -78,7 +78,7 @@ chacha20_encrypt_bytes(chacha_ctx *ctx, const uint8_t *m, uint8_t *c,
+ }
+ 
+ static int
+-stream_ref(unsigned char *c, unsigned long long clen, const unsigned char *n,
++stream_ref_ssse3(unsigned char *c, unsigned long long clen, const unsigned char *n,
+            const unsigned char *k)
+ {
+     struct chacha_ctx ctx;
+@@ -87,17 +87,17 @@ stream_ref(unsigned char *c, unsigned long long clen, const unsigned char *n,
+         return 0;
+     }
+     COMPILER_ASSERT(crypto_stream_chacha20_KEYBYTES == 256 / 8);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ivsetup(&ctx, n, NULL);
++    chacha_keysetup_ssse3(&ctx, k);
++    chacha_ivsetup_ssse3(&ctx, n, NULL);
+     memset(c, 0, clen);
+-    chacha20_encrypt_bytes(&ctx, c, c, clen);
++    chacha20_encrypt_bytes_ssse3(&ctx, c, c, clen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+ }
+ 
+ static int
+-stream_ietf_ext_ref(unsigned char *c, unsigned long long clen,
++stream_ietf_ext_ref_ssse3(unsigned char *c, unsigned long long clen,
+                     const unsigned char *n, const unsigned char *k)
+ {
+     struct chacha_ctx ctx;
+@@ -106,17 +106,17 @@ stream_ietf_ext_ref(unsigned char *c, unsigned long long clen,
+         return 0;
+     }
+     COMPILER_ASSERT(crypto_stream_chacha20_KEYBYTES == 256 / 8);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ietf_ivsetup(&ctx, n, NULL);
++    chacha_keysetup_ssse3(&ctx, k);
++    chacha_ietf_ivsetup_ssse3(&ctx, n, NULL);
+     memset(c, 0, clen);
+-    chacha20_encrypt_bytes(&ctx, c, c, clen);
++    chacha20_encrypt_bytes_ssse3(&ctx, c, c, clen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+ }
+ 
+ static int
+-stream_ref_xor_ic(unsigned char *c, const unsigned char *m,
++stream_ref_xor_ic_ssse3(unsigned char *c, const unsigned char *m,
+                   unsigned long long mlen, const unsigned char *n, uint64_t ic,
+                   const unsigned char *k)
+ {
+@@ -132,16 +132,16 @@ stream_ref_xor_ic(unsigned char *c, const unsigned char *m,
+     ic_low  = (uint32_t) ic;
+     STORE32_LE(&ic_bytes[0], ic_low);
+     STORE32_LE(&ic_bytes[4], ic_high);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ivsetup(&ctx, n, ic_bytes);
+-    chacha20_encrypt_bytes(&ctx, m, c, mlen);
++    chacha_keysetup_ssse3(&ctx, k);
++    chacha_ivsetup_ssse3(&ctx, n, ic_bytes);
++    chacha20_encrypt_bytes_ssse3(&ctx, m, c, mlen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+ }
+ 
+ static int
+-stream_ietf_ext_ref_xor_ic(unsigned char *c, const unsigned char *m,
++stream_ietf_ext_ref_xor_ic_ssse3(unsigned char *c, const unsigned char *m,
+                            unsigned long long mlen, const unsigned char *n,
+                            uint32_t ic, const unsigned char *k)
+ {
+@@ -152,9 +152,9 @@ stream_ietf_ext_ref_xor_ic(unsigned char *c, const unsigned char *m,
+         return 0;
+     }
+     STORE32_LE(ic_bytes, ic);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ietf_ivsetup(&ctx, n, ic_bytes);
+-    chacha20_encrypt_bytes(&ctx, m, c, mlen);
++    chacha_keysetup_ssse3(&ctx, k);
++    chacha_ietf_ivsetup_ssse3(&ctx, n, ic_bytes);
++    chacha20_encrypt_bytes_ssse3(&ctx, m, c, mlen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+@@ -162,10 +162,10 @@ stream_ietf_ext_ref_xor_ic(unsigned char *c, const unsigned char *m,
+ 
+ struct crypto_stream_chacha20_implementation
+     crypto_stream_chacha20_dolbeau_ssse3_implementation = {
+-        SODIUM_C99(.stream =) stream_ref,
+-        SODIUM_C99(.stream_ietf_ext =) stream_ietf_ext_ref,
+-        SODIUM_C99(.stream_xor_ic =) stream_ref_xor_ic,
+-        SODIUM_C99(.stream_ietf_ext_xor_ic =) stream_ietf_ext_ref_xor_ic
++        SODIUM_C99(.stream =) stream_ref_ssse3,
++        SODIUM_C99(.stream_ietf_ext =) stream_ietf_ext_ref_ssse3,
++        SODIUM_C99(.stream_xor_ic =) stream_ref_xor_ic_ssse3,
++        SODIUM_C99(.stream_ietf_ext_xor_ic =) stream_ietf_ext_ref_xor_ic_ssse3
+     };
+ 
+ #endif
+diff --git a/src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c b/src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c
+index 40cccbf8..2e4c7d5a 100644
+--- a/src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c
++++ b/src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c
+@@ -43,7 +43,7 @@ typedef struct chacha_ctx chacha_ctx;
+     b = ROTATE(XOR(b, c), 7);
+ 
+ static void
+-chacha_keysetup(chacha_ctx *ctx, const uint8_t *k)
++chacha_keysetup_ref(chacha_ctx *ctx, const uint8_t *k)
+ {
+     ctx->input[0]  = U32C(0x61707865);
+     ctx->input[1]  = U32C(0x3320646e);
+@@ -60,7 +60,7 @@ chacha_keysetup(chacha_ctx *ctx, const uint8_t *k)
+ }
+ 
+ static void
+-chacha_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
++chacha_ivsetup_ref(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ {
+     ctx->input[12] = counter == NULL ? 0 : LOAD32_LE(counter + 0);
+     ctx->input[13] = counter == NULL ? 0 : LOAD32_LE(counter + 4);
+@@ -69,7 +69,7 @@ chacha_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ }
+ 
+ static void
+-chacha_ietf_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
++chacha_ietf_ivsetup_ref(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ {
+     ctx->input[12] = counter == NULL ? 0 : LOAD32_LE(counter);
+     ctx->input[13] = LOAD32_LE(iv + 0);
+@@ -78,8 +78,8 @@ chacha_ietf_ivsetup(chacha_ctx *ctx, const uint8_t *iv, const uint8_t *counter)
+ }
+ 
+ static void
+-chacha20_encrypt_bytes(chacha_ctx *ctx, const uint8_t *m, uint8_t *c,
+-                       unsigned long long bytes)
++chacha20_encrypt_bytes_ref(chacha_ctx *ctx, const uint8_t *m, uint8_t *c,
++			   unsigned long long bytes)
+ {
+     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14,
+         x15;
+@@ -230,10 +230,10 @@ stream_ref(unsigned char *c, unsigned long long clen, const unsigned char *n,
+         return 0;
+     }
+     COMPILER_ASSERT(crypto_stream_chacha20_KEYBYTES == 256 / 8);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ivsetup(&ctx, n, NULL);
++    chacha_keysetup_ref(&ctx, k);
++    chacha_ivsetup_ref(&ctx, n, NULL);
+     memset(c, 0, clen);
+-    chacha20_encrypt_bytes(&ctx, c, c, clen);
++    chacha20_encrypt_bytes_ref(&ctx, c, c, clen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+@@ -249,10 +249,10 @@ stream_ietf_ext_ref(unsigned char *c, unsigned long long clen,
+         return 0;
+     }
+     COMPILER_ASSERT(crypto_stream_chacha20_KEYBYTES == 256 / 8);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ietf_ivsetup(&ctx, n, NULL);
++    chacha_keysetup_ref(&ctx, k);
++    chacha_ietf_ivsetup_ref(&ctx, n, NULL);
+     memset(c, 0, clen);
+-    chacha20_encrypt_bytes(&ctx, c, c, clen);
++    chacha20_encrypt_bytes_ref(&ctx, c, c, clen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+@@ -275,9 +275,9 @@ stream_ref_xor_ic(unsigned char *c, const unsigned char *m,
+     ic_low  = U32V(ic);
+     STORE32_LE(&ic_bytes[0], ic_low);
+     STORE32_LE(&ic_bytes[4], ic_high);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ivsetup(&ctx, n, ic_bytes);
+-    chacha20_encrypt_bytes(&ctx, m, c, mlen);
++    chacha_keysetup_ref(&ctx, k);
++    chacha_ivsetup_ref(&ctx, n, ic_bytes);
++    chacha20_encrypt_bytes_ref(&ctx, m, c, mlen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
+@@ -295,9 +295,9 @@ stream_ietf_ext_ref_xor_ic(unsigned char *c, const unsigned char *m,
+         return 0;
+     }
+     STORE32_LE(ic_bytes, ic);
+-    chacha_keysetup(&ctx, k);
+-    chacha_ietf_ivsetup(&ctx, n, ic_bytes);
+-    chacha20_encrypt_bytes(&ctx, m, c, mlen);
++    chacha_keysetup_ref(&ctx, k);
++    chacha_ietf_ivsetup_ref(&ctx, n, ic_bytes);
++    chacha20_encrypt_bytes_ref(&ctx, m, c, mlen);
+     sodium_memzero(&ctx, sizeof ctx);
+ 
+     return 0;
