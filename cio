@@ -244,8 +244,6 @@ echo -n Cleaning up build artifacts from compilation,checking pass...
 make --directory=$TARGET_DIR clean
 echo done
 
-echo "Reached point after bap call"
-# exit
 
 # TODO, this should be llc with just our passes which would get rid of our
 # need to have to play nice with the crypto lib's CFLAGS.
@@ -281,5 +279,18 @@ if [[ $MITIGATION_PASS_RES -ne 0 ]]; then
 fi
 
 echo -n Running verification pass...
-echo TODO
+echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
+echo "logging to ${BAP_LOGS}"
+bap \
+    --plugin-path=$CHECKER_PLUGIN_PATH \
+    --pass=uarch-checker \
+    --no-optimization --bil-optimization=0 \
+    --uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
+    $CHECKER_CS_FLAGS \
+    $CHECKER_SS_FLAGS \
+    --uarch-checker-no-symex \
+    --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
+    --uarch-checker-config-file=$CONFIG_FILE \
+    $BIG_OBJ > ${BAP_LOGS}.verification.log 2>&1
+echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
 echo done
