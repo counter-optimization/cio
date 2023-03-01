@@ -21,6 +21,7 @@ IS_LIBSODIUM=0
 
 MITIGATE_SS=0
 MITIGATE_CS=0
+DO_SYMEX=1
 
 function usage
 {
@@ -43,7 +44,7 @@ function usage
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs" -n $TOOLNAME -- "$@")
+PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex" -n $TOOLNAME -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -77,6 +78,11 @@ while true; do
 	    ;;
 	'--cs')
 	    MITIGATE_CS=1
+	    shift
+	    continue
+	    ;;
+	'--nosymex')
+	    DO_SYMEX=0
 	    shift
 	    continue
 	    ;;
@@ -144,6 +150,12 @@ if [[ $? -ne 0 ]]; then
     echo -e "\t4. opam install bap-primus-symbolic-executor"
     echo -e '\t5. eval $(opam env)'
     exit 3
+fi
+
+if [[ DO_SYMEX -eq 1 ]]; then
+    CHECKER_SYMEX_FLAGS="--uarch-checker-no-symex"
+else
+    CHECKER_SYMEX_FLAGS=""
 fi
 
 if [[ MITIGATE_CS -eq 0 ]]; then
@@ -234,7 +246,7 @@ bap \
     --uarch-checker-output-csv-file=$CHECKER_ALERTS_CSV \
     $CHECKER_CS_FLAGS \
     $CHECKER_SS_FLAGS \
-    --uarch-checker-no-symex \
+    $CHECKER_SYMEX_FLAGS \
     --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
     --uarch-checker-config-file=$CONFIG_FILE \
     $BIG_OBJ > $BAP_LOGS 2>&1
@@ -278,6 +290,12 @@ if [[ $MITIGATION_PASS_RES -ne 0 ]]; then
     exit 9
 fi
 
+# put all the object files into one big object file again
+echo -n "Gathering all intermediate object files into ${BIG_OBJ}..."
+find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -z muldefs -o ${BIG_OBJ}.verification.o -lc
+BUILD_BIG_OBJ_RES=$?
+echo done
+
 echo -n Running verification pass...
 echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
 echo "logging to ${BAP_LOGS}"
@@ -288,9 +306,9 @@ bap \
     --uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
     $CHECKER_CS_FLAGS \
     $CHECKER_SS_FLAGS \
-    --uarch-checker-no-symex \
+    $CHECKER_SYMEX_FLAGS \
     --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
     --uarch-checker-config-file=$CONFIG_FILE \
-    $BIG_OBJ > ${BAP_LOGS}.verification.log 2>&1
+    ${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
 echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
 echo done
