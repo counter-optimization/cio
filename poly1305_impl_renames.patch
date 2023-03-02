@@ -1,0 +1,133 @@
+diff --git a/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.c b/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.c
+index e798072f..c51015d0 100644
+--- a/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.c
++++ b/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.c
+@@ -33,7 +33,12 @@ poly1305_update(poly1305_state_internal_t *st, const unsigned char *m,
+         if (st->leftover < poly1305_block_size) {
+             return;
+         }
+-        poly1305_blocks(st, st->buffer, poly1305_block_size);
++#ifdef HAVE_TI_MODE
++	poly1305_blocks_64(st, st->buffer, poly1305_block_size);
++#else
++	poly1305_blocks_32(st, st->buffer, poly1305_block_size);
++#endif
++        
+         st->leftover = 0;
+     }
+ 
+@@ -41,7 +46,11 @@ poly1305_update(poly1305_state_internal_t *st, const unsigned char *m,
+     if (bytes >= poly1305_block_size) {
+         unsigned long long want = (bytes & ~(poly1305_block_size - 1));
+ 
+-        poly1305_blocks(st, m, want);
++#ifdef HAVE_TI_MODE
++	poly1305_blocks_64(st, st->buffer, poly1305_block_size);
++#else
++	poly1305_blocks_32(st, st->buffer, poly1305_block_size);
++#endif
+         m += want;
+         bytes -= want;
+     }
+diff --git a/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna32.h b/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna32.h
+index cef64480..3b4d223e 100644
+--- a/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna32.h
++++ b/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna32.h
+@@ -53,7 +53,7 @@ poly1305_init(poly1305_state_internal_t *st, const unsigned char key[32])
+ }
+ 
+ static void
+-poly1305_blocks(poly1305_state_internal_t *st, const unsigned char *m,
++poly1305_blocks_32(poly1305_state_internal_t *st, const unsigned char *m,
+                 unsigned long long bytes)
+ {
+     const unsigned long hibit = (st->final) ? 0UL : (1UL << 24); /* 1 << 128 */
+@@ -153,7 +153,7 @@ poly1305_finish(poly1305_state_internal_t *st, unsigned char mac[16])
+             st->buffer[i] = 0;
+         }
+         st->final = 1;
+-        poly1305_blocks(st, st->buffer, poly1305_block_size);
++        poly1305_blocks_32(st, st->buffer, poly1305_block_size);
+     }
+ 
+     /* fully carry h */
+diff --git a/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna64.h b/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna64.h
+index 2475bfa1..7c7d8d0c 100644
+--- a/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna64.h
++++ b/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna64.h
+@@ -59,7 +59,7 @@ poly1305_init(poly1305_state_internal_t *st, const unsigned char key[32])
+ }
+ 
+ static void
+-poly1305_blocks(poly1305_state_internal_t *st, const unsigned char *m,
++poly1305_blocks_64(poly1305_state_internal_t *st, const unsigned char *m,
+                 unsigned long long bytes)
+ {
+     const unsigned long long hibit =
+@@ -150,7 +150,7 @@ poly1305_finish(poly1305_state_internal_t *st, unsigned char mac[16])
+             st->buffer[i] = 0;
+         }
+         st->final = 1;
+-        poly1305_blocks(st, st->buffer, poly1305_block_size);
++        poly1305_blocks_64(st, st->buffer, poly1305_block_size);
+     }
+ 
+     /* fully carry h */
+diff --git a/src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c b/src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c
+index e80c961d..9344d587 100644
+--- a/src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c
++++ b/src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c
+@@ -193,7 +193,7 @@ poly1305_init_ext(poly1305_state_internal_t *st, const unsigned char key[32],
+ }
+ 
+ static POLY1305_NOINLINE void
+-poly1305_blocks(poly1305_state_internal_t *st, const unsigned char *m,
++poly1305_blocks_sse2(poly1305_state_internal_t *st, const unsigned char *m,
+                 unsigned long long bytes)
+ {
+     CRYPTO_ALIGN(64)
+@@ -777,7 +777,7 @@ poly1305_update(poly1305_state_internal_t *st, const unsigned char *m,
+         if (st->leftover < poly1305_block_size) {
+             return;
+         }
+-        poly1305_blocks(st, st->buffer, poly1305_block_size);
++        poly1305_blocks_sse2(st, st->buffer, poly1305_block_size);
+         st->leftover = 0;
+     }
+ 
+@@ -785,7 +785,7 @@ poly1305_update(poly1305_state_internal_t *st, const unsigned char *m,
+     if (bytes >= poly1305_block_size) {
+         unsigned long long want = (bytes & ~(poly1305_block_size - 1));
+ 
+-        poly1305_blocks(st, m, want);
++        poly1305_blocks_sse2(st, m, want);
+         m += want;
+         bytes -= want;
+     }
+@@ -814,7 +814,7 @@ poly1305_finish_ext(poly1305_state_internal_t *st, const unsigned char *m,
+         }
+         st->flags |=
+             (leftover >= 16) ? poly1305_final_shift8 : poly1305_final_shift16;
+-        poly1305_blocks(st, final, 32);
++        poly1305_blocks_sse2(st, final, 32);
+     }
+ 
+     if (st->flags & poly1305_started) {
+@@ -824,7 +824,7 @@ poly1305_finish_ext(poly1305_state_internal_t *st, const unsigned char *m,
+         } else {
+             st->flags |= poly1305_final_r_1;
+         }
+-        poly1305_blocks(st, NULL, 32);
++        poly1305_blocks_sse2(st, NULL, 32);
+     }
+ 
+     h0 = st->H.h[0];
+@@ -913,7 +913,7 @@ crypto_onetimeauth_poly1305_sse2(unsigned char *out, const unsigned char *m,
+     poly1305_init_ext(&st, key, inlen);
+     blocks = inlen & ~31;
+     if (blocks > 0) {
+-        poly1305_blocks(&st, m, blocks);
++        poly1305_blocks_sse2(&st, m, blocks);
+         m += blocks;
+         inlen -= blocks;
+     }

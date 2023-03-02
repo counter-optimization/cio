@@ -153,9 +153,9 @@ if [[ $? -ne 0 ]]; then
 fi
 
 if [[ DO_SYMEX -eq 1 ]]; then
-    CHECKER_SYMEX_FLAGS="--uarch-checker-no-symex"
-else
     CHECKER_SYMEX_FLAGS=""
+else
+    CHECKER_SYMEX_FLAGS="--uarch-checker-no-symex"
 fi
 
 if [[ MITIGATE_CS -eq 0 ]]; then

@@ -99,19 +99,17 @@ $(LIBSODIUM_BUILT).$(MITIGATIONS_STR):
 	git submodule init -- $(LIBSODIUM_DIR)
 	git submodule update --remote -- $(LIBSODIUM_DIR)
 	git submodule foreach 'git fetch --tags'
-	cd $(LIBSODIUM_DIR); git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); git apply ../chacha20_impl_renames.patch
-	# todo, set cflags,cc for libna build
-	cio --cc $(CC) \
+	cd $(LIBSODIUM_DIR); \
+		git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
+		git apply ../chacha20_impl_renames.patch; \
+		git apply ../poly1305_impl_renames.patch
+	./cio --cc $(CC) \
 		 -j $(NUM_MAKE_JOB_SLOTS) \
 		 --checker-plugin-path $(CHECKER_PLUGIN_PATH) \
 		 --is-libsodium \
 		 $(MITIGATIONS) \
 		 --config-file libsodium.uarch_checker.config \
 		 --crypto-dir $(LIBSODIUM_DIR)
-	# cd $(LIBSODIUM_DIR); \
-	#   	git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
-	# 	./configure CC=$(CC)
-	# $(MAKE) -C $(LIBSODIUM_DIR) 
 	touch $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 
 checker: $(CHECKER_BUILT)
