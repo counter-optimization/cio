@@ -174,7 +174,7 @@ else
     CC_SS_FLAGS="-mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV}"
 fi
 
-make clean
+make --directory=$TARGET_DIR clean
 
 pushd .
 cd $TARGET_DIR; ./configure CC=$CC
@@ -196,7 +196,7 @@ mkdir $BUILD_DIR
 echo done
 
 echo -n "Running target\'s makefile..."
-make -C $TARGET_DIR CC=$CC -j ${NUM_MAKE_JOB_SLOTS}
+make --directory=$TARGET_DIR CC=$CC -j ${NUM_MAKE_JOB_SLOTS}
 COMPILE_PASS_RES=$?
 # echo compile_pass_res is $COMPILE_PASS_RES
 echo done
@@ -259,6 +259,27 @@ echo -n Cleaning up build artifacts from compilation,checking pass...
 make --directory=$TARGET_DIR clean
 echo done
 
+echo "Transforming instructions in the following functions:"
+# first field of each csv record has the double quoted sub name
+HARDEN_FUNCS=$(tail -n +2 $CHECKER_ALERTS_CSV | gawk --field-separator="," '{ print $1 }' - | uniq)
+
+for func in $HARDEN_FUNCS; do
+    echo $func
+done
+
+# debugging: check that each sub is outputted the same, same SHA256 hash?
+# make --directory=$TARGET_DIR clean
+make --directory=$TARGET_DIR CC=$CC -j ${NUM_MAKE_JOB_SLOTS}
+find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -O0 -o $BIG_OBJ.second.time.o -lc
+echo $HARDEN_FUNCS | while read -r func
+do
+    echo Checking if func $func differs...
+    ORIG_CONTENTS=$(objdump --disassemble=$func $BIG_OBJ | tail -n +3)
+    NEW_CONTENTS=$(objdump --disassemble=$func $BIG_OBJ.second.time.o | tail -n +3)
+    ORIG_CONTENTS_HASH=$(echo $ORIG_CONTENTS | sha256sum -)
+    NEW_CONTENTS_HASH=$(echo $NEW_CONTENTS | sha256sum -)
+    test "$NEW_CONTENTS_HASH" != "$ORIG_CONTENTS_HASH" && echo "Disassembly for fn symbol $func differs"
+done
 
 # TODO, this should be llc with just our passes which would get rid of our
 # need to have to play nice with the crypto lib's CFLAGS.
@@ -284,6 +305,7 @@ echo -n Running mitigation pass...
 echo -n TODO, this should be llc with just our passes...
 echo final_cflags are $FINAL_CFLAGS
 export CFLAGS=$FINAL_CFLAGS
+make --directory=$TARGET_DIR clean
 make --environment-overrides --directory=$TARGET_DIR CC=$CC -j $NUM_MAKE_JOB_SLOTS
 MITIGATION_PASS_RES=$?
 echo done
@@ -315,3 +337,9 @@ bap \
     ${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
 echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
 echo done
+
+if [[ $IS_LIBSODIUM -eq 1 ]]; then
+    echo -n "Running libsodium unit tests..."
+    make --directory=$TARGET_DIR check
+    echo done
+fi
