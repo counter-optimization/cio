@@ -2,7 +2,7 @@
 
 # SET BY USER
 CC=`realpath ~/llvm-project/build/bin/clang`
-CHECKER_PLUGIN_PATH=`realpath ~/checker/bap/interval/`
+CHECKER_PLUGIN_PATH=`realpath ./checker/bap/interval/`
 
 # cio defaults
 TOOLNAME=cio
@@ -212,22 +212,22 @@ fi
 
 # put all per-function secret csv contents into one big  csv file
 # echo -n "Gathering all per-function secret csv files into ${ALL_SECRETS_CSV}..."
-# find $TARGET_DIR -name '*secrets.csv' -a ! -empty | xargs -I '{}' cat '{}' >> $CONFIG_FILE
-# GATHER_SECRETS_RES=$?
-# echo done
+find $TARGET_DIR -name '*secrets.csv' -a ! -empty | xargs -I '{}' cat '{}' >> $CONFIG_FILE
+GATHER_SECRETS_RES=$?
+echo done
 
-# if [[ $GATHER_SECRETS_RES -ne 0 ]]; then
-#     echo "Error gathering all per-function secret csv files into one. $TOOLNAME exiting."
-#     exit 7
-# fi
+if [[ $GATHER_SECRETS_RES -ne 0 ]]; then
+    echo "Error gathering all per-function secret csv files into one. $TOOLNAME exiting."
+    exit 7
+fi
 
-# echo -n "Cleaning up per-function secret csv files..."
-# find . -name '*secrets.csv' -a ! -path "*${BUILD_DIR}*" -delete
-# echo done
+echo -n "Cleaning up per-function secret csv files..."
+find $TARGET_DIR -name '*secrets.csv' -a ! -path "*${BUILD_DIR}*" -delete
+echo done
 
 # put all the object files into one big object file
 echo -n "Gathering all intermediate object files into ${BIG_OBJ}..."
-find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -z muldefs -o $BIG_OBJ -lc
+find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -O0 -o $BIG_OBJ -lc
 BUILD_BIG_OBJ_RES=$?
 echo done
 
@@ -235,6 +235,9 @@ if [[ $BUILD_BIG_OBJ_RES -ne 0 ]]; then
     echo "Error jamming all separate object files into one for use by checker. $TOOLNAME exiting."
     exit 8
 fi
+
+echo "SHA256 of pre-mitigation $BIG_OBJ is:"
+echo $(sha256sum $BIG_OBJ)
 
 echo "Starting checker on ${BIG_OBJ} using secrets file ${ALL_SECRETS_CSV}"
 echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
@@ -292,7 +295,7 @@ fi
 
 # put all the object files into one big object file again
 echo -n "Gathering all intermediate object files into ${BIG_OBJ}..."
-find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -z muldefs -o ${BIG_OBJ}.verification.o -lc
+find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -O0 -o ${BIG_OBJ}.verification.o -lc
 BUILD_BIG_OBJ_RES=$?
 echo done
 
