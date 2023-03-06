@@ -103,13 +103,6 @@ $(LIBSODIUM_BUILT).$(MITIGATIONS_STR):
 		git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
 		git apply ../chacha20_impl_renames.patch; \
 		git apply ../poly1305_impl_renames.patch
-	# ./cio --cc $(CC) \
-	# 	 -j $(NUM_MAKE_JOB_SLOTS) \
-	# 	 --checker-plugin-path $(CHECKER_PLUGIN_PATH) \
-	# 	 --is-libsodium \
-	# 	 $(MITIGATIONS) \
-	# 	 --config-file libsodium.uarch_checker.config \
-	# 	 --crypto-dir $(LIBSODIUM_DIR)
 	touch $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 
 checker: $(CHECKER_BUILT)
