@@ -103,6 +103,7 @@ $(LIBSODIUM_BUILT).$(MITIGATIONS_STR):
 		git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
 		git apply ../chacha20_impl_renames.patch; \
 		git apply ../poly1305_impl_renames.patch
+	$(MAKE) --directory $(LIBSODIUM_DIR)
 	touch $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 
 checker: $(CHECKER_BUILT)
@@ -110,7 +111,7 @@ checker: $(CHECKER_BUILT)
 $(CHECKER_BUILT):
 	git submodule init -- $(CHECKER_DIR)
 	git submodule update --remote -- $(CHECKER_DIR)
-	$(MAKE) -e -C $(CHECKER_PLUGIN_PATH) BAPBUILD_JOB_SLOTS=$(NUM_MAKE_JOB_SLOTS) debug
+/	$(MAKE) -e -C $(CHECKER_PLUGIN_PATH) BAPBUILD_JOB_SLOTS=$(NUM_MAKE_JOB_SLOTS) debug
 	touch $(CHECKER_BUILT)
 
 %.o: %.c
