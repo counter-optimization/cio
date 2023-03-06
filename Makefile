@@ -111,7 +111,7 @@ checker: $(CHECKER_BUILT)
 $(CHECKER_BUILT):
 	git submodule init -- $(CHECKER_DIR)
 	git submodule update --remote -- $(CHECKER_DIR)
-/	$(MAKE) -e -C $(CHECKER_PLUGIN_PATH) BAPBUILD_JOB_SLOTS=$(NUM_MAKE_JOB_SLOTS) debug
+	$(MAKE) -e -C $(CHECKER_PLUGIN_PATH) BAPBUILD_JOB_SLOTS=$(NUM_MAKE_JOB_SLOTS) debug
 	touch $(CHECKER_BUILT)
 
 %.o: %.c
