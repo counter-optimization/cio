@@ -1,0 +1,91 @@
+#!/bin/bash
+
+TOOLNAME=ciocc
+INIT_ARGS="$@"
+SEEN_C_FLAG=0
+SEEN_O_FLAG=0
+C_FILE=""
+OBJ_FILE=""
+LL_FILE=""
+MIR_FILE=""
+LL_FILE=
+OPT_FLAG="" # llc defaults to O2
+
+COMPILER_DIR="/home/mkf/llvm-project/build/bin/"
+COMPILER="$COMPILER_DIR/clang"
+LLC="$COMPILER_DIR/llc"
+
+
+FINAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+    if [[ ! ("$1" =~ 'PACKAGE_STRING') ]]; then
+	FINAL_ARGS+=( "$1" )
+    fi
+    
+    case "$1" in
+	'-o')
+	    SEEN_O_FLAG=1
+	    OBJ_FILE="$2"
+	    LL_FILE=${OBJ_FILE/%.o/.ll}
+	    LL_FILE=${LL_FILE/%.lo/.ll}
+	    MIR_FILE=${OBJ_FILE/%.o/.mir}
+	    MIR_FILE=${MIR_FILE/%.lo/.mir}
+	    # echo "Found object file: $OBJ_FILE"
+	    # echo "LL_FILE: $LL_FILE"
+	    # echo "MIR_FILE: $MIR_FILE"
+	    # FINAL_ARGS+=( "$(echo $2 | sed 's/\.o$/\.ll/' | sed 's/\.lo$/\.ll/')" )
+	    FINAL_ARGS+=( "$LL_FILE" )
+	    shift 2
+	    continue
+	    ;;
+	'-c')
+	    SEEN_C_FLAG=1
+	    C_FILE="$2"
+	    # echo "Found C file: $C_FILE"
+	    FINAL_ARGS+=( "$2" )
+	    shift 2
+	    continue
+	    ;;
+	'-O0' | '-O1' | '-O2' | '-O3' | '-Ofast')
+	    OPT_FLAG=$1
+	    FINAL_ARGS+=( "-emit-llvm" )
+	    # echo "Opt level is: $OPT_FLAG"
+	    shift
+	    continue
+	    ;;
+	*)
+	    shift
+	    continue
+	    ;;
+    esac
+    shift
+done
+
+# echo Num final args: "${#FINAL_ARGS[@]}"
+# echo Final args are: "${FINAL_ARGS[@]}"
+
+# take the same CL flags, add -emit-llvm to it, change '-o file.o' to '-o file.ll'
+# run 'llc $OPT_FLAG file.ll -o file.mir'
+# run 'llc file.mir -o file.o'
+if [[ SEEN_C_FLAG && SEEN_O_FLAG ]]; then
+    if [[ -z "$LL_FILE" || -z "$OBJ_FILE" || -z "$MIR_FILE" ]]; then
+	echo "Error getting .ll/.mir file name for command: $@, OBJ_FILE=$OBJ_FILE"
+	exit 1
+    fi
+    
+    # this is a C compiler call
+    # echo "C Compiler call:"
+    # echo "$COMPILER ${FINAL_ARGS[@]}"
+    echo "$COMPILER ${FINAL_ARGS[@]}"
+    $COMPILER "${FINAL_ARGS[@]}"
+    echo "$LLC $OPT_FLAG $LL_FILE -o $MIR_FILE"
+    $LLC $OPT_FLAG $LL_FILE -o $MIR_FILE
+    echo "$LLC $OPT_FLAG $LL_FILE -o $OBJ_FILE"
+    $LLC $OPT_FLAG $LL_FILE -o $OBJ_FILE
+else
+    # then probably linking, just pass the arguments through
+    $COMPILER "$@"
+fi
+
+

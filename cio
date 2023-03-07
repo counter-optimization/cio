@@ -195,8 +195,12 @@ fi
 mkdir $BUILD_DIR
 echo done
 
+DRY_RUN_LOG=$BUILD_DIR/initial_make_dry_run.log
+echo "Putting 'make --dry-run' output into $DRY_RUN_LOG"
+make -j 1 --directory=$TARGET_DIR CC=$CC  --dry-run > $DRY_RUN_LOG 2>&1
+
 echo -n "Running target\'s makefile..."
-make --directory=$TARGET_DIR CC=$CC -j ${NUM_MAKE_JOB_SLOTS}
+make -j 32 --directory=$TARGET_DIR CC=$CC
 COMPILE_PASS_RES=$?
 # echo compile_pass_res is $COMPILE_PASS_RES
 echo done
@@ -238,6 +242,10 @@ fi
 
 echo "SHA256 of pre-mitigation $BIG_OBJ is:"
 echo $(sha256sum $BIG_OBJ)
+
+echo Dumping BIR and DKNOWLEDGE into $BUILD_DIR/jammed.together.dbir.txt
+bap -dbir --no-optimization --bil-optimization=0 $BIG_OBJ &> $BUILD_DIR/jammed.together.dbir.txt
+bap -dknowledge --no-optimization --bil-optimization=0 $BIG_OBJ >> $BUILD_DIR/jammed.together.dbir.txt 2>&1
 
 echo "Starting checker on ${BIG_OBJ} using secrets file ${ALL_SECRETS_CSV}"
 echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
@@ -306,7 +314,7 @@ echo -n TODO, this should be llc with just our passes...
 echo final_cflags are $FINAL_CFLAGS
 export CFLAGS=$FINAL_CFLAGS
 make --directory=$TARGET_DIR clean
-make --environment-overrides --directory=$TARGET_DIR CC=$CC -j $NUM_MAKE_JOB_SLOTS
+make CFLAGS="$FINAL_CFLAGS" --environment-overrides --directory="$TARGET_DIR" CC=$CC -j $NUM_MAKE_JOB_SLOTS
 MITIGATION_PASS_RES=$?
 echo done
 
