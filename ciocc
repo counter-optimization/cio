@@ -80,12 +80,12 @@ if [[ SEEN_C_FLAG && SEEN_O_FLAG ]]; then
     echo "$COMPILER ${FINAL_ARGS[@]}"
     $COMPILER "${FINAL_ARGS[@]}"
     echo "$LLC $OPT_FLAG $LL_FILE -o $MIR_FILE"
-    $LLC $OPT_FLAG $LL_FILE -o $MIR_FILE
+    $LLC $OPT_FLAG $LL_FILE -o $MIR_FILE &>/dev/null
     echo "$LLC $OPT_FLAG $LL_FILE -o $OBJ_FILE"
-    $LLC $OPT_FLAG $LL_FILE -o $OBJ_FILE
+    $LLC $OPT_FLAG $LL_FILE -o $OBJ_FILE &>/dev/null
 else
     # then probably linking, just pass the arguments through
     $COMPILER "$@"
 fi
 
-
+exit 0
