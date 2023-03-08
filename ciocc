@@ -2,19 +2,23 @@
 
 TOOLNAME=ciocc
 INIT_ARGS="$@"
+
 SEEN_C_FLAG=0
 SEEN_O_FLAG=0
+OPT_FLAG="" # llc defaults to O2
+
 C_FILE=""
 OBJ_FILE=""
+ASM_FILE=""
 LL_FILE=""
 MIR_FILE=""
 LL_FILE=
-OPT_FLAG="" # llc defaults to O2
+
 
 COMPILER_DIR="/home/mkf/llvm-project/build/bin/"
 COMPILER="$COMPILER_DIR/clang"
 LLC="$COMPILER_DIR/llc"
-
+LLVM_MC="$COMPILER_DIR/llvm-mc"
 
 FINAL_ARGS=()
 
@@ -31,20 +35,35 @@ while [[ $# -gt 0 ]]; do
 	    LL_FILE=${LL_FILE/%.lo/.ll}
 	    MIR_FILE=${OBJ_FILE/%.o/.mir}
 	    MIR_FILE=${MIR_FILE/%.lo/.mir}
-	    # echo "Found object file: $OBJ_FILE"
-	    # echo "LL_FILE: $LL_FILE"
-	    # echo "MIR_FILE: $MIR_FILE"
-	    # FINAL_ARGS+=( "$(echo $2 | sed 's/\.o$/\.ll/' | sed 's/\.lo$/\.ll/')" )
+	    ASM_FILE=${OBJ_FILE/%.o/.s}
+	    ASM_FILE=${ASM_FILE/%.lo/.s}
+
+	    # libtool/autotools used?
+	    LL_FILE=${LL_FILE/.libs/}
+	    MIR_FILE=${MIR_FILE/.libs/}
+	    ASM_FILE=${ASM_FILE/.libs/}
+	    
+	    # if [[ "$OBJ_FILE" =~ '\.libs' ]]; then
+	    # 	echo "has .libs"
+	    # 	LL_FILE=${LL_FILE/.libs/}
+	    # 	MIR_FILE=${MIR_FILE/.libs/}
+	    # 	ASM_FILE=${ASM_FILE/.libs/}
+	    # else
+	    # 	echo "doesn't have .libs"
+	    # fi
 	    FINAL_ARGS+=( "$LL_FILE" )
 	    shift 2
 	    continue
 	    ;;
 	'-c')
-	    SEEN_C_FLAG=1
-	    C_FILE="$2"
-	    # echo "Found C file: $C_FILE"
-	    FINAL_ARGS+=( "$2" )
-	    shift 2
+	    if [[ "$2" =~ '.*\.(c|cpp)' ]]; then
+		SEEN_C_FLAG=1
+		C_FILE="$2"
+		FINAL_ARGS+=( "$2" )
+		shift 2
+	    else
+		shift
+	    fi
 	    continue
 	    ;;
 	'-O0' | '-O1' | '-O2' | '-O3' | '-Ofast')
@@ -74,17 +93,25 @@ if [[ SEEN_C_FLAG && SEEN_O_FLAG ]]; then
 	exit 1
     fi
     
-    # this is a C compiler call
-    # echo "C Compiler call:"
-    # echo "$COMPILER ${FINAL_ARGS[@]}"
+    # Make doesn't properly handle our intermediate build artifacts
+    # Build them clean from scratch every time
+    test -e "$LL_FILE" && rm "$LL_FILE"
+    test -e "$MIR_FILE" && rm "$MIR_FILE"
+    test -e "$ASM_FILE" && rm "$ASM_FILE"
+
     echo "$COMPILER ${FINAL_ARGS[@]}"
     $COMPILER "${FINAL_ARGS[@]}"
     echo "$LLC $OPT_FLAG $LL_FILE -o $MIR_FILE"
-    $LLC $OPT_FLAG $LL_FILE -o $MIR_FILE &>/dev/null
-    echo "$LLC $OPT_FLAG $LL_FILE -o $OBJ_FILE"
-    $LLC $OPT_FLAG $LL_FILE -o $OBJ_FILE &>/dev/null
+    $LLC $OPT_FLAG $LL_FILE -o $MIR_FILE >/dev/null
+    echo "$LLC $OPT_FLAG $LL_FILE -o $ASM_FILE"
+    $LLC $OPT_FLAG $LL_FILE -o $ASM_FILE >/dev/null
+
+    echo "$LLVM_MC $ASM_FILE -filetype=obj -o $OBJ_FILE"
+    $LLVM_MC $ASM_FILE -filetype=obj -o $OBJ_FILE
 else
-    # then probably linking, just pass the arguments through
+    # then probably linking or assembling, just pass the arguments through
+    echo "LINKING OR ASSEMBLING:"
+    echo "$COMPILER $@"
     $COMPILER "$@"
 fi
 
