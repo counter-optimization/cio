@@ -12,8 +12,18 @@ OBJ_FILE=""
 ASM_FILE=""
 LL_FILE=""
 MIR_FILE=""
-LL_FILE=
+LL_FILE=""
 
+# for saving state about this object file's compilation for later cio use.
+# cio calls make which calls libtool which calls ciocc.
+# a lot of cio's work runs on intermediate libtool build artifacts.
+# ciocc knows about these build artifacts, but cio does not.
+# so save some of this info in a bash script denoted by $CIOCC_FILE
+# that cio can source--i.e., 'source $CIOCC_FILE' where
+# CIOCC_FILE is the mir file name for this object file
+# with the .mir suffix changed to .ciocc--i.e., source ${SOME_MIR_FILE/%.mir/.ciocc}
+# gives cio the needed information for this .mir/.o/.ll file.
+CIOCC_FILE="" 
 
 COMPILER_DIR="/home/mkf/llvm-project/build/bin/"
 COMPILER="$COMPILER_DIR/clang"
@@ -46,11 +56,13 @@ while [[ $# -gt 0 ]]; do
 	    MIR_FILE=${MIR_FILE/%.lo/.mir}
 	    ASM_FILE=${OBJ_FILE/%.o/.s}
 	    ASM_FILE=${ASM_FILE/%.lo/.s}
+	    CIOCC_FILE=${MIR_FILE/%.mir/.ciocc}
 
 	    # libtool/autotools used?
 	    LL_FILE=${LL_FILE/.libs/}
 	    MIR_FILE=${MIR_FILE/.libs/}
 	    ASM_FILE=${ASM_FILE/.libs/}
+	    CIOCC_FILE=${CIOCC_FILE/.libs/}
 	    
 	    # if [[ "$OBJ_FILE" =~ '\.libs' ]]; then
 	    # 	echo "has .libs"
@@ -105,13 +117,17 @@ if [[ "$SEEN_C_FLAG" -eq 1 && "$SEEN_O_FLAG" -eq 1 ]]; then
 
     echo "$COMPILER ${FINAL_ARGS[@]}"
     $COMPILER "${FINAL_ARGS[@]}"
-    echo "$LLC ${LLC_FLAGS[@]} $OPT_FLAG $LL_FILE -o $MIR_FILE"
-    $LLC "${LLC_FLAGS[@]}" $OPT_FLAG $LL_FILE -o $MIR_FILE >/dev/null
-    echo "$LLC ${LLC_FLAGS[@]} $OPT_FLAG $LL_FILE -o $ASM_FILE"
-    $LLC "${LLC_FLAGS[@]}" $OPT_FLAG $LL_FILE -o $ASM_FILE >/dev/null
+    echo "$LLC $LLC_FLAGS $OPT_FLAG $LL_FILE -o $MIR_FILE"
+    $LLC "$LLC_FLAGS" $OPT_FLAG $LL_FILE -o $MIR_FILE >/dev/null
+    echo "$LLC $LLC_FLAGS $OPT_FLAG $LL_FILE -o $ASM_FILE"
+    $LLC "$LLC_FLAGS" $OPT_FLAG $LL_FILE -o $ASM_FILE >/dev/null
 
-    echo "$LLVM_MC ${LLVM_MC_FLAGS[@]} $ASM_FILE -filetype=obj -o $OBJ_FILE"
-    $LLVM_MC "${LLVM_MC_FLAGS[@]}" $ASM_FILE -filetype=obj -o $OBJ_FILE
+    echo "$LLVM_MC $LLVM_MC_FLAGS $ASM_FILE -filetype=obj -o $OBJ_FILE"
+    $LLVM_MC "$LLVM_MC_FLAGS" $ASM_FILE -filetype=obj -o $OBJ_FILE
+
+    echo "OBJ_FILE=$OBJ_FILE" >> "$CIOCC_FILE"
+    echo "MIR_FILE=$MIR_FILE" >> "$CIOCC_FILE"
+    echo "ASM_FILE=$ASM_FILE" >> "$CIOCC_FILE"
 else
     # then probably linking or assembling, just pass the arguments through
     echo "$COMPILER $@"
