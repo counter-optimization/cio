@@ -11,12 +11,7 @@ CHECKER_PLUGIN_PATH=`realpath ./checker/bap/interval/`
 
 # cio defaults
 TOOLNAME=cio
-BUILD_DIR=`realpath ./${TOOLNAME}-build`
-NORMAL_MAKE_LOG=`realpath ${BUILD_DIR}/normal.make.log`
-BIG_OBJ=`realpath ${BUILD_DIR}/jammed.together.o`
-ALL_SECRETS_CSV=`realpath ${BUILD_DIR}/secrets.csv`
-BAP_LOGS=`realpath ${BUILD_DIR}/bap.log`
-CHECKER_ALERTS_CSV=`realpath ${BUILD_DIR}/checker.alerts.csv`
+BUILD_DIR="./${TOOLNAME}-build"
 NUM_MAKE_JOB_SLOTS=8
 
 EXTRA_CFLAGS=""
@@ -27,6 +22,7 @@ IS_LIBSODIUM=0
 MITIGATE_SS=0
 MITIGATE_CS=0
 DO_SYMEX=1
+DO_CLEAN=0
 
 function usage
 {
@@ -41,6 +37,7 @@ function usage
 			   [ --is-libsodium <run libsodium init> ]
 			   [ --ss (do silent store checks and mitigations) ]
 			   [ --cs (do comp simp checks and mitigaitons) ]
+			   [ --clean (clean up intermediate build artifacts from the dir specified by -t or --crypto-dir flags) ]
 			   -f | --config-file <path to uarch checker config file for checking>
 			   -t | --crypto-dir <path to the crypto lib project that has the root makefile>
 			  
@@ -49,7 +46,7 @@ function usage
     exit 1
 }
 
-PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex" -n $TOOLNAME -- "$@")
+PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,clean,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex" -n $TOOLNAME -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -69,6 +66,11 @@ while true; do
 	'-j')
 	    NUM_MAKE_JOB_SLOTS=$2
 	    shift 2
+	    continue
+	    ;;
+	'--clean')
+	    DO_CLEAN=1
+	    shift
 	    continue
 	    ;;
 	'--is-libsodium')
@@ -144,6 +146,32 @@ while true; do
     shift
 done
 
+BUILD_DIR=$(realpath "$BUILD_DIR")
+mkdir "$BUILD_DIR"
+NORMAL_MAKE_LOG="${BUILD_DIR}/normal.make.log"
+BIG_OBJ="${BUILD_DIR}/jammed.together.o"
+ALL_SECRETS_CSV="${BUILD_DIR}/secrets.csv"
+BAP_LOGS="${BUILD_DIR}/bap.log"
+CHECKER_ALERTS_CSV="${BUILD_DIR}/checker.alerts.csv"
+
+if [[ "$DO_CLEAN" -eq 1 ]]; then
+    if [[ -n "$TARGET_DIR" ]]; then
+	set -x
+	find "$TARGET_DIR" -iname '*.ciocc' -delete
+	find "$TARGET_DIR" -iname '*.mir' -delete
+	find "$TARGET_DIR" -iname '*.ll' -delete
+	find "$TARGET_DIR" -iname '*.o' -delete
+	find "$TARGET_DIR" -iname '*.secrets.csv' -delete
+	if [[ -n "$BUILD_DIR" && -d "$BUILD_DIR" ]]; then
+	    rm -r "$BUILD_DIR"
+	fi
+	exit 0
+    else
+	echo "--crypto-dir or -t option must be specified when using --clean"
+	exit 1
+    fi
+fi
+
 # check if bap is installed for the checkers
 HAS_BAP=$(which bap)
 if [[ $? -ne 0 ]]; then
@@ -153,7 +181,8 @@ if [[ $? -ne 0 ]]; then
     echo -e "\t2. opam switch create bap-alpha --repos default,bap=git+https://github.com/BinaryAnalysisPlatform/opam-repository#testing 4.11.2+flambda"
     echo -e "\t3. opam install bap"
     echo -e "\t4. opam install bap-primus-symbolic-executor"
-    echo -e '\t5. eval $(opam env)'
+    echo -e "\t5. opam install z3"
+    echo -e '\t6. eval $(opam env)'
     exit 2
 fi
 
@@ -225,22 +254,22 @@ fi
 
 
 
-if [[ $IS_LIBSODIUM -eq 1 ]]; then
-    echo 'init sodium_init' > $CONFIG_FILE
-fi
+# if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
+#     echo 'init sodium_init' > $CONFIG_FILE
+# fi
 
 
 
-# put all per-function secret csv contents into one big  csv file
-# echo "Gathering all per-function secret csv files into ${ALL_SECRETS_CSV}..."
-find $TARGET_DIR -name '*secrets.csv' -a ! -empty | xargs -I '{}' cat '{}' >> $CONFIG_FILE
-GATHER_SECRETS_RES=$?
-echo done
+# # put all per-function secret csv contents into one big  csv file
+# # echo "Gathering all per-function secret csv files into ${ALL_SECRETS_CSV}..."
+# find $TARGET_DIR -name '*secrets.csv' -a ! -empty | xargs -I '{}' cat '{}' >> $CONFIG_FILE
+# GATHER_SECRETS_RES=$?
+# echo done
 
-if [[ $GATHER_SECRETS_RES -ne 0 ]]; then
-    echo "Error gathering all per-function secret csv files into one. $TOOLNAME exiting."
-    exit $GATHER_SECRETS_RES
-fi
+# if [[ $GATHER_SECRETS_RES -ne 0 ]]; then
+#     echo "Error gathering all per-function secret csv files into one. $TOOLNAME exiting."
+#     exit $GATHER_SECRETS_RES
+# fi
 
 echo "Cleaning up per-function secret csv files..."
 find $TARGET_DIR -name '*secrets.csv' -a ! -path "*${BUILD_DIR}*" -delete
@@ -298,20 +327,40 @@ bap \
 echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
 
 
+set -x
 
 ALL_MIR_FILES=$(find $TARGET_DIR -iname '*.mir')
 for MIR_FILE in $ALL_MIR_FILES; do
     CIOCC_COMPILATION_FILE=${MIR_FILE/%.mir/.ciocc}
+    LIBTOOL_FILE=${MIR_FILE/%.mir/.lo}
     if [[ ! (-e "$CIOCC_COMPILATION_FILE") ]]; then
 	echo "ciocc metadata file for MIR file $MIR_FILE doesn't exist"
 	exit 3
     fi
-    # this source provides definitions for ASM_FILE, MIR_FILE, OBJ_FILE 
+    # this source provides definitions for ASM_FILE, MIR_FILE, OBJ_FILE,
+    # LIBTOOL_OBJ_FILE
     source "$CIOCC_COMPILATION_FILE"
-    echo "$LLC --relocation-model=pic $LLC_SS_FLAGS $LLC_CS_FLAGS $MIR_FILE -o $ASM_FILE"
-    $LLC --relocation-model=pic "$LLC_SS_FLAGS" "$LLC_CS_FLAGS" $MIR_FILE -o $ASM_FILE
-    echo "$LLVM_MC --position-independent $ASM_FILE -filetype=obj -o $OBJ_FILE"
-    $LLVM_MC --position-independent $ASM_FILE -filetype=obj -o $OBJ_FILE
+    source "$LIBTOOL_FILE"
+    # echo "$LLC --relocation-model=pic $LLC_SS_FLAGS $LLC_CS_FLAGS $MIR_FILE -o $ASM_FILE"
+    # $LLC -x=mir --relocation-model=pic $LLC_SS_FLAGS $LLC_CS_FLAGS $MIR_FILE -o $ASM_FILE
+    LLC_PASSES=""
+    if [[ "$MITIGATE_SS" -eq 1 ]]; then
+	LLC_PASSES="ss"
+    fi
+    if [[ "$MITIGATE_CS" -eq 1 ]]; then
+	LLC_PASSES="$LLC_PASSES,csimp-mitigation"
+    fi
+	
+    $LLC --disable-verify --debug-pass=Structure -x=mir --relocation-model=pic --run-pass="$LLC_PASSES" --x86-cs-csv-path="$CHECKER_ALERTS_CSV" --x86-ss-csv-path="$CHECKER_ALERTS_CSV" "$MIR_FILE" -o "$MIR_FILE"
+
+    $LLC --disable-verify --debug-pass=Structure -x=mir --start-after=csimp-mitigation --relocation-model=pic --filetype=obj "$MIR_FILE" -o "$OBJ_FILE"
+    # echo "$LLVM_MC --position-independent $ASM_FILE -filetype=obj -o $OBJ_FILE"
+    # $LLVM_MC --position-independent "$ASM_FILE" --filetype=obj -o "$OBJ_FILE"
+    # echo "cp $OBJECT_FILE $OBJECT_FILE/../$pic_object"
+    BASE_DIR=$(dirname "$OBJ_FILE")
+    cp "$OBJ_FILE" "$BASE_DIR/$pic_object"
+    cp "$OBJ_FILE" "$BASE_DIR/$non_pic_object"
+    touch "$LIBTOOL_OBJ_FILE"
 done
 
 
