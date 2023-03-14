@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source llvm_patch.sh # imports function inline_patch_mir_file
+
 # SET BY USER
 OUR_LLVM_BINARIES=`realpath ~/llvm-project/build/bin`
 CLANG="$OUR_LLVM_BINARIES/clang" # need the underlying clang driver that ciocc uses
@@ -162,9 +164,10 @@ if [[ "$DO_CLEAN" -eq 1 ]]; then
 	find "$TARGET_DIR" -iname '*.ll' -delete
 	find "$TARGET_DIR" -iname '*.o' -delete
 	find "$TARGET_DIR" -iname '*.secrets.csv' -delete
-	if [[ -n "$BUILD_DIR" && -d "$BUILD_DIR" ]]; then
-	    rm -r "$BUILD_DIR"
-	fi
+	find "$TARGET_DIR" -iname '*.mirbak' -delete
+	# if [[ -n "$BUILD_DIR" && -d "$BUILD_DIR" ]]; then
+	#     rm -r "$BUILD_DIR"
+	# fi
 	exit 0
     else
 	echo "--crypto-dir or -t option must be specified when using --clean"
@@ -212,23 +215,22 @@ else
     LLC_SS_FLAGS="--x86-ss --x86-ss-csv-path=${CHECKER_ALERTS_CSV}"
 fi
 
-
 # need to set cio to a known-good state, so clean, re-configure
 make --directory=$TARGET_DIR clean
 
 pushd .
 # need the underlying clang driver that ciocc uses in configure.
 # ciocc currently does not work here
-cd $TARGET_DIR; ./configure CC=$CLANG
-CONFIG_RES=$?
-popd
+if [[ -e "$TARGET_DIR/configure" ]]; then
+    cd $TARGET_DIR; ./configure CC=$CLANG
+    CONFIG_RES=$?
+    popd
 
-if [[ $CONFIG_RES -ne 0 ]]; then
-    echo "Error running ./configure in $TARGET_DIR. $TOOLNAME exiting."
-    exit $CONFIG_RES
+    if [[ $CONFIG_RES -ne 0 ]]; then
+	echo "Error running ./configure in $TARGET_DIR. $TOOLNAME exiting."
+	exit $CONFIG_RES
+    fi
 fi
-
-
 
 # make the dir to hold all of the build artifacts
 echo "Creating ${TOOLNAME} build dir ${BUILD_DIR}..."
@@ -238,8 +240,6 @@ if [[ -e $BUILD_DIR ]]; then
 fi
 mkdir $BUILD_DIR
 echo done
-
-
 
 echo "Running target's makefile: make -j 32 --directory=$TARGET_DIR CC=$CC"
 make -j 32 --directory=$TARGET_DIR CC=$CC
@@ -251,8 +251,6 @@ if [[ $COMPILE_PASS_RES -ne 0 ]]; then
     echo "Error running $TOOLNAME initial compilation pass. $TOOLNAME exiting."
     exit $COMPILE_PASS_RES
 fi
-
-
 
 # if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
 #     echo 'init sodium_init' > $CONFIG_FILE
@@ -275,8 +273,6 @@ echo "Cleaning up per-function secret csv files..."
 find $TARGET_DIR -name '*secrets.csv' -a ! -path "*${BUILD_DIR}*" -delete
 echo done
 
-
-
 # put all the object files into one big object file
 if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
     source $TARGET_DIR/src/libsodium/libsodium.la
@@ -297,18 +293,12 @@ if [[ $BUILD_BIG_OBJ_RES -ne 0 ]]; then
     exit $BUILD_BIG_OBJ_RES
 fi
 
-
-
 echo "SHA256 of pre-mitigation $BIG_OBJ is:"
 echo $(sha256sum $BIG_OBJ)
-
-
 
 echo Dumping BIR and DKNOWLEDGE into $BUILD_DIR/jammed.together.dbir.txt
 bap -dbir --no-optimization --bil-optimization=0 $BIG_OBJ &> $BUILD_DIR/jammed.together.dbir.txt
 bap -dknowledge --no-optimization --bil-optimization=0 $BIG_OBJ >> $BUILD_DIR/jammed.together.dbir.txt 2>&1
-
-
 
 echo "Starting checker on ${BIG_OBJ} using secrets file ${ALL_SECRETS_CSV}"
 echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
@@ -326,8 +316,9 @@ bap \
     $BIG_OBJ > $BAP_LOGS 2>&1
 echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
 
-
 set -x
+
+# make --directory="$TARGET_DIR" clean
 
 ALL_MIR_FILES=$(find $TARGET_DIR -iname '*.mir')
 for MIR_FILE in $ALL_MIR_FILES; do
@@ -337,6 +328,10 @@ for MIR_FILE in $ALL_MIR_FILES; do
 	echo "ciocc metadata file for MIR file $MIR_FILE doesn't exist"
 	exit 3
     fi
+
+    if [[ "$(basename $MIR_FILE)" == "librdrand_la-randombytes_internal_random.mir" ]]; then
+	continue
+    fi
     # this source provides definitions for ASM_FILE, MIR_FILE, OBJ_FILE,
     # LIBTOOL_OBJ_FILE
     source "$CIOCC_COMPILATION_FILE"
@@ -344,33 +339,87 @@ for MIR_FILE in $ALL_MIR_FILES; do
     # echo "$LLC --relocation-model=pic $LLC_SS_FLAGS $LLC_CS_FLAGS $MIR_FILE -o $ASM_FILE"
     # $LLC -x=mir --relocation-model=pic $LLC_SS_FLAGS $LLC_CS_FLAGS $MIR_FILE -o $ASM_FILE
     LLC_PASSES=""
+    MITIGATION_OPTIONS=""
     if [[ "$MITIGATE_SS" -eq 1 ]]; then
 	LLC_PASSES="ss"
+	MITIGATION_OPTIONS="$MITIGATION_OPTIONS --x86-ss --x86-ss-csv-path=$CHECKER_ALERTS_CSV"
     fi
     if [[ "$MITIGATE_CS" -eq 1 ]]; then
 	LLC_PASSES="$LLC_PASSES,csimp-mitigation"
+	MITIGATION_OPTIONS="$MITIGATION_OPTIONS --x86-cs --x86-cs-csv-path=$CHECKER_ALERTS_CSV"
     fi
+    
+    inline_patch_mir_file "$MIR_FILE"
 	
-    $LLC --disable-verify --debug-pass=Structure -x=mir --relocation-model=pic --run-pass="$LLC_PASSES" --x86-cs-csv-path="$CHECKER_ALERTS_CSV" --x86-ss-csv-path="$CHECKER_ALERTS_CSV" "$MIR_FILE" -o "$MIR_FILE"
+    $LLC --disable-verify \
+	 --debug-pass=Structure \
+	 -x=mir \
+	 --relocation-model=pic \
+	 --run-pass="$LLC_PASSES" $MITIGATION_OPTIONS \
+	 "$MIR_FILE" -o "$MIR_FILE.mitigated"
 
-    $LLC --disable-verify --debug-pass=Structure -x=mir --start-after=csimp-mitigation --relocation-model=pic --filetype=obj "$MIR_FILE" -o "$OBJ_FILE"
-    # echo "$LLVM_MC --position-independent $ASM_FILE -filetype=obj -o $OBJ_FILE"
-    # $LLVM_MC --position-independent "$ASM_FILE" --filetype=obj -o "$OBJ_FILE"
-    # echo "cp $OBJECT_FILE $OBJECT_FILE/../$pic_object"
-    BASE_DIR=$(dirname "$OBJ_FILE")
-    cp "$OBJ_FILE" "$BASE_DIR/$pic_object"
-    cp "$OBJ_FILE" "$BASE_DIR/$non_pic_object"
-    touch "$LIBTOOL_OBJ_FILE"
+    MITIGATION_PASS_RESULT=$?
+
+    if [[ $MITIGATION_PASS_RESULT -eq 0 ]]; then
+	mv "$MIR_FILE.mitigated" "$MIR_FILE"
+
+	inline_patch_mir_file "$MIR_FILE"
+	
+	# $LLC --disable-verify \
+	#      --debug-pass=Structure \
+	#      -x=mir \
+	#      --relocation-model=pic \
+	#      --start-after=csimp-mitigation \
+	#      "$MIR_FILE" -o "$ASM_FILE"
+	
+	# TO_ASM_RESULT=$?
+
+	# if [[ $TO_ASM_RESULT -ne 0 ]]; then
+	#     echo "Error compiling MIR to ASM: $MIR_FILE -> $ASM_FILE"
+	#     # exit $TO_ASM_RESULT
+	# fi
+
+	TO_ASM_RESULT=0
+	if [[ $TO_ASM_RESULT -eq 0 ]]; then
+	    # $LLVM_MC --position-independent "$ASM_FILE" --filetype=obj -o "$OBJ_FILE"
+	    $LLC --disable-verify \
+		 --debug-pass=Structure \
+		 -x=mir \
+		 --start-after=csimp-mitigation \
+		 --relocation-model=pic \
+		 --filetype=obj \
+		 "$MIR_FILE" -o "$OBJ_FILE"
+
+	    TO_OBJ_RESULT=$?
+	    if [[ $TO_OBJ_RESULT -ne 0 ]]; then
+		echo "Error compiling mitigated hardened assembly to object file for $MIR_FILE -> $ASM_FILE -> $OBJ_FILE"
+		# exit $TO_OBJ_RESULT
+	    fi
+	fi
+
+	# echo "$LLVM_MC --position-independent $ASM_FILE -filetype=obj -o $OBJ_FILE"
+	# $LLVM_MC --position-independent "$ASM_FILE" --filetype=obj -o "$OBJ_FILE"
+	# echo "cp $OBJECT_FILE $OBJECT_FILE/../$pic_object"
+	BASE_DIR=$(dirname "$OBJ_FILE")
+	cp "$OBJ_FILE" "$BASE_DIR/$pic_object"
+	cp "$OBJ_FILE" "$BASE_DIR/$non_pic_object"
+	touch "$LIBTOOL_OBJ_FILE"
+    else
+	echo "Error running mitigation passes '--run-pass=$LLC_PASSES' on $MIR_FILE"
+    fi
 done
-
-
 
 # after regenerating the object files, the shared libraries should be out of
 # date, so running make should regenerate these automagically
 # don't need to use ciocc here
 make --directory="$TARGET_DIR" CC="$CLANG" -j "$NUM_MAKE_JOB_SLOTS"
 
+RELINK_RES=$?
 
+if [[ $RELINK_RES -ne 0 ]]; then
+    echo "Error relinking all object togethers after mitigation pass: $RELINK_RES"
+    exit $RELINK_RES
+fi
 
 # put all the object files into one big object file again
 if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
@@ -392,12 +441,8 @@ if [[ "$BUILD_BIG_OBJ_RES" -ne 0 ]]; then
     exit $BUILD_BIG_OBJ_RES
 fi
 
-
-
 echo "SHA256 of post-mitigation $BIG_OBJ.verification.o is:"
 echo $(sha256sum "$BIG_OBJ.verification.o")
-
-
 
 echo Running verification pass...
 echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
@@ -415,8 +460,6 @@ bap \
     ${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
 echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
 echo done
-
-
 
 if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
     echo "Running libsodium unit tests..."
