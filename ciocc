@@ -1,12 +1,19 @@
 #!/bin/bash
 
 # llvm_patch.sh must be in the working directory
-if [[ ! (-e 'llvm_patch.sh') ]]; then
+# if [[ ! (-e 'llvm_patch.sh') ]]; then
+    # echo "file llvm_patch.sh (from pandora-eval repo root) must be in the working directory"
+    # exit 1
+# fi
+
+CIOCC_LOCATION=$(realpath ~/pandora-eval)
+
+if [[ ! (-e "$CIOCC_LOCATION/llvm_patch.sh") ]]; then
     echo "file llvm_patch.sh (from pandora-eval repo root) must be in the working directory"
     exit 1
 fi
 
-source llvm_patch.sh # imports function inline_patch_mir_file
+source "$CIOCC_LOCATION/llvm_patch.sh" # imports function inline_patch_mir_file
 
 TOOLNAME=ciocc
 INIT_ARGS="$@"
