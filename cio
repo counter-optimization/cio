@@ -13,7 +13,8 @@ CHECKER_PLUGIN_PATH=`realpath ./checker/bap/interval/`
 
 # cio defaults
 TOOLNAME=cio
-BUILD_DIR="./${TOOLNAME}-build"
+TIMESTAMP=$(TZ='America/Los_Angeles' date +%F-%T-%Z)
+BUILD_DIR="./${TIMESTAMP}-${TOOLNAME}-build"
 NUM_MAKE_JOB_SLOTS=8
 
 EXTRA_CFLAGS=""
@@ -213,6 +214,20 @@ else
     CHECKER_SS_FLAGS="--uarch-checker-ss"
     CC_SS_FLAGS="-mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV}"
     LLC_SS_FLAGS="--x86-ss --x86-ss-csv-path=${CHECKER_ALERTS_CSV}"
+fi
+
+# build checkers
+echo "Building checkers..."
+make checker
+if [[ $? -ne 0 ]]; then
+	echo Couldn\'t build checkers. Please fix the problem and try again
+	exit 2
+fi
+
+# if target is libsodium, initialize and patch libsodium submodule
+if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
+    echo "Initializing libsodium submodule..."
+    make libsodium_init
 fi
 
 # need to set cio to a known-good state, so clean, re-configure

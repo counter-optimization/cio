@@ -95,7 +95,7 @@ eval_argon2id: eval_prereqs $(EVAL_ARGON2ID)
 
 eval_prereqs: $(LIBSODIUM_BUILT).$(MITIGATIONS_STR) $(CHECKER_BUILT)
 
-$(LIBSODIUM_BUILT).$(MITIGATIONS_STR):
+libsodium_init:
 	git submodule init -- $(LIBSODIUM_DIR)
 	git submodule update --remote -- $(LIBSODIUM_DIR)
 	git submodule foreach 'git fetch --tags'
@@ -103,14 +103,18 @@ $(LIBSODIUM_BUILT).$(MITIGATIONS_STR):
 		git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
 		git apply ../chacha20_impl_renames.patch; \
 		git apply ../poly1305_impl_renames.patch
+
+$(LIBSODIUM_BUILT).$(MITIGATIONS_STR): libsodium_init
 	$(MAKE) --directory $(LIBSODIUM_DIR)
 	touch $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 
 checker: $(CHECKER_BUILT)
 
-$(CHECKER_BUILT):
+checker_init:
 	git submodule init -- $(CHECKER_DIR)
 	git submodule update --remote -- $(CHECKER_DIR)
+
+$(CHECKER_BUILT): checker_init
 	$(MAKE) -e -C $(CHECKER_PLUGIN_PATH) BAPBUILD_JOB_SLOTS=$(NUM_MAKE_JOB_SLOTS) debug
 	touch $(CHECKER_BUILT)
 
@@ -126,8 +130,15 @@ clean_eval:
 	-rm -f eval_chacha20_poly1305_encrypt
 	-rm -f eval_chacha20_poly1305_decrypt
 
-clean: clean_eval
+clean_libsodium:
 	-rm $(LIBSODIUM_BUILT).*
-	-rm $(CHECKER_BUILT)
 	-$(MAKE) -C $(LIBSODIUM_DIR) clean
+	find libsodium -type f -name '*.secrets.csv' -delete
+	find libsodium -type f -name '*.ciocc' -delete
+	find libsodium -type f -name '*.ll' -delete
+	find libsodium -type f -name '*.mir' -delete
+	find libsodium -type f -name '*.s' -delete
+
+clean: clean_eval clean_libsodium
+	-rm $(CHECKER_BUILT)
 	-$(MAKE) -C $(CHECKER_PLUGIN_PATH) clean
