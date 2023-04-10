@@ -1,0 +1,190 @@
+diff --git a/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c b/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c
+index 8acb42ca..2397dde7 100644
+--- a/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c
++++ b/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c
+@@ -41,7 +41,7 @@
+ # include "blamka-round-avx2.h"
+ 
+ static void
+-fill_block(__m256i *state, const uint8_t *ref_block, uint8_t *next_block)
++fill_block_avx2(__m256i *state, const uint8_t *ref_block, uint8_t *next_block)
+ {
+     __m256i  block_XY[ARGON2_HWORDS_IN_BLOCK];
+     uint32_t i;
+@@ -68,7 +68,7 @@ fill_block(__m256i *state, const uint8_t *ref_block, uint8_t *next_block)
+ }
+ 
+ static void
+-fill_block_with_xor(__m256i *state, const uint8_t *ref_block,
++fill_block_with_xor_avx2(__m256i *state, const uint8_t *ref_block,
+                     uint8_t *next_block)
+ {
+     __m256i  block_XY[ARGON2_HWORDS_IN_BLOCK];
+@@ -128,10 +128,10 @@ generate_addresses(const argon2_instance_t *instance,
+                 /* Increasing index counter */
+                 input_block.v[6]++;
+                 /* First iteration of G */
+-                fill_block_with_xor(zero_block, (uint8_t *) &input_block.v,
++                fill_block_with_xor_avx2(zero_block, (uint8_t *) &input_block.v,
+                                     (uint8_t *) &tmp_block.v);
+                 /* Second iteration of G */
+-                fill_block_with_xor(zero2_block, (uint8_t *) &tmp_block.v,
++                fill_block_with_xor_avx2(zero2_block, (uint8_t *) &tmp_block.v,
+                                     (uint8_t *) &address_block.v);
+             }
+ 
+@@ -228,10 +228,10 @@ fill_segment_avx2(const argon2_instance_t *instance,
+                     instance->lane_length * ref_lane + ref_index;
+         curr_block = instance->region->memory + curr_offset;
+         if (position.pass != 0) {
+-            fill_block_with_xor(state, (uint8_t *) ref_block->v,
++            fill_block_with_xor_avx2(state, (uint8_t *) ref_block->v,
+                                 (uint8_t *) curr_block->v);
+         } else {
+-            fill_block(state, (uint8_t *) ref_block->v,
++            fill_block_avx2(state, (uint8_t *) ref_block->v,
+                        (uint8_t *) curr_block->v);
+         }
+     }
+diff --git a/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c b/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c
+index 1f1ec8b3..9a179e32 100644
+--- a/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c
++++ b/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c
+@@ -42,7 +42,7 @@
+ # include "blamka-round-avx512f.h"
+ 
+ static void
+-fill_block(__m512i *state, const uint8_t *ref_block, uint8_t *next_block)
++fill_block_avx512f(__m512i *state, const uint8_t *ref_block, uint8_t *next_block)
+ {
+     __m512i  block_XY[ARGON2_512BIT_WORDS_IN_BLOCK];
+     uint32_t i;
+@@ -71,7 +71,7 @@ fill_block(__m512i *state, const uint8_t *ref_block, uint8_t *next_block)
+ }
+ 
+ static void
+-fill_block_with_xor(__m512i *state, const uint8_t *ref_block,
++fill_block_with_xor_avx512f(__m512i *state, const uint8_t *ref_block,
+                     uint8_t *next_block)
+ {
+     __m512i  block_XY[ARGON2_512BIT_WORDS_IN_BLOCK];
+@@ -133,10 +133,10 @@ generate_addresses(const argon2_instance_t *instance,
+                 /* Increasing index counter */
+                 input_block.v[6]++;
+                 /* First iteration of G */
+-                fill_block_with_xor(zero_block, (uint8_t *) &input_block.v,
++                fill_block_with_xor_avx512f(zero_block, (uint8_t *) &input_block.v,
+                                     (uint8_t *) &tmp_block.v);
+                 /* Second iteration of G */
+-                fill_block_with_xor(zero2_block, (uint8_t *) &tmp_block.v,
++                fill_block_with_xor_avx512f(zero2_block, (uint8_t *) &tmp_block.v,
+                                     (uint8_t *) &address_block.v);
+             }
+ 
+@@ -233,10 +233,10 @@ fill_segment_avx512f(const argon2_instance_t *instance,
+                     instance->lane_length * ref_lane + ref_index;
+         curr_block = instance->region->memory + curr_offset;
+         if (position.pass != 0) {
+-            fill_block_with_xor(state, (uint8_t *) ref_block->v,
++            fill_block_with_xor_avx512f(state, (uint8_t *) ref_block->v,
+                                 (uint8_t *) curr_block->v);
+         } else {
+-            fill_block(state, (uint8_t *) ref_block->v,
++            fill_block_avx512f(state, (uint8_t *) ref_block->v,
+                        (uint8_t *) curr_block->v);
+         }
+     }
+diff --git a/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c b/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c
+index 75e8d8f5..76822bf4 100644
+--- a/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c
++++ b/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c
+@@ -21,7 +21,7 @@
+ #include "private/common.h"
+ 
+ static void
+-fill_block(const block *prev_block, const block *ref_block, block *next_block)
++fill_block_ref(const block *prev_block, const block *ref_block, block *next_block)
+ {
+     block    blockR, block_tmp;
+     unsigned i;
+@@ -59,7 +59,7 @@ fill_block(const block *prev_block, const block *ref_block, block *next_block)
+ }
+ 
+ static void
+-fill_block_with_xor(const block *prev_block, const block *ref_block,
++fill_block_with_xor_ref(const block *prev_block, const block *ref_block,
+                     block *next_block)
+ {
+     block    blockR, block_tmp;
+@@ -131,8 +131,8 @@ generate_addresses(const argon2_instance_t *instance,
+                 input_block.v[6]++;
+                 init_block_value(&tmp_block, 0);
+                 init_block_value(&address_block, 0);
+-                fill_block_with_xor(&zero_block, &input_block, &tmp_block);
+-                fill_block_with_xor(&zero_block, &tmp_block, &address_block);
++                fill_block_with_xor_ref(&zero_block, &input_block, &tmp_block);
++                fill_block_with_xor_ref(&zero_block, &tmp_block, &address_block);
+             }
+ 
+             pseudo_rands[i] = address_block.v[i % ARGON2_ADDRESSES_IN_BLOCK];
+@@ -223,10 +223,10 @@ fill_segment_ref(const argon2_instance_t *instance, argon2_position_t position)
+                     instance->lane_length * ref_lane + ref_index;
+         curr_block = instance->region->memory + curr_offset;
+         if (position.pass != 0) {
+-            fill_block_with_xor(instance->region->memory + prev_offset,
++            fill_block_with_xor_ref(instance->region->memory + prev_offset,
+                                 ref_block, curr_block);
+         } else {
+-            fill_block(instance->region->memory + prev_offset, ref_block,
++            fill_block_ref(instance->region->memory + prev_offset, ref_block,
+                        curr_block);
+         }
+     }
+diff --git a/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c b/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c
+index 796c4455..ff4adef5 100644
+--- a/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c
++++ b/src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c
+@@ -36,7 +36,7 @@
+ # include "blamka-round-ssse3.h"
+ 
+ static void
+-fill_block(__m128i *state, const uint8_t *ref_block, uint8_t *next_block)
++fill_block_ssse3(__m128i *state, const uint8_t *ref_block, uint8_t *next_block)
+ {
+     __m128i  block_XY[ARGON2_OWORDS_IN_BLOCK];
+     uint32_t i;
+@@ -65,7 +65,7 @@ fill_block(__m128i *state, const uint8_t *ref_block, uint8_t *next_block)
+ }
+ 
+ static void
+-fill_block_with_xor(__m128i *state, const uint8_t *ref_block,
++fill_block_with_xor_ssse3(__m128i *state, const uint8_t *ref_block,
+                     uint8_t *next_block)
+ {
+     __m128i  block_XY[ARGON2_OWORDS_IN_BLOCK];
+@@ -127,10 +127,10 @@ generate_addresses(const argon2_instance_t *instance,
+                 /* Increasing index counter */
+                 input_block.v[6]++;
+                 /* First iteration of G */
+-                fill_block_with_xor(zero_block, (uint8_t *) &input_block.v,
++                fill_block_with_xor_ssse3(zero_block, (uint8_t *) &input_block.v,
+                                     (uint8_t *) &tmp_block.v);
+                 /* Second iteration of G */
+-                fill_block_with_xor(zero2_block, (uint8_t *) &tmp_block.v,
++                fill_block_with_xor_ssse3(zero2_block, (uint8_t *) &tmp_block.v,
+                                     (uint8_t *) &address_block.v);
+             }
+ 
+@@ -227,10 +227,10 @@ fill_segment_ssse3(const argon2_instance_t *instance,
+                     instance->lane_length * ref_lane + ref_index;
+         curr_block = instance->region->memory + curr_offset;
+         if (position.pass != 0) {
+-            fill_block_with_xor(state, (uint8_t *) ref_block->v,
++            fill_block_with_xor_ssse3(state, (uint8_t *) ref_block->v,
+                                 (uint8_t *) curr_block->v);
+         } else {
+-            fill_block(state, (uint8_t *) ref_block->v,
++            fill_block_ssse3(state, (uint8_t *) ref_block->v,
+                        (uint8_t *) curr_block->v);
+         }
+     }
