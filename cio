@@ -316,7 +316,7 @@ bap -dbir --no-optimization --bil-optimization=0 $BIG_OBJ &> $BUILD_DIR/jammed.t
 bap -dknowledge --no-optimization --bil-optimization=0 $BIG_OBJ >> $BUILD_DIR/jammed.together.dbir.txt 2>&1
 
 echo "Starting checker on ${BIG_OBJ} using secrets file ${ALL_SECRETS_CSV}"
-echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
+echo "Start time is: $(TZ='America/Los_Angeles' date +%F-%T-%Z)"
 echo "logging to ${BAP_LOGS}"
 bap \
     --plugin-path=$CHECKER_PLUGIN_PATH \
@@ -329,7 +329,17 @@ bap \
     --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
     --uarch-checker-config-file=$CONFIG_FILE \
     $BIG_OBJ > $BAP_LOGS 2>&1
-echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
+echo "Done checking $BIG_OBJ at $(TZ='America/Los_Angeles' date +%F-%T-%Z)"
+
+echo "Checking if bap actually ran... you should also check that the elapsed time above is >= 10 minutes"
+LINES_IN_BAP_ALERTS=$(wc -l "$CHECKER_ALERTS_CSV" | awk '{ print $1 }')
+if [[ $LINES_IN_BAP_ALERTS -le 1 ]]; then
+    # check for <= 1 because if it is empty or only contains the header row, there is probably a problem
+    echo "ERROR: Number of rows in bap alerts file ($CHECKER_ALERTS_CSV) is <= 1 after checking step."
+    echo "ERROR: BAP probably did not run or did not run properly. Please check ($BAP_LOGS) for more info"
+    echo "ERROR: exiting."
+    exit 3
+fi
 
 set -x
 
@@ -460,7 +470,7 @@ echo "SHA256 of post-mitigation $BIG_OBJ.verification.o is:"
 echo $(sha256sum "$BIG_OBJ.verification.o")
 
 echo Running verification pass...
-echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
+echo "Start time is: $(TZ='America/Los_Angeles' date +%F-%T-%Z)"
 echo "logging to ${BAP_LOGS}"
 bap \
     --plugin-path=$CHECKER_PLUGIN_PATH \
@@ -473,11 +483,21 @@ bap \
     --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
     --uarch-checker-config-file=$CONFIG_FILE \
     ${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
-echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
+echo "Done checking $BIG_OBJ at $(TZ='America/Los_Angeles' date +%F-%T-%Z)"
 echo done
 
 if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
     echo "Running libsodium unit tests..."
     make -j 32 --directory="$TARGET_DIR" check
     echo done
+fi
+
+LINES_IN_BAP_VERIF_ALERTS=$(wc -l "${CHECKER_ALERTS_CSV}.verification.csv" | awk '{ print $1 }')
+if [[ $LINES_IN_BAP_VERIF_ALERTS -gt 1 ]]; then
+    echo "ERROR: BAP and checkers couldn't verify that the final code is free of leaks"
+    echo "ERROR: See ${CHECKER_ALERTS_CSV}.verification.csv and ${BAP_LOGS}.verification.log for more info"
+    echo "ERROR: exiting"
+    exit 4
+else
+    exit 0
 fi
