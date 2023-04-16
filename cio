@@ -10,6 +10,7 @@ LLVM_MC="$OUR_LLVM_BINARIES/llvm-mc"
 CIOCC=`realpath ./ciocc`
 CC="$CIOCC"
 CHECKER_PLUGIN_PATH=`realpath ./checker/bap/interval/`
+CHECKER_PLUGIN_NAME="uarch_checker.plugin"
 
 # cio defaults
 TOOLNAME=cio
@@ -182,7 +183,7 @@ if [[ $? -ne 0 ]]; then
     echo Looks like bap is not installed or available on your path.
     echo To install bap:
     echo -e "\t1. Install the OCaml package manager, opam, using the system package manager, then run the following commands:"
-    echo -e "\t2. opam switch create bap-alpha --repos default,bap=git+https://github.com/BinaryAnalysisPlatform/opam-repository#testing 4.11.2+flambda"
+    echo -e "\t2. opam switch create bap-alpha --repos default,bap=git+https://github.com/BinaryAnalysisPlatform/opam-repository#testing 4.14.0"
     echo -e "\t3. opam install bap"
     echo -e "\t4. opam install bap-primus-symbolic-executor"
     echo -e "\t5. opam install z3"
@@ -218,16 +219,14 @@ fi
 
 # build checkers
 echo "Building checkers..."
-make checker
-if [[ $? -ne 0 ]]; then
-	echo Couldn\'t build checkers. Please fix the problem and try again
-	exit 2
+if [[ ! (-e "$CHECKER_PLUGIN_PATH/$CHECKER_PLUGIN_NAME") ]]; then
+    echo "Checkers arent built, please run 'make checker_init', then rerun cio"
+    exit 2
 fi
 
-# if target is libsodium, initialize and patch libsodium submodule
-if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
-    echo "Initializing libsodium submodule..."
-    make libsodium_init
+if [[ "$IS_LIBSODIUM" -eq 1 && ! (-e "$TARGET_DIR/Makefile") ]]; then
+    echo "Libsodium submodule isn't initialized, please run 'make libsodium_init', then rerun cio"
+    exit 2
 fi
 
 # need to set cio to a known-good state, so clean, re-configure
@@ -270,7 +269,6 @@ fi
 # if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
 #     echo 'init sodium_init' > $CONFIG_FILE
 # fi
-
 
 
 # # put all per-function secret csv contents into one big  csv file
@@ -390,19 +388,6 @@ for MIR_FILE in $ALL_MIR_FILES; do
 
 	inline_patch_mir_file "$MIR_FILE"
 	
-	# $LLC --disable-verify \
-	#      --debug-pass=Structure \
-	#      -x=mir \
-	#      --relocation-model=pic \
-	#      --start-after=csimp-mitigation \
-	#      "$MIR_FILE" -o "$ASM_FILE"
-	
-	# TO_ASM_RESULT=$?
-
-	# if [[ $TO_ASM_RESULT -ne 0 ]]; then
-	#     echo "Error compiling MIR to ASM: $MIR_FILE -> $ASM_FILE"
-	#     # exit $TO_ASM_RESULT
-	# fi
 
 	TO_ASM_RESULT=0
 	if [[ $TO_ASM_RESULT -eq 0 ]]; then
@@ -422,9 +407,6 @@ for MIR_FILE in $ALL_MIR_FILES; do
 	    fi
 	fi
 
-	# echo "$LLVM_MC --position-independent $ASM_FILE -filetype=obj -o $OBJ_FILE"
-	# $LLVM_MC --position-independent "$ASM_FILE" --filetype=obj -o "$OBJ_FILE"
-	# echo "cp $OBJECT_FILE $OBJECT_FILE/../$pic_object"
 	BASE_DIR=$(dirname "$OBJ_FILE")
 	cp "$OBJ_FILE" "$BASE_DIR/$pic_object"
 	cp "$OBJ_FILE" "$BASE_DIR/$non_pic_object"
