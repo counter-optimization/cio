@@ -6,7 +6,7 @@
     # exit 1
 # fi
 
-CIOCC_LOCATION=$(realpath ~/tmp/pandora-eval)
+CIOCC_LOCATION=$(realpath ~/pandora-eval)
 
 if [[ ! (-e "$CIOCC_LOCATION/llvm_patch.sh") ]]; then
     echo "file llvm_patch.sh (from pandora-eval repo root) must be in the working directory"

@@ -1,9 +1,25 @@
 
 # fixups for invalid MIR serialized by LLVM
-function inline_patch_mir_file () {
+function inline_patch_mir_file {
     set -x
+
+    BASENAME=$(basename "$1")
+    echo "BASENAME is $BASENAME"
+    if [[ "$BASENAME" == "libsse2_la-poly1305_sse2.indexed.mir" ]]; then
+	echo "inline patching file: $1"
+	sed -i'' 's/<4 x i32> zeroinitializer/<4 x i32> <i32 0, i32 0, i32 0, i32 0>/gi' "$1"
+	
+	SED_RES=$?
+	if [[ $SED_RES -ne 0 ]]; then
+	    echo "sed for zeroinitializer failed"
+	    exit $SED_RES
+	fi
+    fi
     
-    if [[ $(basename "$1") == "libsse2_la-poly1305_sse2.mir" ]]; then
+    # ibsse2_la-poly1305_sse2.indexed.mir
+    # libsse2_la-poly1305_sse2.indexed.mir
+    if [[ "$BASENAME" == "libsse2_la-poly1305_sse2.mir" ]]; then
+	echo "inline patching file: $1"
 	sed -i'' 's/<4 x i32> zeroinitializer/<4 x i32> <i32 0, i32 0, i32 0, i32 0>/gi' "$1"
 	
 	SED_RES=$?
