@@ -345,7 +345,7 @@ set -x
 
 # make --directory="$TARGET_DIR" clean
 
-ALL_MIR_FILES=$(find $TARGET_DIR -iname '*.mir')
+ALL_MIR_FILES=$(find $TARGET_DIR -iname '*.mir' -a ! -iname '*.indexed.mir')
 for MIR_FILE in $ALL_MIR_FILES; do
     CIOCC_COMPILATION_FILE=${MIR_FILE/%.mir/.ciocc}
     LIBTOOL_FILE=${MIR_FILE/%.mir/.lo}
@@ -375,9 +375,9 @@ for MIR_FILE in $ALL_MIR_FILES; do
     fi
     
     inline_patch_mir_file "$MIR_FILE"
-	
+
+    # --debug-pass=Structure
     $LLC --disable-verify \
-	 --debug-pass=Structure \
 	 -x=mir \
 	 --relocation-model=pic \
 	 --run-pass="$LLC_PASSES" $MITIGATION_OPTIONS \

@@ -6,7 +6,7 @@
     # exit 1
 # fi
 
-CIOCC_LOCATION=$(realpath ~/pandora-eval)
+CIOCC_LOCATION=$(realpath ~/tmp/pandora-eval)
 
 if [[ ! (-e "$CIOCC_LOCATION/llvm_patch.sh") ]]; then
     echo "file llvm_patch.sh (from pandora-eval repo root) must be in the working directory"
@@ -76,6 +76,8 @@ while [[ $# -gt 0 ]]; do
 	    LIBTOOL_OBJ_FILE=${LL_FILE/%.ll/.lo}
 	    MIR_FILE=${OBJ_FILE/%.o/.mir}
 	    MIR_FILE=${MIR_FILE/%.lo/.mir}
+	    INDEXED_MIR_FILE=${OBJ_FILE/%.o/.indexed.mir}
+	    INDEXED_MIR_FILE=${INDEXED_MIR_FILE/%.lo/.indexed.mir}
 	    ASM_FILE=${OBJ_FILE/%.o/.s}
 	    ASM_FILE=${ASM_FILE/%.lo/.s}
 	    CIOCC_FILE=${MIR_FILE/%.mir/.ciocc}
@@ -137,12 +139,14 @@ if [[ $SEEN_C_FLAG -eq 1 && $SEEN_O_FLAG -eq 1 && $LINK_MODE -ne 1 ]]; then
     test -e "$LL_FILE" && rm "$LL_FILE"
     test -e "$MIR_FILE" && rm "$MIR_FILE"
     test -e "$ASM_FILE" && rm "$ASM_FILE"
+    test -e "$INDEXED_MIR_FILE" && rm "$INDEXED_MIR_FILE"
 
     set -x
 
     $COMPILER "${FINAL_ARGS[@]}"
 
-    $LLC "$LLC_FLAGS" --debug-pass=Structure --stop-after=pseudo-probe-inserter $OPT_FLAG $LL_FILE -o $MIR_FILE
+    # --debug-pass=Structure
+    $LLC "$LLC_FLAGS" --stop-after=pseudo-probe-inserter $OPT_FLAG $LL_FILE -o $MIR_FILE
 
     TO_MIR_RET=$?
     
@@ -153,16 +157,33 @@ if [[ $SEEN_C_FLAG -eq 1 && $SEEN_O_FLAG -eq 1 && $LINK_MODE -ne 1 ]]; then
 
     # fixups for invalid MIR serialized by LLVM
     inline_patch_mir_file "$MIR_FILE"
-    
-    $LLC "$LLC_FLAGS" --disable-verify --filetype=asm --debug-pass=Structure --start-after=pseudo-probe-inserter $OPT_FLAG $MIR_FILE -o $ASM_FILE
+
+    # -x86-cs -x86-gen-idx
+    # --run-pass=ss,csimp-mitigation
+    $LLC --disable-verify \
+	 -x=mir \
+	 --run-pass=ss \
+	 --x86-ss --x86-gen-idx \
+	 "$MIR_FILE" -o "$INDEXED_MIR_FILE"
+
+    ADD_INSN_INDICES_PASS_RET=$?
+
+    if [[ "$ADD_INSN_INDICES_PASS_RET" -ne 0 ]]; then
+	echo "Non-zero exit status running pass to add insn indices in ciocc: $ADD_INSN_INDICES_PASS_RET"
+	exit $ADD_INSN_INDICES_PASS_RET
+    fi
+
+    inline_patch_mir_file "$INDEXED_MIR_FILE"
+
+    # --debug-pass=Structure 
+    $LLC "$LLC_FLAGS" --disable-verify --filetype=asm --start-after=pseudo-probe-inserter $OPT_FLAG $INDEXED_MIR_FILE -o $ASM_FILE
 
     # $LLC "$LLC_FLAGS" --simplify-mir --debug-pass=Structure --filetype=obj "$OPT_FLAG" "$LL_FILE" -o "$OBJ_FILE"
-
     
     TO_ASM_RET=$?
     
     if [[ "$TO_ASM_RET" -ne 0 ]]; then
-	echo ".mir to .s call failed with exit status $TO_ASM_RET: $MIR_FILE -> $ASM_FILE"
+	echo ".mir to .s call failed with exit status $TO_ASM_RET: $INDEXED_MIR_FILE -> $ASM_FILE"
 	exit $TO_ASM_RET
     fi
 
@@ -179,6 +200,7 @@ if [[ $SEEN_C_FLAG -eq 1 && $SEEN_O_FLAG -eq 1 && $LINK_MODE -ne 1 ]]; then
     echo "OBJ_FILE=$(realpath $OBJ_FILE)" > "$CIOCC_FILE"
     echo "MIR_FILE=$(realpath $MIR_FILE)" >> "$CIOCC_FILE"
     echo "ASM_FILE=$(realpath $ASM_FILE)" >> "$CIOCC_FILE"
+    echo "INDEXED_MIR_FILE=$(realpath $INDEXED_MIR_FILE)" >> "$CIOCC_FILE"
     echo "LIBTOOL_OBJ_FILE=$(realpath $LIBTOOL_OBJ_FILE)" >> "$CIOCC_FILE"
 else
     # then probably linking or assembling, just pass the arguments through
