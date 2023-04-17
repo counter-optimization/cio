@@ -93,7 +93,10 @@ main(int argc, char** argv)
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
 
-    assert(-1 != sign_result); // -1 on err, 0 on ok
+    if (-1 == sign_result) { // -1 on err, 0 on ok
+      printf("FAILURE: eval_ed25519 failed at crypto_sign");
+      exit(0);
+    }
 
     if (cur_iter >= num_warmup) {
       times[cur_iter - num_warmup] = end_time - start_time;

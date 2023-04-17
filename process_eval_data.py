@@ -14,6 +14,15 @@ CRYPTO_FNS = dict({
     ]
 })
 
+Y_BOUNDS = dict({
+    'ed25519': (40000, 100000),
+    'aesni256gcm-decrypt': (0, 1000),
+    'aesni256gcm-encrypt': (0, 1000),
+    'argon2id': (10**8, 2 * 10**8),
+    'chacha20-poly1305-decrypt': (0, 2500),
+    'chacha20-poly1305-encrypt': (0, 2500),
+})
+
 
 def parse_lines(filepath):
     '''
@@ -40,6 +49,9 @@ def gen_cycle_curves(eval_dir, subdir):
             # Get data
             logfile = os.path.join(eval_dir, subdir, f'{lib}-{fn}.log')
             raw_data = parse_lines(logfile)
+            if "FAILURE" in raw_data[0]:
+                continue
+
             title = f'{subdir}: {raw_data[0]}'
             cycles_data = raw_data[1:]
 
@@ -56,7 +68,7 @@ def gen_cycle_curves(eval_dir, subdir):
             # Plot
             fig, ax = plt.subplots()
             ax.plot(cycles_data)
-            # ax.set_ylim(bottom=lower_bound, top=upper_bound)
+            ax.set_ylim(bottom=Y_BOUNDS[fn][0], top=Y_BOUNDS[fn][1])
             ax.set_title(title)
             ax.set_ylabel('Cycles')
             ax.set_xlabel('Iteration')
@@ -69,6 +81,9 @@ def get_avg_cycles(eval_dir, subdir, test_case):
     # TODO: geomean?
     logfile = os.path.join(eval_dir, subdir, f'{test_case}.log')
     raw_data = parse_lines(logfile)
+    if "FAILURE" in raw_data[0]:
+        return 0
+
     cycles_data = raw_data[1:]
     return sum(cycles_data) / len(cycles_data)
 

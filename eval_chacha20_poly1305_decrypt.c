@@ -109,7 +109,10 @@ main(int argc, char** argv)
         /*additional data=*/additional_data,
         /*additional data sz=*/additional_data_sz, NULL, nonce, privk);
 
-    assert(-1 != encrypt_result); // -1 on err, 0 on ok
+    if (-1 == encrypt_result) {
+      printf("FAILURE: eval_chacha20_poly1305_decrypt failed at crypto_aead_chacha20poly1305_ietf_encrypt");
+      exit(0);
+    }
 
     // start counting cycles
     start_time = START_CYCLE_TIMER;
@@ -123,6 +126,11 @@ main(int argc, char** argv)
 
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
+
+    if (-1 == decrypt_result) {
+      printf("FAILURE: eval_chacha20_poly1305_decrypt failed at crypto_aead_chacha20poly1305_ietf_decrypt");
+      exit(0);
+    }
 
     if (cur_iter >= num_warmup) {
       times[cur_iter - num_warmup] = end_time - start_time;

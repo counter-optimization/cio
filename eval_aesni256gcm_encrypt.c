@@ -112,7 +112,10 @@ main(int argc, char** argv)
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
 
-    assert(-1 != encrypt_result);
+    if (-1 == encrypt_result) {
+      printf("FAILURE: eval_aesni256gcm_encrypt failed at crypto_aead_aes256gcm_encrypt");
+      exit(0);
+    }
     
     if (cur_iter >= num_warmup) {
       times[cur_iter - num_warmup] = end_time - start_time;
@@ -123,7 +126,10 @@ main(int argc, char** argv)
           NULL, ciphertext, ciphertext_sz, additional_data, additional_data_sz,
           nonce, key);
 
-    // assert(-1 != decrypt_result);
+    if (-1 == decrypt_result) {
+      printf("FAILURE: eval_aesni256gcm_encrypt failed at crypto_aead_aes256gcm_decrypt");
+      exit(0);
+    }
 
     int cmp_result = memcmp(msg, decrypted_msg, msg_sz);
     // assert(0 == cmp_result &&
