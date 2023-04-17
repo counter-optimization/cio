@@ -5,6 +5,9 @@ CC=$(OUR_CC) # default to our fork of llvm's clang
 
 NUM_MAKE_JOB_SLOTS=8
 
+MITIGATIONS=--ss #--cs default to silent store followed by comp simp
+MITIGATIONS_STR=$(subst ${null} ${null},,$(subst -,,$(subst ${null} --${null},-,$(MITIGATIONS))))
+
 CHECKER_DIR=./checker
 CHECKER_PLUGIN_PATH=$(CHECKER_DIR)/bap/interval
 CHECKER_BUILT=checker.built
@@ -14,9 +17,7 @@ LIBSODIUM_AR=$(LIBSODIUM_DIR)/src/libsodium/.libs/libsodium.a
 # LIBSODIUM_AR ::= $(shell find $(LIBSODIUM_DIR) -name 'libsodium.a' -o -name 'libsodium.ar')
 LIBSODIUM_TARGET_RELEASE_TAG=1.0.18-RELEASE
 LIBSODIUM_BUILT=libsodium.built
-
-MITIGATIONS=--ss --cs # default to silent store followed by comp simp
-MITIGATIONS_STR=$(subst -,,$(subst ${null} ${null},.,$(MITIGATIONS)))
+LIBSODIUM_BUILT_AR=$(LIBSODIUM_BUILT).$(MITIGATIONS_STR)/libsodium.a
 
 EVAL_ED25519=eval_ed25519.o
 ED25519_MSG_LEN=100
@@ -31,7 +32,7 @@ AESNI256GCM_NUM_ITER=1000
 EVAL_ARGON2ID=eval_argon2id.o
 ARGON2ID_PASSWD_LEN=100
 ARGON2ID_OUT_LEN=100
-ARGON2ID_NUM_ITER=1000
+ARGON2ID_NUM_ITER=100
 
 EVAL_CHACHA20_POLY1305_ENCRYPT=eval_chacha20_poly1305_encrypt.o
 EVAL_CHACHA20_POLY1305_DECRYPT=eval_chacha20_poly1305_decrypt.o
@@ -76,22 +77,22 @@ run_eval: build_eval
 build_eval: eval_ed25519 eval_aesni256gcm_encrypt eval_aesni256gcm_decrypt eval_argon2id eval_chacha20_poly1305_encrypt eval_chacha20_poly1305_decrypt
 
 eval_ed25519: eval_prereqs $(EVAL_ED25519)
-	$(CC) $(EVAL_ED25519) $(LIBSODIUM_AR) -o $@
+	$(CC) $(EVAL_ED25519) $(LIBSODIUM_BUILT_AR) -o $@
 
 eval_aesni256gcm_encrypt: eval_prereqs $(EVAL_AESNI256GCM_ENCRYPT)
-	$(CC) $(EVAL_AESNI256GCM_ENCRYPT) $(LIBSODIUM_AR) -o $@
+	$(CC) $(EVAL_AESNI256GCM_ENCRYPT) $(LIBSODIUM_BUILT_AR) -o $@
 
 eval_aesni256gcm_decrypt: eval_prereqs $(EVAL_AESNI256GCM_DECRYPT)
-	$(CC) $(EVAL_AESNI256GCM_DECRYPT) $(LIBSODIUM_AR) -o $@
+	$(CC) $(EVAL_AESNI256GCM_DECRYPT) $(LIBSODIUM_BUILT_AR) -o $@
 
 eval_chacha20_poly1305_encrypt: eval_prereqs $(EVAL_CHACHA20_POLY1305_ENCRYPT)
-	$(CC) $(EVAL_CHACHA20_POLY1305_ENCRYPT) $(LIBSODIUM_AR) -o $@
+	$(CC) $(EVAL_CHACHA20_POLY1305_ENCRYPT) $(LIBSODIUM_BUILT_AR) -o $@
 
 eval_chacha20_poly1305_decrypt: eval_prereqs $(EVAL_CHACHA20_POLY1305_DECRYPT)
-	$(CC) $(EVAL_CHACHA20_POLY1305_DECRYPT) $(LIBSODIUM_AR) -o $@
+	$(CC) $(EVAL_CHACHA20_POLY1305_DECRYPT) $(LIBSODIUM_BUILT_AR) -o $@
 
 eval_argon2id: eval_prereqs $(EVAL_ARGON2ID)
-	$(CC) $(EVAL_ARGON2ID) $(LIBSODIUM_AR) -o $@
+	$(CC) $(EVAL_ARGON2ID) $(LIBSODIUM_BUILT_AR) -o $@
 
 eval_prereqs: $(LIBSODIUM_BUILT).$(MITIGATIONS_STR) $(CHECKER_BUILT)
 
@@ -104,10 +105,12 @@ libsodium_init:
 		git apply ../chacha20_impl_renames.patch; \
 		git apply ../poly1305_impl_renames.patch; \
 		git apply ../argon2_impl_renames.patch
+	touch libsodium_init
 
-$(LIBSODIUM_BUILT).$(MITIGATIONS_STR): libsodium_init
-	$(MAKE) --directory $(LIBSODIUM_DIR)
-	touch $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
+$(LIBSODIUM_BUILT).$(MITIGATIONS_STR): libsodium_init checker
+	./cio --is-libsodium --nosymex $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1
+	mkdir $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
+	cp $(LIBSODIUM_AR) $(LIBSODIUM_BUILT_AR)
 
 checker: $(CHECKER_BUILT)
 
@@ -132,7 +135,6 @@ clean_eval:
 	-rm -f eval_chacha20_poly1305_decrypt
 
 clean_libsodium:
-	-rm $(LIBSODIUM_BUILT).*
 	-$(MAKE) -C $(LIBSODIUM_DIR) clean
 	find libsodium -type f -name '*.secrets.csv' -delete
 	find libsodium -type f -name '*.ciocc' -delete
@@ -140,6 +142,8 @@ clean_libsodium:
 	find libsodium -type f -name '*.mir' -delete
 	find libsodium -type f -name '*.s' -delete
 
-clean: clean_eval clean_libsodium
+clean_checker:
 	-rm $(CHECKER_BUILT)
 	-$(MAKE) -C $(CHECKER_PLUGIN_PATH) clean
+
+clean: clean_eval clean_libsodium

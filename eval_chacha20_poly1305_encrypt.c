@@ -20,7 +20,7 @@ extern int crypto_aead_chacha20poly1305_ietf_encrypt(
     unsigned long long mlen, const unsigned char *ad, unsigned long long adlen,
     const unsigned char *nsec, const unsigned char *npub,
     const unsigned char *k);
-extern int crypto_aead_aes256gcm_decrypt(unsigned char *m,
+extern int crypto_aead_chacha20poly1305_ietf_decrypt(unsigned char *m,
           unsigned long long *mlen_p, unsigned char *nsec,
           const unsigned char *c, unsigned long long clen,
           const unsigned char *ad, unsigned long long adlen,
@@ -123,7 +123,7 @@ main(int argc, char** argv)
 
     times[cur_iter] = end_time - start_time;
 
-    int decrypt_result = crypto_aead_aes256gcm_decrypt(decrypted_msg, &msg_sz,
+    int decrypt_result = crypto_aead_chacha20poly1305_ietf_decrypt(decrypted_msg, &msg_sz,
           NULL, ciphertext, ciphertext_sz, additional_data, additional_data_sz,
           nonce, privk);
 

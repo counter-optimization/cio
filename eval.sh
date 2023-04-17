@@ -7,6 +7,8 @@ TOP_EVAL_DIR=$EVAL_START_TIME-eval
 CC=`realpath ~/llvm-project/build/bin/clang`
 CHECKER_DIR=`realpath ./checker`
 LIBSODIUM_DIR=`realpath ./libsodium`
+LIBSODIUM_AR=$LIBSODIUM_DIR/src/libsodium/.libs/libsodium.a
+LIBSODIUM_BASELINE_DIR="libsodium.built."
 NUM_MAKE_JOB_SLOTS=8
 
 EXTRA_MAKEFILE_FLAGS=""
@@ -84,6 +86,12 @@ done
 mkdir $TOP_EVAL_DIR
 
 # baseline
+make clean
+if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
+	mkdir $LIBSODIUM_BASELINE_DIR
+	make --directory=$LIBSODIUM_DIR
+	cp $LIBSODIUM_AR libsodium.built./libsodium.a
+fi
 make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
@@ -95,17 +103,19 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # cs only
-make MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    run_eval
+# make clean
+# make MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
+#     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+#     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+#     run_eval
 
-if [[ $? -ne 0 ]]; then
-       echo "Error running cs mitigations"
-       exit -1
-fi
+# if [[ $? -ne 0 ]]; then
+#        echo "Error running cs mitigations"
+#        exit -1
+# fi
 
 # ss only
+make clean
 make MITIGATIONS="--ss" EVAL_DIR="$TOP_EVAL_DIR/$SS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
@@ -117,17 +127,19 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # cs then ss
-make MITIGATIONS="--cs --ss" EVAL_DIR="$TOP_EVAL_DIR/$CS_SS_DIR" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    run_eval
+# make clean
+# make MITIGATIONS="--cs --ss" EVAL_DIR="$TOP_EVAL_DIR/$CS_SS_DIR" \
+#     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+#     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+#     run_eval
 
-if [[ $? -ne 0 ]]; then
-       echo "Error running cs-ss mitigations"
-       exit -1
-fi
+# if [[ $? -ne 0 ]]; then
+#        echo "Error running cs-ss mitigations"
+#        exit -1
+# fi
 
 # ss then cs
+# make clean
 # make MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
 #     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
 #     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
@@ -139,5 +151,5 @@ fi
 # fi
 
 # generate plots
-python3 process_eval_data.py $EVAL_DIR $BASELINE_DIR \
-    $CS_DIR $SS_DIR $CS_SS_DIR
+python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
+    $SS_DIR # $CS_DIR $CS_SS_DIR
