@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <assert.h> 
+#include <string.h>
 
 #include "eval_util.h"
 
 #define EXPECTED_ARGC 5
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
-#define PASSWD_SIZE_ARG_IDX 3
+#define PASSWD_ARG_IDX 3
 #define OUT_SIZE_ARG_IDX 4
 
 extern int sodium_init(void);
@@ -36,9 +37,6 @@ main(int argc, char** argv)
     exit(-1);
   }
 
-  // seed non-crypto-secure PRNG, for generating message contents
-  srand(EVAL_UTIL_H_SEED);
-
   // init libsodium, must be called before other libsodium functions are called
   const int sodium_init_success = 0;
   const int sodium_already_initd = 1;
@@ -57,7 +55,8 @@ main(int argc, char** argv)
 			/*base=*/ 10);
 
   // passwd_sz must be between PASSWD_MIN and PASSWD_MAX (inclusive)
-  unsigned long long passwd_sz = strtol(argv[PASSWD_SIZE_ARG_IDX], (char**) NULL, 10);
+  unsigned char* passwd = (unsigned char*)argv[PASSWD_ARG_IDX];
+  unsigned long long passwd_sz = strlen(argv[PASSWD_ARG_IDX]);
   assert(passwd_sz >= crypto_pwhash_passwd_min() &&
     "Password size is less than min in eval_argon2id.c");
   assert(passwd_sz <= crypto_pwhash_passwd_max() &&
@@ -69,10 +68,6 @@ main(int argc, char** argv)
     "Output size is less than min in eval_argon2id.c");
   assert(out_sz <= crypto_pwhash_bytes_max() &&
     "Output size is greater than max in eval_argon2id.c");
-
-  // allocate space for password
-  unsigned char* passwd = malloc(passwd_sz);
-  assert(passwd && "Couldn't allocate passwd bytes in eval_argon2id.c");
 
   // allocate space for output
   unsigned char* out = malloc(out_sz);
@@ -103,9 +98,6 @@ main(int argc, char** argv)
   for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate salt
     randombytes_buf(salt, sizeof salt);
-
-    // generate password
-    ciocc_eval_rand_fill_buf(passwd, passwd_sz);
 
     // start counting cycles
     start_time = START_CYCLE_TIMER;

@@ -19,6 +19,9 @@ SS_DIR="ss"
 SS_CS_DIR="ss-cs"
 CS_SS_DIR="cs-ss"
 
+EVAL_MSG_LEN=100
+EVAL_MSG=$(timeout 0.01s cat /dev/urandom | tr -dc '[:alnum:]' | fold -w $EVAL_MSG_LEN | head -n 1)
+
 function usage
 {
     echo "Usage: ./eval.sh [ -h | --help (displays this message) ]
@@ -84,6 +87,7 @@ while true; do
 done
 
 mkdir $TOP_EVAL_DIR
+echo "$EVAL_MSG" > $TOP_EVAL_DIR/msg.txt
 
 # baseline
 make clean
@@ -95,6 +99,7 @@ fi
 make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+	EVAL_MSG=$EVAL_MSG \
     run_eval
 
 if [[ $? -ne 0 ]]; then
@@ -107,6 +112,7 @@ fi
 # make MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
 #     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
 #     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+#     EVAL_MSG=$EVAL_MSG \
 #     run_eval
 
 # if [[ $? -ne 0 ]]; then
@@ -119,6 +125,7 @@ make clean
 make MITIGATIONS="--ss" EVAL_DIR="$TOP_EVAL_DIR/$SS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+	EVAL_MSG=$EVAL_MSG \
     run_eval
 
 if [[ $? -ne 0 ]]; then
@@ -131,6 +138,7 @@ fi
 # make MITIGATIONS="--cs --ss" EVAL_DIR="$TOP_EVAL_DIR/$CS_SS_DIR" \
 #     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
 #     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+#     EVAL_MSG=$EVAL_MSG \
 #     run_eval
 
 # if [[ $? -ne 0 ]]; then
@@ -143,6 +151,7 @@ fi
 # make MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
 #     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
 #     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+#     EVAL_MSG=$EVAL_MSG \
 #     run_eval
 
 # if [[ $? -ne 0 ]]; then

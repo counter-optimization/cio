@@ -9,7 +9,7 @@
 #define EXPECTED_ARGC 5
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
-#define MSG_SIZE_ARG_IDX 3
+#define MSG_ARG_IDX 3
 #define AD_SIZE_ARG_IDX 4
 
 extern int strncmp(const char *str1, const char *str2, size_t n);
@@ -41,9 +41,6 @@ main(int argc, char** argv)
     exit(-1);
   }
 
-  // seed non-crypto-secure PRNG, for generating message contents
-  srand(EVAL_UTIL_H_SEED);
-
   // parse args
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
@@ -53,8 +50,9 @@ main(int argc, char** argv)
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
 
-  unsigned long long msg_sz = strtol(argv[MSG_SIZE_ARG_IDX], (char**) NULL, 10);
-  unsigned long long additional_data_sz = strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
+  unsigned char* msg = (unsigned char*)argv[MSG_ARG_IDX];
+  unsigned long long msg_sz = strlen(argv[MSG_ARG_IDX]);
+  unsigned long long additional_data_sz = 0; // strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
 
   // init libsodium, must be called before other libsodium functions are called
   const int sodium_init_success = 0;
@@ -67,13 +65,9 @@ main(int argc, char** argv)
   // Make sure AES is available
   assert(crypto_aead_aes256gcm_is_available() && "AES not available on this CPU");
 
-  // allocate space for message
-  unsigned char* msg = malloc(msg_sz);
-  assert(msg && "Couldn't allocate msg bytes in eval_aesni256gcm_encrypt.c");
-
-  // allocate space for additional data
-  unsigned char* additional_data = malloc(additional_data_sz);
-  assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_encrypt.c");
+  /// allocate space for additional data
+  unsigned char* additional_data = NULL; // malloc(additional_data_sz);
+  // assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_decrypt.c");
 
   // allocate space for decrypted message
   unsigned char* decrypted_msg = malloc(msg_sz);
@@ -107,9 +101,6 @@ main(int argc, char** argv)
     // generate nonce
     crypto_aead_aes256gcm_keygen(key);
     randombytes_buf(nonce, sizeof nonce);
-
-    // generate message
-    ciocc_eval_rand_fill_buf(msg, msg_sz);
 
     // start counting cycles
     start_time = START_CYCLE_TIMER;

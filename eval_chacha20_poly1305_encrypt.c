@@ -9,7 +9,7 @@
 #define EXPECTED_ARGC 5
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
-#define MSG_SIZE_ARG_IDX 3
+#define MSG_ARG_IDX 3
 #define AD_SIZE_ARG_IDX 4
 
 extern int sodium_init();
@@ -38,9 +38,6 @@ main(int argc, char** argv)
     exit(-1);
   }
 
-  // seed non-crypto-secure PRNG, for generating message contents
-  srand(EVAL_UTIL_H_SEED);
-
   // parse args
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
@@ -58,20 +55,17 @@ main(int argc, char** argv)
 	  sodium_already_initd == sodium_init_result) &&
 	 "Error initializing lib sodium");
 
-  unsigned long long msg_sz = strtol(argv[MSG_SIZE_ARG_IDX], (char**) NULL, 10);
-  unsigned long long additional_data_sz = strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
-
-  // allocate space for message
-  unsigned char* msg = malloc(msg_sz);
-  assert(msg && "Couldn't allocate msg bytes in eval_chacha20-poly1305-encrypt.c");
+  unsigned char* msg = (unsigned char*)argv[MSG_ARG_IDX];
+  unsigned long long msg_sz = strlen(argv[MSG_ARG_IDX]);
+  unsigned long long additional_data_sz = 0; //strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
 
   // allocate space for opened message
   unsigned char* opened_msg = malloc(msg_sz);
   assert(opened_msg && "Couldn't allocate opened_msg bytes in eval_chacha20-poly1305-encrypt.c");
 
   // allocate space for additional data
-  unsigned char* additional_data = malloc(additional_data_sz);
-  assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_encrypt.c");
+  unsigned char* additional_data = NULL; // malloc(additional_data_sz);
+  // assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_encrypt.c");
 
   // allocate space for signed message buffer
   unsigned long long ciphertext_sz = msg_sz + crypto_aead_chacha20poly1305_ietf_abytes();
@@ -103,9 +97,6 @@ main(int argc, char** argv)
   for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate private key
     crypto_aead_chacha20poly1305_ietf_keygen(privk);
-
-    // generate message
-    ciocc_eval_rand_fill_buf(msg, msg_sz);
 
     // generate nonce
     ciocc_eval_rand_fill_buf(nonce, sizeof nonce);

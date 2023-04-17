@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <assert.h> 
+#include <string.h>
 
 #include "eval_util.h"
 
 #define EXPECTED_ARGC 4
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
-#define MSG_SIZE_ARG_IDX 3
+#define MSG_ARG_IDX 3
 
 extern int sodium_init(void);
 extern size_t crypto_sign_secretkeybytes(void);
@@ -30,9 +31,6 @@ main(int argc, char** argv)
 	   " <size_of_message>\n", argv[0]);
   }
 
-  // seed non-crypto-secure PRNG, for generating message contents
-  srand(EVAL_UTIL_H_SEED);
-
   // init libsodium, must be called before other libsodium functions are called
   const int sodium_init_success = 0;
   const int sodium_already_initd = 1;
@@ -50,11 +48,8 @@ main(int argc, char** argv)
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
 
-  unsigned long long msg_sz = strtol(argv[MSG_SIZE_ARG_IDX], (char**) NULL, 10);
-
-  // allocate space for message
-  unsigned char* msg = malloc(msg_sz);
-  assert(msg && "Couldn't allocate msg bytes in eval_ed25519.c");
+  unsigned char* msg = (unsigned char*)argv[MSG_ARG_IDX];
+  unsigned long long msg_sz = strlen(argv[MSG_ARG_IDX]);
 
   // allocate space for opened message
   unsigned char* opened_msg = malloc(msg_sz);
@@ -84,9 +79,6 @@ main(int argc, char** argv)
     // generate private key
     // generate public key
     int _eval_unused = crypto_sign_keypair(/*public=*/ pubk, /*secret=*/ privk);
-
-    // generate message
-    ciocc_eval_rand_fill_buf(msg, msg_sz);
 
     // start counting cycles
     start_time = START_CYCLE_TIMER;
