@@ -19,6 +19,9 @@ SS_DIR="ss"
 SS_CS_DIR="ss-cs"
 CS_SS_DIR="cs-ss"
 
+VALIDATE=0
+VALIDATION_DIR=""
+
 EVAL_MSG_LEN=100
 EVAL_MSG=$(timeout 0.01s cat /dev/urandom | tr -dc '[:alnum:]' | fold -w $EVAL_MSG_LEN | head -n 1)
 
@@ -28,12 +31,13 @@ function usage
 			   [ -c | --cc <path to c compiler> ]
 			   [ -p | --checker-dir <path to root checker dir> ]
 			   [ -t | --crypto-dir <path to the crypto lib project that has the root makefile> ]
+			   [ -v | --validate <path to a prior eval directory against which to validate results> ]
 			   [ -m | --makefile-flags \"<~double quoted string~ of extra flags for the Makefile>\" ]
 			   [ -j <num make job slots> ]"
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "hc:p:t:m:j:" -l "help,cc:,checker-dir:,crypto-dir:,makefile-flags:" -n eval.sh -- "$@")
+PARSED_ARGS=$(getopt -o "hc:p:t:v:m:j:" -l "help,cc:,checker-dir:,crypto-dir:,validate:,makefile-flags:" -n eval.sh -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -71,6 +75,12 @@ while true; do
 	    ;;
 	'-t' | '--crypto-dir')
 	    TARGET_DIR=$2
+	    shift 2
+	    continue
+	    ;;
+	'-v' | '--validate')
+		VALIDATE=1
+	    VALIDATION_DIR=$2
 	    shift 2
 	    continue
 	    ;;
@@ -160,5 +170,17 @@ fi
 # fi
 
 # generate plots
+if [[ "$VALIDATE" -eq 1 ]]; then
+	echo ""
+	echo "Validating baseline..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR "../$VALIDATION_DIR/baseline"
+
+	echo ""
+	echo "Validating SS..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $SS_DIR "../$VALIDATION_DIR/ss"
+fi
+
+echo ""
+echo "Overheads vs baseline:"
 python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
     $SS_DIR # $CS_DIR $CS_SS_DIR

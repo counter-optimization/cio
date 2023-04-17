@@ -57,7 +57,7 @@ def gen_cycle_curves(eval_dir, subdir):
 
             min_cycles = min(cycles_data)
             min_idx = cycles_data.index(min_cycles)
-            print(f'min of {lib}-{fn} is {min_cycles} at {min_idx}')
+            # print(f'min of {lib}-{fn} is {min_cycles} at {min_idx}')
 
             # # Calculate reasonable bounds for y-axis
             # quartiles = np.quantile(cycles_data, [0.25, 0.75])
@@ -108,7 +108,10 @@ def get_cycle_overheads(eval_dir, baseline, ablations):
             for abl in ablations:
                 test_case = f'{lib}-{fn}'
                 avg_cycles = get_avg_cycles(eval_dir, abl, test_case)
-                fn_ohs[abl] = avg_cycles / baseline_avgs[lib][fn]
+                if baseline_avgs[lib][fn] == 0:
+                    fn_ohs[abl] = 0.0
+                else:
+                    fn_ohs[abl] = avg_cycles / baseline_avgs[lib][fn]
             lib_ohs[fn] = fn_ohs
         overheads[lib] = lib_ohs
 
@@ -118,7 +121,7 @@ def get_cycle_overheads(eval_dir, baseline, ablations):
 def gen_overhead_plot(eval_dir, baseline, ablations, out_dir):
     ''' Create plot of runtime overhead for each ablation vs baseline.'''
     overheads = get_cycle_overheads(eval_dir, baseline, ablations)
-    print(overheads)
+    print(overheads['libsodium'])
     
     # Plot overheads
     fig, ax = plt.subplots()
@@ -127,7 +130,7 @@ def gen_overhead_plot(eval_dir, baseline, ablations, out_dir):
     for fn in lib_ohs:
         fn_ohs = lib_ohs[fn]
         ax.bar(fn_ohs.keys(), fn_ohs.values())
-        print(fn_ohs)
+        # print(fn_ohs)
         fig.savefig(os.path.join(out_dir, f'{fn}-plot.png'))
         plt.close()
 
