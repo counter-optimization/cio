@@ -5,10 +5,11 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 4
+#define EXPECTED_ARGC 5
 #define NUM_BENCH_ITER_ARG_IDX 1
-#define PASSWD_SIZE_ARG_IDX 2
-#define OUT_SIZE_ARG_IDX 2
+#define NUM_WARMUP_ITER_ARG_IDX 2
+#define PASSWD_SIZE_ARG_IDX 3
+#define OUT_SIZE_ARG_IDX 4
 
 extern int sodium_init(void);
 extern void randombytes_buf(void * const buf, const size_t size);
@@ -29,7 +30,9 @@ int
 main(int argc, char** argv)
 {
   if (argc != EXPECTED_ARGC) {
-    printf("Usage: %s <num_benchmark_iterations> <size_of_message>\n", argv[0]);
+    printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
+	   " <size_of_password>"
+	   " <size_of_output>\n", argv[0]);
     exit(-1);
   }
 
@@ -46,6 +49,10 @@ main(int argc, char** argv)
 
   // parse args
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
+			/*endptr=*/ (char**) NULL,
+			/*base=*/ 10);
+
+  int num_warmup = strtol(/*src=*/ argv[NUM_WARMUP_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
 
@@ -93,7 +100,7 @@ main(int argc, char** argv)
   volatile uint64_t end_time = 0;
 
   // main loop
-  for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
+  for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate salt
     randombytes_buf(salt, sizeof salt);
 
@@ -112,7 +119,9 @@ main(int argc, char** argv)
 
     assert(-1 != pwhash_result); // -1 on err, 0 on ok
 
-    times[cur_iter] = end_time - start_time;
+    if (cur_iter >= num_warmup) {
+      times[cur_iter - num_warmup] = end_time - start_time;
+    }
 
     // TODO sanity check
   }

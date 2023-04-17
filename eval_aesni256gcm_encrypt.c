@@ -6,10 +6,11 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 4
+#define EXPECTED_ARGC 5
 #define NUM_BENCH_ITER_ARG_IDX 1
-#define MSG_SIZE_ARG_IDX 2
-#define AD_SIZE_ARG_IDX 3
+#define NUM_WARMUP_ITER_ARG_IDX 2
+#define MSG_SIZE_ARG_IDX 3
+#define AD_SIZE_ARG_IDX 4
 
 extern int strncmp(const char *str1, const char *str2, size_t n);
 extern size_t crypto_aead_aes256gcm_keybytes(void);
@@ -34,7 +35,9 @@ int
 main(int argc, char** argv)
 {
   if (argc != EXPECTED_ARGC) {
-    printf("Usage: %s <num_benchmark_iterations> <size_of_message>\n", argv[0]);
+    printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
+	   " <size_of_message>"
+	   " <size_of_associated_data>\n", argv[0]);
     exit(-1);
   }
 
@@ -43,6 +46,10 @@ main(int argc, char** argv)
 
   // parse args
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
+			/*endptr=*/ (char**) NULL,
+			/*base=*/ 10);
+  
+  int num_warmup = strtol(/*src=*/ argv[NUM_WARMUP_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
 
@@ -95,7 +102,7 @@ main(int argc, char** argv)
   volatile uint64_t end_time = 0;
 
   // main loop
-  for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
+  for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate key
     // generate nonce
     crypto_aead_aes256gcm_keygen(key);
@@ -116,7 +123,9 @@ main(int argc, char** argv)
 
     assert(-1 != encrypt_result);
     
-    times[cur_iter] = end_time - start_time;
+    if (cur_iter >= num_warmup) {
+      times[cur_iter - num_warmup] = end_time - start_time;
+    }
 
     // sanity check: verify message decrypts correctly and is same as original
     int decrypt_result = crypto_aead_aes256gcm_decrypt(decrypted_msg, &msg_sz,

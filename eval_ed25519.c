@@ -5,9 +5,10 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 3
+#define EXPECTED_ARGC 4
 #define NUM_BENCH_ITER_ARG_IDX 1
-#define MSG_SIZE_ARG_IDX 2
+#define NUM_WARMUP_ITER_ARG_IDX 2
+#define MSG_SIZE_ARG_IDX 3
 
 extern int sodium_init(void);
 extern size_t crypto_sign_secretkeybytes(void);
@@ -25,8 +26,8 @@ int
 main(int argc, char** argv)
 {
   if (argc != EXPECTED_ARGC) {
-    printf("Usage: %s <num_benchmark_iterations> <size_of_message>\n", argv[0]);
-    exit(-1);
+    printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
+	   " <size_of_message>\n", argv[0]);
   }
 
   // seed non-crypto-secure PRNG, for generating message contents
@@ -42,6 +43,10 @@ main(int argc, char** argv)
 
   // parse args
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
+			/*endptr=*/ (char**) NULL,
+			/*base=*/ 10);
+  
+  int num_warmup = strtol(/*src=*/ argv[NUM_WARMUP_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
 
@@ -75,7 +80,7 @@ main(int argc, char** argv)
   volatile uint64_t end_time = 0;
 
   // main loop
-  for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
+  for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate private key
     // generate public key
     int _eval_unused = crypto_sign_keypair(/*public=*/ pubk, /*secret=*/ privk);
@@ -98,7 +103,9 @@ main(int argc, char** argv)
 
     assert(-1 != sign_result); // -1 on err, 0 on ok
 
-    times[cur_iter] = end_time - start_time;
+    if (cur_iter >= num_warmup) {
+      times[cur_iter - num_warmup] = end_time - start_time;
+    }
 
     // verify the message for sanity check
     int open_result = crypto_sign_open(opened_msg, &msg_sz,
