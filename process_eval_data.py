@@ -86,29 +86,44 @@ def gen_cycle_curves(eval_dir, data):
 def gen_overhead_plot(eval_dir, baseline_dir, data):
     ''' Create plot of runtime overhead for each ablation vs baseline.'''
     for lib in data.keys():
-        for abl in data[lib].keys():
-            if abl == baseline_dir:
-                continue
-            fns = []
-            fn_ohs = []
-            fn_stds = []
-            for fn in data[lib][abl].keys():
-                fns += [fn]
-                fn_ohs += [data[lib][abl][fn]['overhead']]
-                fn_stds += [data[lib][abl][fn]['overhead std']]
+        abls = list(data[lib].keys())
+        abls.remove(baseline_dir)
+        
+        fns = list(data[lib][abls[0]].keys())
+        fn_ohs = dict()
+        fn_stds = dict()
+
+        for abl in abls:
+            fn_ohs[abl] = []
+            fn_stds[abl] = []
+            for fn in fns:
+                fn_ohs[abl] += [data[lib][abl][fn]['overhead']]
+                fn_stds[abl] += [data[lib][abl][fn]['overhead std']]
             
-            x = np.arange(len(fns))
-            fig, ax = plt.subplots()
-            ax.yaxis.grid(True)
-            ax.bar(x, fn_ohs, yerr=fn_stds, align='center', alpha=0.5, capsize=4)
-            ax.set_ylabel('Overhead')
-            ax.set_xlabel('Crypto func')
-            plt.xticks(x, labels=fns, rotation=45, ha='right')
-            plt.axhline(y=1.0, linestyle='-')
-            plt.savefig(
-                os.path.join(eval_dir, abl, 'overhead_bar_plot.png'),
-                bbox_inches='tight')
-            plt.close()
+        x = np.arange(len(fns))
+        width = 0.25
+        multiplier = 0
+        fig, ax = plt.subplots()
+        plt.axhline(y=1.0)
+
+        for abl, ohs in fn_ohs.items():
+            offset = width * multiplier
+            rects = ax.bar(x + offset, ohs, width, yerr=fn_stds[abl], capsize=4, label=abl)
+            # ax.bar_label(rects, padding=3)
+            multiplier += 1
+
+        ax.set_ylabel('Cycle overhead')
+        ax.set_xlabel('Cryptographic function')
+        ax.set_title('Overhead of libsodium microbenchmarks')
+        plt.xticks(x, labels=fns, rotation=45, ha='right')
+        ax.legend(loc='upper right', ncols=4)
+        ax.set_axisbelow(True)
+        ax.yaxis.grid(True)
+
+        plt.savefig(
+            os.path.join(eval_dir, 'overhead_bar_plot.png'),
+            bbox_inches='tight')
+        plt.close()
 
 
 def main():
