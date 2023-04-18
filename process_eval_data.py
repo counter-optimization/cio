@@ -162,10 +162,11 @@ def main():
     
     # Save calculated data
     data_str = gen_pretty_data_string(data)
-    print(data_str)
-    data_file = open(os.path.join(args.eval_dir, 'calculated_data.txt'), 'w')
+    data_filepath = os.path.join(args.eval_dir, 'calculated_data.txt')
+    data_file = open(data_filepath, 'w')
     print(data_str, file=data_file)
     data_file.close()
+    print(f'Saved calculated results to {data_filepath}')
     
     # Plot cycles for each eval run (line charts)
     gen_cycle_curves(args.eval_dir, data)
