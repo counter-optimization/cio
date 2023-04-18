@@ -9,11 +9,13 @@ CHECKER_DIR=`realpath ./checker`
 LIBSODIUM_DIR=`realpath ./libsodium`
 LIBSODIUM_AR=$LIBSODIUM_DIR/src/libsodium/.libs/libsodium.a
 LIBSODIUM_BASELINE_DIR="libsodium.built."
+LIBSODIUM_REG_RES_DIR="libsodium.built.rr"
 NUM_MAKE_JOB_SLOTS=8
 
 EXTRA_MAKEFILE_FLAGS=""
 
 BASELINE_DIR="baseline"
+REG_RES_DIR="rr" # register reservation only, no mitigations
 CS_DIR="cs"
 SS_DIR="ss"
 SS_CS_DIR="ss-cs"
@@ -104,7 +106,7 @@ make clean
 if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
 	mkdir $LIBSODIUM_BASELINE_DIR
 	make --directory=$LIBSODIUM_DIR
-	cp $LIBSODIUM_AR libsodium.built./libsodium.a
+	cp $LIBSODIUM_AR $LIBSODIUM_BASELINE_DIR/libsodium.a
 fi
 taskset -c 0 make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
@@ -114,6 +116,24 @@ taskset -c 0 make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
 
 if [[ $? -ne 0 ]]; then
        echo "Error running baseline"
+       exit -1
+fi
+
+# with register reservation only
+make clean
+if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
+	mkdir $LIBSODIUM_REG_RES_DIR
+	make --directory=$LIBSODIUM_DIR CC=$CC
+	cp $LIBSODIUM_AR $LIBSODIUM_REG_RES_DIR/libsodium.a
+fi
+taskset -c 0 make MITIGATIONS="$REG_RES_DIR" EVAL_DIR="$TOP_EVAL_DIR/$REG_RES_DIR" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+	EVAL_MSG=$EVAL_MSG \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running with register reservation only"
        exit -1
 fi
 
@@ -173,7 +193,11 @@ fi
 if [[ "$VALIDATE" -eq 1 ]]; then
 	echo ""
 	echo "Validating baseline..."
-	python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR "../$VALIDATION_DIR/baseline"
+	python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR "../$VALIDATION_DIR/$BASELINE_DIR"
+
+	echo ""
+	echo "Validating register reservation only..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $REG_RES_DIR "../$VALIDATION_DIR/$REG_RES_DIR"
 
 	echo ""
 	echo "Validating SS..."
@@ -182,5 +206,5 @@ fi
 
 echo ""
 echo "Overheads vs baseline:"
-python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
+python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR $REG_RES_DIR \
     $SS_DIR # $CS_DIR $CS_SS_DIR
