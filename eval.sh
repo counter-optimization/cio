@@ -194,14 +194,17 @@ if [[ "$VALIDATE" -eq 1 ]]; then
 	echo ""
 	echo "Validating baseline..."
 	python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR "../$VALIDATION_DIR/$BASELINE_DIR"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/baseline_validation_data.txt
 
 	echo ""
 	echo "Validating register reservation only..."
 	python3 process_eval_data.py $TOP_EVAL_DIR $REG_RES_DIR "../$VALIDATION_DIR/$REG_RES_DIR"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/rr_validation_data.txt
 
 	echo ""
 	echo "Validating SS..."
 	python3 process_eval_data.py $TOP_EVAL_DIR $SS_DIR "../$VALIDATION_DIR/ss"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/ss_validation_data.txt
 fi
 
 echo ""
