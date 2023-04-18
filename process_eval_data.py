@@ -2,6 +2,7 @@ import argparse
 import os
 import matplotlib.pyplot as plt
 import statistics as stat
+import numpy as np
 
 CRYPTO_FNS = dict({
     'libsodium':
@@ -39,103 +40,75 @@ def parse_lines(filepath):
     return data
 
 
-def gen_cycle_curves(eval_dir, subdir):
+def gen_pretty_data_string(data: dict):
+    result = ''
+    for lib in data.keys():
+        result += f'{lib}:\n'
+        for abl in data[lib].keys():
+            result += f'{abl}:\n'
+            for fn in data[lib][abl].keys():
+                title = data[lib][abl][fn]['title']
+                result += f'\t{title}:\n'
+                for stat in data[lib][abl][fn].keys():
+                    if stat != 'raw cycles' and stat != 'title':
+                        result += f'\t\t{stat}: {data[lib][abl][fn][stat]}\n'
+    return result
+
+
+def gen_cycle_curves(eval_dir, data):
     ''' 
     Generate cycle line charts for each crypto func test case in a subdirectory.
     Useful for gauging number of warmup iterations.
     '''
-    for lib in CRYPTO_FNS:
-        for fn in CRYPTO_FNS[lib]:
-            # Get data
-            logfile = os.path.join(eval_dir, subdir, f'{lib}-{fn}.log')
-            raw_data = parse_lines(logfile)
-            if "FAILURE" in raw_data[0]:
-                continue
+    for lib in data.keys():
+        for abl in data[lib].keys():
+            for fn in data[lib][abl].keys():
+                title = data[lib][abl][fn]['title']
+                cycles_data = data[lib][abl][fn]['raw cycles']
 
-            title = f'{subdir}: {raw_data[0]}'
-            cycles_data = raw_data[1:]
+                # # Calculate reasonable bounds for y-axis
+                # quartiles = np.quantile(cycles_data, [0.25, 0.75])
+                # iqr = quartiles[1] - quartiles[0]
+                # upper_bound = quartiles[1] + iqr * 4
+                # lower_bound = quartiles[0] - iqr * 2
 
-            min_cycles = min(cycles_data)
-            min_idx = cycles_data.index(min_cycles)
-            # print(f'min of {lib}-{fn} is {min_cycles} at {min_idx}')
-
-            # # Calculate reasonable bounds for y-axis
-            # quartiles = np.quantile(cycles_data, [0.25, 0.75])
-            # iqr = quartiles[1] - quartiles[0]
-            # upper_bound = quartiles[1] + iqr * 4
-            # lower_bound = quartiles[0] - iqr * 2
-
-            # Plot
-            fig, ax = plt.subplots()
-            ax.plot(cycles_data)
-            ax.set_ylim(bottom=Y_BOUNDS[fn][0], top=Y_BOUNDS[fn][1])
-            ax.set_title(title)
-            ax.set_ylabel('Cycles')
-            ax.set_xlabel('Iteration')
-            fig.savefig(os.path.join(eval_dir, subdir, f'{lib}-{fn}-cycles.png'))
-            plt.close()
+                # Plot
+                fig, ax = plt.subplots()
+                ax.plot(cycles_data)
+                ax.set_ylim(bottom=Y_BOUNDS[fn][0], top=Y_BOUNDS[fn][1])
+                ax.set_title(title)
+                ax.set_ylabel('Cycles')
+                ax.set_xlabel('Iteration')
+                fig.savefig(os.path.join(eval_dir, abl, f'{lib}-{fn}-cycles.png'))
+                plt.close()
 
 
-def get_avg_stdev(eval_dir, subdir, test_case):
-    ''' Get average cycle counts for a single test case. '''
-    # TODO: geomean?
-    logfile = os.path.join(eval_dir, subdir, f'{test_case}.log')
-    raw_data = parse_lines(logfile)
-    if "FAILURE" in raw_data[0]:
-        return 0
-
-    cycles_data = raw_data[1:]
-    return (sum(cycles_data) / len(cycles_data), stat.stdev(cycles_data))
-
-
-def get_cycle_overheads(eval_dir, baseline, ablations):
-    ''' Calculate runtime cycle overheads for all '''
-    # Calculate baseline average cycles for each crypto func
-    baseline_avgs = dict()
-    for lib in CRYPTO_FNS:
-        lib_avgs = dict()
-        for fn in CRYPTO_FNS[lib]:
-            test_case = f'{lib}-{fn}'
-            lib_avgs[fn] = get_avg_stdev(eval_dir, baseline, test_case)
-        baseline_avgs[lib] = lib_avgs
-
-    # Calculate overheads for each ablation and crypto func
-    overheads = dict()
-    for lib in CRYPTO_FNS:
-        lib_ohs = dict()
-        for fn in CRYPTO_FNS[lib]:
-            fn_ohs = dict()
-            for abl in ablations:
-                test_case = f'{lib}-{fn}'
-                avg_stdev = get_avg_stdev(eval_dir, abl, test_case)
-                if baseline_avgs[lib][fn][0] == 0:
-                    fn_ohs[abl] = (0.0, 0.0)
-                else:
-                    fn_ohs[abl] = (
-                        avg_stdev[0] / baseline_avgs[lib][fn][0],
-                        avg_stdev[1] / baseline_avgs[lib][fn][0]
-                    )
-            lib_ohs[fn] = fn_ohs
-        overheads[lib] = lib_ohs
-
-    return overheads
-
-
-def gen_overhead_plot(eval_dir, baseline, ablations, out_dir):
+def gen_overhead_plot(eval_dir, baseline_dir, data):
     ''' Create plot of runtime overhead for each ablation vs baseline.'''
-    overheads = get_cycle_overheads(eval_dir, baseline, ablations)
-    print(overheads['libsodium'])
-    
-    # Plot overheads
-    # fig, ax = plt.subplots()
-    # lib_ohs = overheads['libsodium']
-
-    # for fn in lib_ohs:
-    #     fn_ohs = lib_ohs[fn]
-    #     ax.bar(fn_ohs.keys(), fn_ohs.values())
-    #     # print(fn_ohs)
-    #     fig.savefig(os.path.join(out_dir, f'{fn}-plot.png'))
-    #     plt.close()
+    for lib in data.keys():
+        for abl in data[lib].keys():
+            if abl == baseline_dir:
+                continue
+            fns = []
+            fn_ohs = []
+            fn_stds = []
+            for fn in data[lib][abl].keys():
+                fns += [fn]
+                fn_ohs += [data[lib][abl][fn]['overhead']]
+                fn_stds += [data[lib][abl][fn]['overhead std']]
+            
+            x = np.arange(len(fns))
+            fig, ax = plt.subplots()
+            ax.yaxis.grid(True)
+            ax.bar(x, fn_ohs, yerr=fn_stds, align='center', alpha=0.5, capsize=4)
+            ax.set_ylabel('Overhead')
+            ax.set_xlabel('Crypto func')
+            plt.xticks(x, labels=fns, rotation=45, ha='right')
+            plt.axhline(y=1.0, linestyle='-')
+            plt.savefig(
+                os.path.join(eval_dir, abl, 'overhead_bar_plot.png'),
+                bbox_inches='tight')
+            plt.close()
 
 
 def main():
@@ -156,11 +129,49 @@ def main():
 
     args = parser.parse_args()
 
-    # Generate cycle overhead plot
-    out_dir = args.out if args.out is not None else args.eval_dir
-    gen_overhead_plot(args.eval_dir, args.baseline_dir, args.ablations, out_dir)
-    for subdir in args.ablations + [args.baseline_dir]:
-        gen_cycle_curves(args.eval_dir, subdir)
+    # Retrieve cycles data
+    data = dict()
+    for lib in CRYPTO_FNS:
+        data[lib] = dict()
+        for abl in [args.baseline_dir] + args.ablations:
+            data[lib][abl] = dict()
+            for fn in CRYPTO_FNS[lib]:
+                fn_data = parse_lines(
+                    os.path.join(args.eval_dir, abl, f'{lib}-{fn}.log')
+                )
+                if len(fn_data) <= 1:
+                    # No data, skip
+                    continue
+                
+                data[lib][abl][fn] = dict()
+                data[lib][abl][fn]['title'] = fn_data[0]
+                data[lib][abl][fn]['raw cycles'] = np.array(fn_data[1:])
+                data[lib][abl][fn]['mean'] = np.mean(data[lib][abl][fn]['raw cycles'])
+                data[lib][abl][fn]['std'] = np.std(data[lib][abl][fn]['raw cycles'])
+    
+    # Calculate cycle overheads vs baseline
+    for lib in data.keys():
+        for abl in data[lib].keys():
+            if abl == args.baseline_dir:
+                continue
+            for fn in data[lib][abl].keys():
+                baseline = data[lib][args.baseline_dir][fn]
+                fn_data = data[lib][abl][fn]
+                fn_data['overhead'] = fn_data['mean'] / baseline['mean']
+                fn_data['overhead std'] = fn_data['std'] / baseline['mean']
+    
+    # Save calculated data
+    data_str = gen_pretty_data_string(data)
+    print(data_str)
+    data_file = open(os.path.join(args.eval_dir, 'calculated_data.txt'), 'w')
+    print(data_str, file=data_file)
+    data_file.close()
+    
+    # Plot cycles for each eval run (line charts)
+    gen_cycle_curves(args.eval_dir, data)
+
+    # Plot overheads (bar charts)
+    gen_overhead_plot(args.eval_dir, args.baseline_dir, data)
 
 
 if __name__ == "__main__":
