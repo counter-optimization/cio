@@ -105,7 +105,10 @@ main(int argc, char** argv)
     // verify the message for sanity check
     int open_result = crypto_sign_open(opened_msg, &msg_sz,
 				       signed_msg, signed_msg_sz, pubk);
-    // assert(0 == open_result && "in eval_ed25519.c, error verifying sign of msg");
+    if (0 != open_result) {
+      printf("FAILURE: eval_ed25519 failed sanity check, sign of msg did not verify");
+      exit(0);
+    }
   }
 
   // output the timer results

@@ -134,8 +134,10 @@ main(int argc, char** argv)
     }
 
     int cmp_result = memcmp(msg, decrypted_msg, msg_sz);
-    assert(0 == cmp_result &&
-          "in eval-chacha20-poly1305-encrypt.c, error validating decrypted msg = msg");
+    if (0 != cmp_result) {
+      printf("FAILURE: eval_chacha20_poly1305_encrypt failed sanity check, decrypted msg != msg");
+      exit(0);
+    }
   }
 
   // output the timer results

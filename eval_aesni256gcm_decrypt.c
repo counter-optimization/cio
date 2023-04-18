@@ -131,9 +131,11 @@ main(int argc, char** argv)
     }
 
     // verify decrypted message is same as original for sanity check
-    // int cmp_result = memcmp(msg, decrypted_msg, msg_sz);
-    // assert(0 == cmp_result &&
-    //       "in eval_aesni256gcm_decrypt.c, error validating decrypted msg = msg");
+    int cmp_result = memcmp(msg, decrypted_msg, msg_sz);
+    if (0 != cmp_result) {
+      printf("FAILURE: eval_aesni256gcm_decrypt failed sanity check, decrypted msg != msg");
+      exit(0);
+    }
   }
 
   // output the timer results
