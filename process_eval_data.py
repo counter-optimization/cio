@@ -1,7 +1,7 @@
 import argparse
 import os
 import matplotlib.pyplot as plt
-import numpy as np
+import statistics as stat
 
 CRYPTO_FNS = dict({
     'libsodium':
@@ -76,7 +76,7 @@ def gen_cycle_curves(eval_dir, subdir):
             plt.close()
 
 
-def get_avg_cycles(eval_dir, subdir, test_case):
+def get_avg_stdev(eval_dir, subdir, test_case):
     ''' Get average cycle counts for a single test case. '''
     # TODO: geomean?
     logfile = os.path.join(eval_dir, subdir, f'{test_case}.log')
@@ -85,7 +85,7 @@ def get_avg_cycles(eval_dir, subdir, test_case):
         return 0
 
     cycles_data = raw_data[1:]
-    return sum(cycles_data) / len(cycles_data)
+    return (sum(cycles_data) / len(cycles_data), stat.stdev(cycles_data))
 
 
 def get_cycle_overheads(eval_dir, baseline, ablations):
@@ -96,7 +96,7 @@ def get_cycle_overheads(eval_dir, baseline, ablations):
         lib_avgs = dict()
         for fn in CRYPTO_FNS[lib]:
             test_case = f'{lib}-{fn}'
-            lib_avgs[fn] = get_avg_cycles(eval_dir, baseline, test_case)
+            lib_avgs[fn] = get_avg_stdev(eval_dir, baseline, test_case)
         baseline_avgs[lib] = lib_avgs
 
     # Calculate overheads for each ablation and crypto func
@@ -107,11 +107,14 @@ def get_cycle_overheads(eval_dir, baseline, ablations):
             fn_ohs = dict()
             for abl in ablations:
                 test_case = f'{lib}-{fn}'
-                avg_cycles = get_avg_cycles(eval_dir, abl, test_case)
-                if baseline_avgs[lib][fn] == 0:
-                    fn_ohs[abl] = 0.0
+                avg_stdev = get_avg_stdev(eval_dir, abl, test_case)
+                if baseline_avgs[lib][fn][0] == 0:
+                    fn_ohs[abl] = (0.0, 0.0)
                 else:
-                    fn_ohs[abl] = avg_cycles / baseline_avgs[lib][fn]
+                    fn_ohs[abl] = (
+                        avg_stdev[0] / baseline_avgs[lib][fn][0],
+                        avg_stdev[1] / baseline_avgs[lib][fn][0]
+                    )
             lib_ohs[fn] = fn_ohs
         overheads[lib] = lib_ohs
 
@@ -124,15 +127,15 @@ def gen_overhead_plot(eval_dir, baseline, ablations, out_dir):
     print(overheads['libsodium'])
     
     # Plot overheads
-    fig, ax = plt.subplots()
-    lib_ohs = overheads['libsodium']
+    # fig, ax = plt.subplots()
+    # lib_ohs = overheads['libsodium']
 
-    for fn in lib_ohs:
-        fn_ohs = lib_ohs[fn]
-        ax.bar(fn_ohs.keys(), fn_ohs.values())
-        # print(fn_ohs)
-        fig.savefig(os.path.join(out_dir, f'{fn}-plot.png'))
-        plt.close()
+    # for fn in lib_ohs:
+    #     fn_ohs = lib_ohs[fn]
+    #     ax.bar(fn_ohs.keys(), fn_ohs.values())
+    #     # print(fn_ohs)
+    #     fig.savefig(os.path.join(out_dir, f'{fn}-plot.png'))
+    #     plt.close()
 
 
 def main():
