@@ -360,11 +360,11 @@ if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
     LIBNA_SHARED_LIB=$(find $TARGET_DIR -name "$dlname")
     BUILD_BIG_OBJ_RES=$?
     if [[ "$BUILD_BIG_OBJ_RES" -eq 0 ]]; then
-	cp $LIBNA_SHARED_LIB $BIG_OBJ
+	cp $LIBNA_SHARED_LIB ${BIG_OBJ}.verification.o
     fi
 else
     echo "Gathering all intermediate object files into ${BIG_OBJ}..."
-    find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -O0 -o $BIG_OBJ -lc
+    find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -O0 -o ${BIG_OBJ}.verification.o -lc
     BUILD_BIG_OBJ_RES=$?
     echo done
 fi
