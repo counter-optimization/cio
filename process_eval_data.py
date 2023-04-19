@@ -83,7 +83,7 @@ def gen_cycle_curves(eval_dir, data):
                 plt.close()
 
 
-def gen_overhead_plot(eval_dir, baseline_dir, data):
+def gen_overhead_plot(target_dir, baseline_dir, data):
     ''' Create plot of runtime overhead for each ablation vs baseline.'''
     for lib in data.keys():
         abls = list(data[lib].keys())
@@ -116,14 +116,48 @@ def gen_overhead_plot(eval_dir, baseline_dir, data):
         ax.set_xlabel('Cryptographic function')
         ax.set_title('Overhead of libsodium microbenchmarks')
         plt.xticks(x, labels=fns, rotation=45, ha='right')
-        ax.legend(loc='upper right', ncols=4)
+        ax.legend(bbox_to_anchor=(1.01, 1.0), loc='upper left')
         ax.set_axisbelow(True)
         ax.yaxis.grid(True)
 
         plt.savefig(
-            os.path.join(eval_dir, 'overhead_bar_plot.png'),
+            os.path.join(target_dir, 'microbench-overheads.png'),
             bbox_inches='tight')
         plt.close()
+
+
+def gen_latex_table_inserts(target_dir, baseline_dir, data):
+    lib = 'libsodium'
+
+    for fn in CRYPTO_FNS[lib]:
+        filepath = os.path.join(target_dir, f'{fn}.tex')
+        output = ''
+
+        # Baseline
+        mean = data[lib][baseline_dir][fn]['mean']
+        output += f'{mean} & '
+
+        # SS
+        if 'ss' in data[lib].keys():
+            mean = data[lib]['ss'][fn]['mean']
+            output += f'{mean}'
+        output += ' & '
+
+        # CS
+        if 'cs' in data[lib].keys():
+            mean = data[lib]['cs'][fn]['mean']
+            output += f'{mean}'
+        output += ' & '
+
+        # SS + CS
+        if 'ss-cs' in data[lib].keys():
+            mean = data[lib]['ss-cs'][fn]['mean']
+            output += f'{mean}'
+        
+        # save output
+        file = open(filepath, 'w')
+        print(output, file=file)
+        file.close()
 
 
 def main():
@@ -186,8 +220,13 @@ def main():
     # Plot cycles for each eval run (line charts)
     gen_cycle_curves(args.eval_dir, data)
 
-    # Plot overheads (bar charts)
-    gen_overhead_plot(args.eval_dir, args.baseline_dir, data)
+    # Generate data and charts for paper
+    target_dir = os.path.join(args.eval_dir, 'benchmarks')
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+
+    gen_latex_table_inserts(target_dir, args.baseline_dir, data)
+    gen_overhead_plot(target_dir, args.baseline_dir, data)
 
 
 if __name__ == "__main__":
