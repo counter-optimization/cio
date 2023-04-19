@@ -18,8 +18,7 @@ BASELINE_DIR="baseline"
 REG_RES_DIR="rr" # register reservation only, no mitigations
 CS_DIR="cs"
 SS_DIR="ss"
-SS_CS_DIR="ss-cs"
-CS_SS_DIR="cs-ss"
+SS_CS_DIR="ss+cs"
 
 VALIDATE=0
 VALIDATION_DIR=""
@@ -163,31 +162,18 @@ if [[ $? -ne 0 ]]; then
        exit -1
 fi
 
-# cs and ss
-# make clean
-# make MITIGATIONS="--cs --ss" EVAL_DIR="$TOP_EVAL_DIR/$CS_SS_DIR" \
-#     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-#     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-#     EVAL_MSG=$EVAL_MSG \
-#     run_eval
+# ss and cs
+make clean
+taskset -c 0 make MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG \
+    run_eval
 
-# if [[ $? -ne 0 ]]; then
-#        echo "Error running cs-ss mitigations"
-#        exit -1
-# fi
-
-# ss then cs
-# make clean
-# make MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
-#     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-#     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-#     EVAL_MSG=$EVAL_MSG \
-#     run_eval
-
-# if [[ $? -ne 0 ]]; then
-#        echo "Error running ss-cs mitigations"
-#        exit -1
-# fi
+if [[ $? -ne 0 ]]; then
+       echo "Error running ss+cs mitigations"
+       exit -1
+fi
 
 # generate plots
 if [[ "$VALIDATE" -eq 1 ]]; then
@@ -215,4 +201,4 @@ fi
 echo ""
 echo "Overheads vs baseline:"
 python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
-    $SS_DIR $CS_DIR # $REG_RES_DIR $CS_SS_DIR
+    $SS_DIR $CS_DIR $SS_CS_DIR # $REG_RES_DIR

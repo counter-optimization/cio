@@ -188,8 +188,8 @@ def gen_latex_table_inserts(target_dir, baseline_dir, data):
         output += ' & '
 
         # SS + CS
-        if 'ss-cs' in data[lib].keys():
-            mean = data[lib]['ss-cs'][fn][MEAN]
+        if 'ss+cs' in data[lib].keys():
+            mean = data[lib]['ss+cs'][fn][MEAN]
             output += "{0:4.5g}".format(mean)
         
         # save output
