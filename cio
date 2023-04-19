@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# this will be logged to the csv file at the very end of the file
 CIO_START_SECS=$(date +%s)
 echo "CIO_START_SECS=$CIO_START_SECS"
 
@@ -149,6 +150,10 @@ BIG_OBJ="${BUILD_DIR}/jammed.together.o"
 ALL_SECRETS_CSV="${BUILD_DIR}/secrets.csv"
 BAP_LOGS="${BUILD_DIR}/bap.log"
 CHECKER_ALERTS_CSV="${BUILD_DIR}/checker.alerts.csv"
+EVAL_RUNTIME_CSV="${BUILD_DIR}/cio-run-times.csv"
+
+# write EVAL_RUNTIME_CSV header to file
+echo "step,start_sec,stop_sec" > "$EVAL_RUNTIME_CSV"
 
 # check if bap is installed for the checkers
 HAS_BAP=$(which bap)
@@ -280,6 +285,10 @@ echo "Finished compilation step"
 COMPILATION_FINISH_SECS=$(date +%s)
 echo "COMPILATION_FINISH_SECS=$COMPILATION_FINISH_SECS"
 
+# write compilation step time to csv file
+echo "COMPILATION,$COMPILATION_START_SECS,$COMPILATION_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
+
+
 echo "Starting checking step"
 CHECKING_START_SECS=$(date +%s)
 echo "CHECKING_START_SECS=$CHECKING_START_SECS"
@@ -317,6 +326,9 @@ echo "Finished checking step"
 CHECKING_FINISH_SECS=$(date +%s)
 echo "CHECKING_FINISH_SECS=$CHECKING_FINISH_SECS"
 
+# write checking step time to csv file
+echo "CHECKING,$CHECKING_START_SECS,$CHECKING_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
+
 echo "Starting mitigation step"
 MITIGATION_START_SECS=$(date +%s)
 echo "MITIGATION_START_SECS=$MITIGATION_START_SECS"
@@ -352,6 +364,9 @@ fi
 echo "Finished mitigation step"
 MITIGATION_FINISH_SECS=$(date +%s)
 echo "MITIGATION_FINISH_SECS=$MITIGATION_FINISH_SECS"
+
+# write mitigation step time to csv file
+echo "MITIGATION,$MITIGATION_START_SECS,$MITIGATION_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
 
 # put all the object files into one big object file again
 echo -n "Gathering all intermediate object files into ${BIG_OBJ}..."
@@ -399,8 +414,14 @@ echo "Finished double-checking step"
 DOUBLECHECKING_FINISH_SECS=$(date +%s)
 echo "DOUBLECHECKING_FINISH_SECS=$DOUBLECHECKING_FINISH_SECS"
 
+# write mitigation step time to csv file
+echo "DOUBLECHECKING,$DOUBLECHECKING_START_SECS,$DOUBLECHECKING_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
+
 CIO_FINISH_SECS=$(date +%s)
 echo "CIO_FINISH_SECS=$CIO_FINISH_SECS"
+
+# write cio overall time to csv file
+echo "CIOTOTAL,$CIO_START_SECS,$CIO_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
 
 if [[ $IS_LIBSODIUM -eq 1 ]]; then
     echo -n "Running libsodium unit tests..."
