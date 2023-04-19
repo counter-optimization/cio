@@ -16,13 +16,22 @@ CRYPTO_FNS = dict({
 })
 
 Y_BOUNDS = dict({
-    'ed25519': (40000, 100000),
+    'ed25519': (40000, 220000),
     'aesni256gcm-decrypt': (0, 1000),
     'aesni256gcm-encrypt': (0, 1000),
     'argon2id': (10**8, 2 * 10**8),
     'chacha20-poly1305-decrypt': (0, 2500),
     'chacha20-poly1305-encrypt': (0, 2500),
 })
+
+TITLE = 'title'
+RAW_CYCLES = 'raw_cycles'
+MEAN = 'mean_cycles'
+STD = 'std'
+OVERHEAD = 'overhead'
+OVERHEAD_STD = 'overhead_std'
+BINARY_SIZE = 'binary_size'
+
 
 
 def parse_lines(filepath):
@@ -40,6 +49,35 @@ def parse_lines(filepath):
     return data
 
 
+def get_data(args):
+    data = dict()
+    for lib in CRYPTO_FNS:
+        data[lib] = dict()
+        for abl in [args.baseline_dir] + args.ablations:
+            data[lib][abl] = dict()
+            for fn in CRYPTO_FNS[lib]:
+                fn_data = parse_lines(
+                    os.path.join(args.eval_dir, abl, f'{lib}-{fn}.log')
+                )
+                if len(fn_data) <= 1:
+                    # No data, skip
+                    continue
+                
+                # cycles data
+                data[lib][abl][fn] = dict()
+                data[lib][abl][fn][TITLE] = fn_data[0]
+                data[lib][abl][fn][RAW_CYCLES] = np.array(fn_data[1:])
+                data[lib][abl][fn][MEAN] = np.mean(data[lib][abl][fn][RAW_CYCLES])
+                data[lib][abl][fn][STD] = np.std(data[lib][abl][fn][RAW_CYCLES])
+
+                # binary size
+                fn_file_sz = open(os.path.join(args.eval_dir, abl, f'{lib}-{fn}-bytesize.txt'))
+                data[lib][abl][fn][BINARY_SIZE] = fn_file_sz.readline().strip()
+                fn_file_sz.close()
+                
+    return data
+
+
 def gen_pretty_data_string(data: dict):
     result = ''
     for lib in data.keys():
@@ -47,10 +85,10 @@ def gen_pretty_data_string(data: dict):
         for abl in data[lib].keys():
             result += f'{abl}:\n'
             for fn in data[lib][abl].keys():
-                title = data[lib][abl][fn]['title']
+                title = data[lib][abl][fn][TITLE]
                 result += f'\t{title}:\n'
                 for stat in data[lib][abl][fn].keys():
-                    if stat != 'raw cycles' and stat != 'title':
+                    if stat != RAW_CYCLES and stat != TITLE:
                         result += f'\t\t{stat}: {data[lib][abl][fn][stat]}\n'
     return result
 
@@ -63,8 +101,8 @@ def gen_cycle_curves(eval_dir, data):
     for lib in data.keys():
         for abl in data[lib].keys():
             for fn in data[lib][abl].keys():
-                title = data[lib][abl][fn]['title']
-                cycles_data = data[lib][abl][fn]['raw cycles']
+                title = data[lib][abl][fn][TITLE]
+                cycles_data = data[lib][abl][fn][RAW_CYCLES]
 
                 # # Calculate reasonable bounds for y-axis
                 # quartiles = np.quantile(cycles_data, [0.25, 0.75])
@@ -97,8 +135,8 @@ def gen_overhead_plot(target_dir, baseline_dir, data):
             fn_ohs[abl] = []
             fn_stds[abl] = []
             for fn in fns:
-                fn_ohs[abl] += [data[lib][abl][fn]['overhead']]
-                fn_stds[abl] += [data[lib][abl][fn]['overhead std']]
+                fn_ohs[abl] += [data[lib][abl][fn][OVERHEAD]]
+                fn_stds[abl] += [data[lib][abl][fn][OVERHEAD_STD]]
             
         x = np.arange(len(fns))
         width = 0.25
@@ -134,25 +172,25 @@ def gen_latex_table_inserts(target_dir, baseline_dir, data):
         output = ''
 
         # Baseline
-        mean = data[lib][baseline_dir][fn]['mean']
-        output += f'{mean} & '
+        mean = data[lib][baseline_dir][fn][MEAN]
+        output += "{0:4.5g} & ".format(mean)
 
         # SS
         if 'ss' in data[lib].keys():
-            mean = data[lib]['ss'][fn]['mean']
-            output += f'{mean}'
+            mean = data[lib]['ss'][fn][MEAN]
+            output += "{0:4.5g}".format(mean)
         output += ' & '
 
         # CS
         if 'cs' in data[lib].keys():
-            mean = data[lib]['cs'][fn]['mean']
-            output += f'{mean}'
+            mean = data[lib]['cs'][fn][MEAN]
+            output += "{0:4.5g}".format(mean)
         output += ' & '
 
         # SS + CS
         if 'ss-cs' in data[lib].keys():
-            mean = data[lib]['ss-cs'][fn]['mean']
-            output += f'{mean}'
+            mean = data[lib]['ss-cs'][fn][MEAN]
+            output += "{0:4.5g}".format(mean)
         
         # save output
         file = open(filepath, 'w')
@@ -179,35 +217,16 @@ def main():
     args = parser.parse_args()
 
     # Retrieve cycles data
-    data = dict()
-    for lib in CRYPTO_FNS:
-        data[lib] = dict()
-        for abl in [args.baseline_dir] + args.ablations:
-            data[lib][abl] = dict()
-            for fn in CRYPTO_FNS[lib]:
-                fn_data = parse_lines(
-                    os.path.join(args.eval_dir, abl, f'{lib}-{fn}.log')
-                )
-                if len(fn_data) <= 1:
-                    # No data, skip
-                    continue
-                
-                data[lib][abl][fn] = dict()
-                data[lib][abl][fn]['title'] = fn_data[0]
-                data[lib][abl][fn]['raw cycles'] = np.array(fn_data[1:])
-                data[lib][abl][fn]['mean'] = np.mean(data[lib][abl][fn]['raw cycles'])
-                data[lib][abl][fn]['std'] = np.std(data[lib][abl][fn]['raw cycles'])
+    data = get_data(args)
     
     # Calculate cycle overheads vs baseline
     for lib in data.keys():
         for abl in data[lib].keys():
-            if abl == args.baseline_dir:
-                continue
             for fn in data[lib][abl].keys():
                 baseline = data[lib][args.baseline_dir][fn]
                 fn_data = data[lib][abl][fn]
-                fn_data['overhead'] = fn_data['mean'] / baseline['mean']
-                fn_data['overhead std'] = fn_data['std'] / baseline['mean']
+                fn_data[OVERHEAD] = fn_data[MEAN] / baseline[MEAN]
+                fn_data[OVERHEAD_STD] = fn_data[STD] / baseline[MEAN]
     
     # Save calculated data
     data_str = gen_pretty_data_string(data)

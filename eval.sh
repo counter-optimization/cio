@@ -120,33 +120,20 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # with register reservation only
-make clean
-if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
-	mkdir $LIBSODIUM_REG_RES_DIR
-	make --directory=$LIBSODIUM_DIR CC=$CC
-	cp $LIBSODIUM_AR $LIBSODIUM_REG_RES_DIR/libsodium.a
-fi
-taskset -c 0 make MITIGATIONS="$REG_RES_DIR" EVAL_DIR="$TOP_EVAL_DIR/$REG_RES_DIR" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-	EVAL_MSG=$EVAL_MSG \
-    run_eval
-
-if [[ $? -ne 0 ]]; then
-       echo "Error running with register reservation only"
-       exit -1
-fi
-
-# cs only
 # make clean
-# make MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
+# if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
+# 	mkdir $LIBSODIUM_REG_RES_DIR
+# 	make --directory=$LIBSODIUM_DIR CC=$CC
+# 	cp $LIBSODIUM_AR $LIBSODIUM_REG_RES_DIR/libsodium.a
+# fi
+# taskset -c 0 make MITIGATIONS="$REG_RES_DIR" EVAL_DIR="$TOP_EVAL_DIR/$REG_RES_DIR" \
 #     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
 #     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-#     EVAL_MSG=$EVAL_MSG \
+# 	EVAL_MSG=$EVAL_MSG \
 #     run_eval
 
 # if [[ $? -ne 0 ]]; then
-#        echo "Error running cs mitigations"
+#        echo "Error running with register reservation only"
 #        exit -1
 # fi
 
@@ -163,7 +150,20 @@ if [[ $? -ne 0 ]]; then
        exit -1
 fi
 
-# cs then ss
+# cs only
+make clean
+taskset -c 0 make MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running cs mitigations"
+       exit -1
+fi
+
+# cs and ss
 # make clean
 # make MITIGATIONS="--cs --ss" EVAL_DIR="$TOP_EVAL_DIR/$CS_SS_DIR" \
 #     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
@@ -196,18 +196,23 @@ if [[ "$VALIDATE" -eq 1 ]]; then
 	python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR "../$VALIDATION_DIR/$BASELINE_DIR"
 	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/baseline_validation_data.txt
 
-	echo ""
-	echo "Validating register reservation only..."
-	python3 process_eval_data.py $TOP_EVAL_DIR $REG_RES_DIR "../$VALIDATION_DIR/$REG_RES_DIR"
-	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/rr_validation_data.txt
+	# echo ""
+	# echo "Validating register reservation only..."
+	# python3 process_eval_data.py $TOP_EVAL_DIR $REG_RES_DIR "../$VALIDATION_DIR/$REG_RES_DIR"
+	# mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/rr_validation_data.txt
 
 	echo ""
 	echo "Validating SS..."
 	python3 process_eval_data.py $TOP_EVAL_DIR $SS_DIR "../$VALIDATION_DIR/ss"
 	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/ss_validation_data.txt
+
+	echo ""
+	echo "Validating CS..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $SS_DIR "../$VALIDATION_DIR/cs"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/cs_validation_data.txt
 fi
 
 echo ""
 echo "Overheads vs baseline:"
-python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR $REG_RES_DIR \
-    $SS_DIR # $CS_DIR $CS_SS_DIR
+python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
+    $SS_DIR $CS_DIR # $REG_RES_DIR $CS_SS_DIR
