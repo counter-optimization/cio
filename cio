@@ -222,14 +222,14 @@ if [[ -e "$TARGET_DIR/configure" ]]; then
     fi
 fi
 
-# make the dir to hold all of the build artifacts
-echo -n "Creating ${TOOLNAME} build dir ${BUILD_DIR}..."
-if [[ -e $BUILD_DIR ]]; then
-    echo -n it already exists, removing old build dir first...
-    rm -r $BUILD_DIR
-fi
-mkdir $BUILD_DIR
-echo done
+# # make the dir to hold all of the build artifacts
+# echo -n "Creating ${TOOLNAME} build dir ${BUILD_DIR}..."
+# if [[ -e $BUILD_DIR ]]; then
+#     echo -n it already exists, removing old build dir first...
+#     rm -r $BUILD_DIR
+# fi
+# mkdir $BUILD_DIR
+# echo done
 
 # Get their CFLAGS so we can append ours
 THEIR_CFLAGS=$(grep -E '^CFLAGS[ =]' ./libsodium/src/libsodium/Makefile)
