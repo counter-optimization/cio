@@ -12,7 +12,8 @@ CHECKER_PLUGIN_NAME="uarch_checker.plugin"
 
 # cio defaults
 TOOLNAME=cio
-TIMESTAMP=$(TZ='America/Los_Angeles' date +%F-%T-%Z)
+TZ='America/Los_Angeles'
+TIMESTAMP=$(date +%F-%T-%Z)
 BUILD_DIR="./${TIMESTAMP}-${TOOLNAME}-build"
 NUM_MAKE_JOB_SLOTS=8
 
@@ -244,7 +245,7 @@ COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $CFLAGS $EXTRA_CFLAGS"
 # fi
 
 echo -n "Running target\'s makefile... with CFLAGS=\"$COMPILATION_STEP_CFLAGS\""
-make -j 32 --directory=$TARGET_DIR CC=$CC CFLAGS="$COMPILATION_STEP_CFLAGS"
+make -j "$NUM_MAKE_JOB_SLOTS" --directory=$TARGET_DIR CC=$CC CFLAGS="$COMPILATION_STEP_CFLAGS"
 COMPILE_PASS_RES=$?
 # echo compile_pass_res is $COMPILE_PASS_RES
 echo done
