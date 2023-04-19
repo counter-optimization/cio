@@ -1,5 +1,8 @@
 #!/bin/bash
 
+CIO_START_SECS=$(date +%s)
+echo "CIO_START_SECS=$CIO_START_SECS"
+
 set -x
 
 # SET BY USER
@@ -192,6 +195,10 @@ if [[ "$IS_LIBSODIUM" -eq 1 && ! (-e "$TARGET_DIR/Makefile") ]]; then
     exit 2
 fi
 
+echo "Starting compilation step"
+COMPILATION_START_SECS=$(date +%s)
+echo "COMPILATION_START_SECS=$COMPILATION_START_SECS"
+
 make --directory=$TARGET_DIR clean
 
 pushd .
@@ -268,6 +275,14 @@ if [[ $BUILD_BIG_OBJ_RES -ne 0 ]]; then
     exit $BUILD_BIG_OBJ_RES
 fi
 
+echo "Finished compilation step"
+COMPILATION_FINISH_SECS=$(date +%s)
+echo "COMPILATION_FINISH_SECS=$COMPILATION_FINISH_SECS"
+
+echo "Starting checking step"
+CHECKING_START_SECS=$(date +%s)
+echo "CHECKING_START_SECS=$CHECKING_START_SECS"
+
 echo "SHA256 of pre-mitigation $BIG_OBJ is:"
 echo $(sha256sum $BIG_OBJ)
 
@@ -297,6 +312,14 @@ if [[ $LINES_IN_BAP_ALERTS -le 1 ]]; then
     exit 3
 fi
 
+echo "Finished checking step"
+CHECKING_FINISH_SECS=$(date +%s)
+echo "CHECKING_FINISH_SECS=$CHECKING_FINISH_SECS"
+
+echo "Starting mitigation step"
+MITIGATION_START_SECS=$(date +%s)
+echo "MITIGATION_START_SECS=$MITIGATION_START_SECS"
+
 echo -n Cleaning up build artifacts from compilation,checking pass...
 make --directory=$TARGET_DIR clean
 echo done
@@ -325,6 +348,10 @@ if [[ $MITIGATION_PASS_RES -ne 0 ]]; then
     exit $MITIGATION_PASS_RES
 fi
 
+echo "Finished mitigation step"
+MITIGATION_FINISH_SECS=$(date +%s)
+echo "MITIGATION_FINISH_SECS=$MITIGATION_FINISH_SECS"
+
 # put all the object files into one big object file again
 echo -n "Gathering all intermediate object files into ${BIG_OBJ}..."
 if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
@@ -346,6 +373,10 @@ if [[ $BUILD_BIG_OBJ_RES -ne 0 ]]; then
     exit $BUILD_BIG_OBJ_RES
 fi
 
+echo "Starting double-checking step"
+DOUBLECHECKING_START_SECS=$(date +%s)
+echo "DOUBLECHECKING_START_SECS=$DOUBLECHECKING_START_SECS"
+
 echo -n Running verification pass...
 echo "Start time is: $(TZ='America/Los_angeles' date +%F-%T-%Z)"
 echo "logging to ${BAP_LOGS}"
@@ -363,6 +394,13 @@ bap \
 echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%F-%T-%Z)"
 echo done
 
+echo "Finished double-checking step"
+DOUBLECHECKING_FINISH_SECS=$(date +%s)
+echo "DOUBLECHECKING_FINISH_SECS=$DOUBLECHECKING_FINISH_SECS"
+
+CIO_FINISH_SECS=$(date +%s)
+echo "CIO_FINISH_SECS=$CIO_FINISH_SECS"
+
 if [[ $IS_LIBSODIUM -eq 1 ]]; then
     echo -n "Running libsodium unit tests..."
     make --directory=$TARGET_DIR check
@@ -378,3 +416,5 @@ fi
 # else
 #     exit 0
 # fi
+
+
