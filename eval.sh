@@ -194,8 +194,13 @@ if [[ "$VALIDATE" -eq 1 ]]; then
 
 	echo ""
 	echo "Validating CS..."
-	python3 process_eval_data.py $TOP_EVAL_DIR $SS_DIR "../$VALIDATION_DIR/cs"
+	python3 process_eval_data.py $TOP_EVAL_DIR $CS_DIR "../$VALIDATION_DIR/cs"
 	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/cs_validation_data.txt
+
+	echo ""
+	echo "Validating SS+CS..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $SS_CS_DIR "../$VALIDATION_DIR/ss+cs"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/ss+cs_validation_data.txt
 fi
 
 echo ""
