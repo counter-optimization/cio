@@ -112,7 +112,7 @@ def gen_overhead_plot(eval_dir, baseline_dir, data):
             # ax.bar_label(rects, padding=3)
             multiplier += 1
 
-        ax.set_ylabel('Cycle overhead')
+        ax.set_ylabel('Normalized execution time')
         ax.set_xlabel('Cryptographic function')
         ax.set_title('Overhead of libsodium microbenchmarks')
         plt.xticks(x, labels=fns, rotation=45, ha='right')
