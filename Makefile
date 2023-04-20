@@ -128,7 +128,8 @@ libsodium_init:
 		git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
 		git apply ../chacha20_impl_renames.patch; \
 		git apply ../poly1305_impl_renames.patch; \
-		git apply ../argon2_impl_renames.patch
+		git apply ../argon2_impl_renames.patch; \
+		git apply ../salsa20_ref_impl.patch
 	touch libsodium_init
 
 $(LIBSODIUM_BUILT).$(MITIGATIONS_STR): libsodium_init checker
