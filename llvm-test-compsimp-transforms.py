@@ -3,15 +3,17 @@ import re
 import subprocess
 
 tempFile = "test.c"
+tempObjFile = "test.o"
 test = open(tempFile, "w+")
-test.write("int main(){return 0;}")
+test.write("int test(){return 0;}")
 test.close()
 
 CC = os.environ["LLVM_HOME"] + "/bin/clang"
 
-subprocess.run(CC + " -mllvm -x86-cs -mllvm -x86-cs-test " + tempFile, shell=True, check=True)
+compile_cmd = f"{CC} -mllvm -x86-cs -mllvm -x86-cs-test -c {tempFile} -o {tempObjFile}"
+subprocess.run(compile_cmd, shell=True, check=True)
 
-nm_process = subprocess.run("nm a.out", check=True, shell=True, text=True, stdout=subprocess.PIPE)
+nm_process = subprocess.run(f"nm {tempObjFile}", check=True, shell=True, text=True, stdout=subprocess.PIPE)
 
 def is_compsimp_test_line(line):
     return "x86compsimptest" in line
@@ -40,7 +42,7 @@ for line in nm_process.stdout.split('\n'):
     func_name, mir_opcode, is_original, is_transformed = parse_nm_stdout(line)
 
     with open(tempFile + ".asm1", "w+") as asm1, open(tempFile + ".asm2", "w+") as asm2:
-        subprocess.run("objdump -drwC -Mintel --no-show-raw-insn --disassemble=x86compsimptest-" + mir_opcode + "-original a.out", shell=True, stdout=asm1, check=True)
-        subprocess.run("objdump -drwC -Mintel --no-show-raw-insn --disassemble=x86compsimptest-" + mir_opcode + "-transformed a.out", shell=True, stdout=asm2, check=True)
+        subprocess.run("objdump -drwC -Mintel --no-show-raw-insn --disassemble=x86compsimptest-" + mir_opcode + f"-original {tempObjFile}", shell=True, stdout=asm1, check=True)
+        subprocess.run("objdump -drwC -Mintel --no-show-raw-insn --disassemble=x86compsimptest-" + mir_opcode + f"-transformed {tempObjFile}", shell=True, stdout=asm2, check=True)
             # original = subprocess.Popen('sed "/:$/d; s/#.*$//; /^$/d; /^[a-z,A-Z]/d; s/.*\t//; /nop/d; /lea/d; /je/d; /jne/d; /jmp/d; /jae/d; /jbe/d" ' + tempFile + ".asm1", shell=True)
             # transformed = subprocess.Popen('sed "/:$/d; s/#.*$//; /^$/d; /^[a-z,A-Z]/d; s/.*\t//; /nop/d; /lea/d; /je/d; /jne/d; /jmp/d; /jae/d; /jbe/d" ' + tempFile + ".asm2", shell=True)
