@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <string.h>
 
 /* OUR TESTING ABI
 
@@ -163,10 +164,16 @@ check_outstates_equivalent(struct OutState* s1, struct OutState* s2)
 	return output_states_equivalent;
 }
 
-/* todo, must be changed to handle vector ops */
-void x86compsimptest_ADD64rr_original(struct OutState* outstate, uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4);
+AUTOMATICALLY_REPLACE_ME
 
-void x86compsimptest_ADD64rr_transformed(struct OutState* outstate,  uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4);
+/* /\* todo, must be changed to handle vector ops *\/ */
+/* void x86compsimptest_ADD64rr_original(struct OutState* outstate, uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4); */
+
+/* void x86compsimptest_ADD64rr_transformed(struct OutState* outstate,  uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4); */
+
+/* const char* opcode_types[5] = { 0 }; */
+
+char* memory_args[5] = { 0 };
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
@@ -185,6 +192,43 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	uint64_t arg3 = data_as_gprs[3];
 	uint64_t arg4 = data_as_gprs[4];
 
+	for (int ii = 0; ii < sizeof(opcode_types) / sizeof(const char*); ++ii) {
+		const char* cur_type = opcode_types[ii];
+		
+		if (0 == cur_type) {
+			break;
+		}
+
+		uint64_t* which_arg = 0;
+		if (strcmp(cur_type, "MEM")) {
+			switch (ii) {
+			case 0:
+				which_arg = &arg0;
+				break;
+			case 1:
+				which_arg = &arg1;
+				break;
+			case 2:
+				which_arg = &arg2;
+				break;
+			case 3:
+				which_arg = &arg3;
+				break;
+			case 4:
+				which_arg = &arg4;
+				break;
+			default:
+				assert(false && "unreachable");
+			}
+
+			memory_args[ii] = malloc(GPR_ARG_SIZE_IN_BYTES);
+			assert(memory_args[ii] &&
+			       "Couldn't allocate memory for mem arg");
+			memcpy(memory_args[ii], which_arg, GPR_ARG_SIZE_IN_BYTES);
+			*which_arg = (uint64_t) memory_args[ii];
+		}
+	}
+
 	struct OutState original_state = { 0 };
 	struct OutState transformed_state = { 0 };
 
@@ -193,6 +237,14 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
 	int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state);
 	assert(is_equivalent);
+
+	for (int ii = 0; ii < sizeof(memory_args) / sizeof(char*); ++ii) {
+		char* cur_ptr = memory_args[ii];
+		if (cur_ptr) {
+			free(cur_ptr);
+		}
+		memory_args[ii] = 0;
+	}
 
 	return 0;
 }
