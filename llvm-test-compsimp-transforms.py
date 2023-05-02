@@ -21,8 +21,8 @@ def is_compsimp_test_line(line):
 def parse_nm_stdout(line):
     """
     lines of nm's stdout look like this:
-    00000000004020e0 t x86compsimptest-XOR16rr-original
-    00000000004020f0 t x86compsimptest-XOR16rr-transformed
+    00000000004020e0 t x86compsimptest_XOR16rr_original
+    00000000004020f0 t x86compsimptest_XOR16rr_transformed
 
     precondition: is_compsimp_test_line(line) returns True for this argument line
     returns a tuple of (function_name_str, mir_opcode_str, is_original_bool, is_transformed_bool)
@@ -31,18 +31,31 @@ def parse_nm_stdout(line):
      # split on all whitespace
     v_addr, _, func_name = line.split()
     # version is one of ['original', 'transformed']
-    _, mir_opcode, version = func_name.split('-')
+    _, mir_opcode, version = func_name.split('_')
     is_original = version == 'original'
     is_transformed = version == 'transformed'
     return (func_name, mir_opcode, is_original, is_transformed)
-    
-for line in nm_process.stdout.split('\n'):
-    if not is_compsimp_test_line(line):
-        continue
-    func_name, mir_opcode, is_original, is_transformed = parse_nm_stdout(line)
 
-    with open(tempFile + ".asm1", "w+") as asm1, open(tempFile + ".asm2", "w+") as asm2:
-        subprocess.run("objdump -drwC -Mintel --no-show-raw-insn --disassemble=x86compsimptest-" + mir_opcode + f"-original {tempObjFile}", shell=True, stdout=asm1, check=True)
-        subprocess.run("objdump -drwC -Mintel --no-show-raw-insn --disassemble=x86compsimptest-" + mir_opcode + f"-transformed {tempObjFile}", shell=True, stdout=asm2, check=True)
-            # original = subprocess.Popen('sed "/:$/d; s/#.*$//; /^$/d; /^[a-z,A-Z]/d; s/.*\t//; /nop/d; /lea/d; /je/d; /jne/d; /jmp/d; /jae/d; /jbe/d" ' + tempFile + ".asm1", shell=True)
-            # transformed = subprocess.Popen('sed "/:$/d; s/#.*$//; /^$/d; /^[a-z,A-Z]/d; s/.*\t//; /nop/d; /lea/d; /je/d; /jne/d; /jmp/d; /jae/d; /jbe/d" ' + tempFile + ".asm2", shell=True)
+def generate_implementations_header(obj_file_name):
+    # header_file_contents = f"
+    # #ifndef IMPLEMENTATIONS_H
+    # #define IMPLEMENTATIONS_H
+
+    # {}
+
+    # #endif // IMPLEMENTATIONS_H
+    # "
+    return
+
+if __name__ == '__main__':
+    for line in nm_process.stdout.split('\n'):
+        if not is_compsimp_test_line(line):
+            continue
+        
+        func_name, mir_opcode, is_original, is_transformed = parse_nm_stdout(line)
+
+        with open(tempFile + ".asm1", "w+") as asm1, open(tempFile + ".asm2", "w+") as asm2:
+            subprocess.run("objdump -drwC -Mintel --no-show-raw-insn --disassemble=x86compsimptest_" + mir_opcode + f"_original {tempObjFile}", shell=True, stdout=asm1, check=True)
+            subprocess.run("objdump -drwC -Mintel --no-show-raw-insn --disassemble=x86compsimptest_" + mir_opcode + f"_transformed {tempObjFile}", shell=True, stdout=asm2, check=True)
+        # original = subprocess.Popen('sed "/:$/d; s/#.*$//; /^$/d; /^[a-z,A-Z]/d; s/.*\t//; /nop/d; /lea/d; /je/d; /jne/d; /jmp/d; /jae/d; /jbe/d" ' + tempFile + ".asm1", shell=True)
+        # transformed = subprocess.Popen('sed "/:$/d; s/#.*$//; /^$/d; /^[a-z,A-Z]/d; s/.*\t//; /nop/d; /lea/d; /je/d; /jne/d; /jmp/d; /jae/d; /jbe/d" ' + tempFile + ".asm2", shell=True)

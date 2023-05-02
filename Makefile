@@ -1,5 +1,6 @@
 CFLAGS=-O0 -Werror -std=c18 # for the eval code, don't optimize anything
 
+LLVM_HOME=$(HOME)/llvm-project/build
 OUR_CC=$(HOME)/llvm-project/build/bin/clang
 CC=$(OUR_CC) # default to our fork of llvm's clang
 
@@ -172,3 +173,18 @@ clean_checker:
 	-$(MAKE) -C $(CHECKER_PLUGIN_PATH) clean
 
 clean: clean_eval clean_libsodium
+
+# builds the big object file containing original instructions and
+# transformed instructions
+test.o:
+	LLVM_HOME=$(LLVM_HOME) python3 llvm-test-compsimp-transforms.py
+
+# builds the LLVM libFuzzer test harness and links it with test.o
+# where test.o contains the original instructions and transformed instructions
+implementation-tester: test.o
+	clang -g -O0 -Wall -c implementation-tester.c -o implementation-tester.o
+	clang -g -O0 -Wall -fsanitize=fuzzer test.o implementation-tester.o -o implementation-tester
+
+# runs the LLVM libFuzzer test harness on the original and transformed insns
+test_implementations: implementation-tester
+
