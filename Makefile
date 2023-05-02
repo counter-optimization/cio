@@ -176,15 +176,16 @@ clean: clean_eval clean_libsodium
 
 # builds the big object file containing original instructions and
 # transformed instructions
-test.o:
+test.o: $(OUR_CC)
 	LLVM_HOME=$(LLVM_HOME) python3 llvm-test-compsimp-transforms.py
 
 # builds the LLVM libFuzzer test harness and links it with test.o
 # where test.o contains the original instructions and transformed instructions
-implementation-tester: test.o
-	clang -g -O0 -Wall -c implementation-tester.c -o implementation-tester.o
+implementation-tester: implementation-tester.c test.o
+	clang -g -O0 -Wall -fsanitize=fuzzer-no-link -c implementation-tester.c -o implementation-tester.o
 	clang -g -O0 -Wall -fsanitize=fuzzer test.o implementation-tester.o -o implementation-tester
 
 # runs the LLVM libFuzzer test harness on the original and transformed insns
 test_implementations: implementation-tester
+	./implementation-tester -runs=100000000 -max_len=650 -len_control=0 -timeout=10 -jobs=1
 

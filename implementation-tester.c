@@ -199,11 +199,8 @@ void x86compsimptest_ADD64rr_transformed(struct OutState* outstate,  uint64_t i0
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-	
-	const size_t fuzz_data_size_ceiling = INPUT_STATE_SIZE + 100;
-	
-	if (size < INPUT_STATE_SIZE || size > fuzz_data_size_ceiling) {
-		return 0;
+	if (size < INPUT_STATE_SIZE) {
+		return -1;
 	}
 
 	/* todo, must be changed to handle vector ops */
@@ -222,7 +219,8 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	x86compsimptest_ADD64rr_original(&original_state, arg0, arg1, arg2, arg3, arg4);
 	x86compsimptest_ADD64rr_transformed(&transformed_state, arg0, arg1, arg2, arg3, arg4);
 
-	check_outstates_equivalent(&original_state, &transformed_state);
+	int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state);
+	assert(is_equivalent);
 
 	return 0;
 }

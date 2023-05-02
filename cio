@@ -196,7 +196,7 @@ if [[ ! (-e "$CHECKER_PLUGIN_PATH/$CHECKER_PLUGIN_NAME") ]]; then
     exit 2
 fi
 
-if [[ "$IS_LIBSODIUM" -eq 1 && ! (-e "$TARGET_DIR/Makefile") ]]; then
+if [[ "$IS_LIBSODIUM" -eq 1 && ! (-e "$TARGET_DIR/configure") ]]; then
     echo "Libsodium submodule isn't initialized, please run 'make libsodium_init', then rerun cio"
     exit 2
 fi
