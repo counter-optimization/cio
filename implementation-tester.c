@@ -50,39 +50,39 @@
 
    x86compsimptesting-ADD64rr-original:
       add rsi, rdx
-      mov %[rdi+8], rax
-      mov %[rdi+16], rbx
+      mov %[rdi+0], rax
+      mov %[rdi+8], rbx
+      mov %[rdi+16], rcx
       mov %[rdi+24], rcx
-      mov %[rdi+32], rcx
-      mov %[rdi+40], rdx
-      mov %[rdi+48], rsp
-      mov %[rdi+56], rbp
-      mov %[rdi+64], rsi
-      mov %[rdi+72], rdi
-      mov %[rdi+80], r8
-      mov %[rdi+88], r9
-      mov %[rdi+96], r10
-      mov %[rdi+104], r11
-      mov %[rdi+112], r12
-      mov %[rdi+120], r13
-      mov %[rdi+128], r14
-      mov %[rdi+136], r15
-      mov %[rdi+144], ymm0 //todo
-      mov %[rdi+176], ymm1 //todo
-      mov %[rdi+208], ymm2 //todo
-      mov %[rdi+240], ymm3 //todo
-      mov %[rdi+272], ymm4 //todo
-      mov %[rdi+304], ymm5 //todo
-      mov %[rdi+336], ymm6 //todo
-      mov %[rdi+368], ymm7 //todo
-      mov %[rdi+400], ymm8 //todo
-      mov %[rdi+432], ymm9 //todo
-      mov %[rdi+464], ymm10 //todo
-      mov %[rdi+496], ymm11 //todo
-      mov %[rdi+528], ymm12 //todo
-      mov %[rdi+560], ymm13 //todo
-      mov %[rdi+592], ymm14 //todo
-      mov %[rdi+624], ymm15 //todo
+      mov %[rdi+32], rdx
+      mov %[rdi+40], rsp
+      mov %[rdi+48], rbp
+      mov %[rdi+56], rsi
+      mov %[rdi+64], rdi
+      mov %[rdi+72], r8
+      mov %[rdi+80], r9
+      mov %[rdi+88], r10
+      mov %[rdi+96], r11
+      mov %[rdi+104], r12
+      mov %[rdi+112], r13
+      mov %[rdi+120], r14
+      mov %[rdi+128], r15
+      mov %[rdi+136], ymm0 //todo
+      mov %[rdi+168], ymm1 //todo
+      mov %[rdi+200], ymm2 //todo
+      mov %[rdi+232], ymm3 //todo
+      mov %[rdi+264], ymm4 //todo
+      mov %[rdi+296], ymm5 //todo
+      mov %[rdi+328], ymm6 //todo
+      mov %[rdi+360], ymm7 //todo
+      mov %[rdi+392], ymm8 //todo
+      mov %[rdi+424], ymm9 //todo
+      mov %[rdi+458], ymm10 //todo
+      mov %[rdi+488], ymm11 //todo
+      mov %[rdi+520], ymm12 //todo
+      mov %[rdi+552], ymm13 //todo
+      mov %[rdi+584], ymm14 //todo
+      mov %[rdi+616], ymm15 //todo
       ret
 
    *though the stores for vector registers haven't been added yet*
@@ -130,64 +130,36 @@ struct __attribute__((__packed__)) OutState {
       /* mov %[rdi+624], ymm15 //todo */
 };
 
-const char* out_state_offset_to_reg_name[sizeof(struct OutState) * sizeof(char*)] = {
-	"rax", "rax", "rax", "rax", "rax", "rax", "rax", "rax",
-		"rbx", "rbx", "rbx", "rbx", "rbx", "rbx", "rbx", "rbx",
-		"rcx", "rcx", "rcx", "rcx", "rcx", "rcx", "rcx", "rcx",
-		"rdx", "rdx", "rdx", "rdx", "rdx", "rdx", "rdx", "rdx",
-		"rsp", "rsp", "rsp", "rsp", "rsp", "rsp", "rsp", "rsp", 
-		"rbp", "rbp", "rbp", "rbp", "rbp", "rbp", "rbp", "rbp", 
-		"rsi", "rsi", "rsi", "rsi", "rsi", "rsi", "rsi", "rsi", 
-		"rdi", "rdi", "rdi", "rdi", "rdi", "rdi", "rdi", "rdi", 
-		"r8", "r8", "r8", "r8", "r8", "r8", "r8", "r8", 
-		"r9", "r9", "r9", "r9", "r9", "r9", "r9", "r9", 
-		"r10", "r10", "r10", "r10", "r10", "r10", "r10", "r10", 
-		"r11", "r11", "r11", "r11", "r11", "r11", "r11", "r11", 
-		"r12", "r12", "r12", "r12", "r12", "r12", "r12", "r12", 
-		"r13", "r13", "r13", "r13", "r13", "r13", "r13", "r13", 
-		"r14", "r14", "r14", "r14", "r14", "r14", "r14", "r14", 
-		"r15", "r15", "r15", "r15", "r15", "r15", "r15", "r15",
-		/* todo, must be changed to handle vector ops */
-};
-
-const char*
-map_out_state_offset_to_reg_name(int offs)
-{
-	return out_state_offset_to_reg_name[offs];
-}
-
+#define CHECK_GPRS_EQUIV(REG_NAME, S1, S2, OK)	\
+	{ \
+	    if (S1->REG_NAME != S2->REG_NAME) { \
+	        OK = 0; \
+		printf("Output states differed on register %s: expected %" PRIu64 ", given %" PRIu64 "\n", \
+                       #REG_NAME, S1->REG_NAME, S2->REG_NAME); \
+	    } \
+	}
 
 int
 check_outstates_equivalent(struct OutState* s1, struct OutState* s2)
 {
-	/* s1 is expected (value from original insn), s2 is given (value from transformed insn seq) */
-	uint8_t* s1_bytes = (uint8_t*) s1;
-	uint8_t* s2_bytes = (uint8_t*) s2;
-	
-	const char* which_reg_differed = 0;
 	int output_states_equivalent = 1;
-
-	int last_gpr_idx = 0;
-	
-	for (int state_byte_idx = 0; state_byte_idx < (int) sizeof(struct OutState); ++state_byte_idx) {
-		/* todo must be changed to handle vector ops */
-		last_gpr_idx = 0 == (state_byte_idx % GPR_ARG_SIZE_IN_BYTES) ? state_byte_idx : last_gpr_idx;
-			
-		if (s1_bytes[state_byte_idx] != s2_bytes[state_byte_idx]) {
-			which_reg_differed = map_out_state_offset_to_reg_name(state_byte_idx);
-
-			/* todo must be changed to handle vector ops */
-			const uint64_t expected_value = s1_bytes[last_gpr_idx];
-			const uint64_t given_value = s2_bytes[last_gpr_idx];
-
-			/* todo must be changed to handle vector ops */
-			printf("Output states differed on register %s: expected %" PRIu64 ", given %" PRIu64 "\n",
-			       which_reg_differed, expected_value, given_value);
-			
-			output_states_equivalent = 0;
-		}
-	}
-
+	CHECK_GPRS_EQUIV(rax, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(rbx, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(rcx, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(rdx, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(rsp, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(rbp, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(rsi, s1, s2, output_states_equivalent);
+	/* don't check RDI since it holds the pointer to OutState struct
+	   CHECK_GPRS_EQUIV(rdi, s1, s2, output_states_equivalent); */
+	CHECK_GPRS_EQUIV(r8, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(r9, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(r10, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(r11, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(r12, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(r13, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(r14, s1, s2, output_states_equivalent);
+	CHECK_GPRS_EQUIV(r15, s1, s2, output_states_equivalent);
 	return output_states_equivalent;
 }
 

@@ -187,5 +187,5 @@ implementation-tester: implementation-tester.c test.o
 
 # runs the LLVM libFuzzer test harness on the original and transformed insns
 test_implementations: implementation-tester
-	./implementation-tester -runs=100000000 -max_len=650 -len_control=0 -timeout=10 -jobs=1
+	./implementation-tester -runs=100000000 -max_len=650 -len_control=0 -timeout=10
 
