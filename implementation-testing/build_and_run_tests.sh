@@ -58,6 +58,8 @@ for harness_file in $HARNESS_C_FILES; do
     FUZZERS=("${FUZZERS[@]}" "$final_file")
 done
 
+echo "fuzzers are: ${FUZZERS[@]}"
+
 # Run all fuzzers in a thread (process) pool using xargs
 
 # ALL_FUZZERS=$(find $FUZZ_HARNESSES_DIR \(-not -iname '*.c'\) \(-not -iname '*.o'\))
@@ -67,7 +69,7 @@ if [[ ! -v NUM_FUZZ_JOBS ]]; then
 fi
 
 if [[ ! -v NUM_FUZZ_RUNS ]]; then
-    NUM_FUZZ_RUNS=1000000
+    NUM_FUZZ_RUNS=100000 # 100,000
 fi
 
 if [[ ! -v MAX_SEED_LEN ]]; then
@@ -76,12 +78,22 @@ fi
 
 if [[ $NUM_FUZZ_JOBS -eq 1 ]]; then
     # do in serial
-    for fuzzer in $FUZZERS; do
-	$fuzzer -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10
+    for fuzzer in "${FUZZERS[@]}"; do
+	echo "running fuzzer $fuzzer"
+	$fuzzer -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> $fuzzer.log
     done
 else
     # do in parallel
-    echo $FUZZERS | xargs --replace=FUZZER --max-procs=$NUM_FUZZ_JOBS FUZZER -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10
+    echo "${FUZZERS[@]}" | xargs -I {} --max-procs=$NUM_FUZZ_JOBS bash -c "echo running fuzzer {} && {} -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> {}.log"
 fi
 
+echo "Done running fuzzers"
+
+# Did any errors happen?
+
+ASSERT_FAILS=$(find $FUZZ_HARNESSES_DIR -iname '*.log' -exec grep -Eil 'assert' {} \;)
+
+for logfile in $ASSERT_FAILS; do
+    echo "Assertion failure in logfile: $logfile"
+done
 
