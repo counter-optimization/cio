@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <inttypes.h>
@@ -164,7 +165,7 @@ check_outstates_equivalent(struct OutState* s1, struct OutState* s2)
 	return output_states_equivalent;
 }
 
-AUTOMATICALLY_REPLACE_ME
+AUTOMATICALLY_REPLACE_ME_PROTOTYPES
 
 /* /\* todo, must be changed to handle vector ops *\/ */
 /* void x86compsimptest_ADD64rr_original(struct OutState* outstate, uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4); */
@@ -192,8 +193,8 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	uint64_t arg3 = data_as_gprs[3];
 	uint64_t arg4 = data_as_gprs[4];
 
-	for (int ii = 0; ii < sizeof(opcode_types) / sizeof(const char*); ++ii) {
-		const char* cur_type = opcode_types[ii];
+	for (int ii = 0; ii < sizeof(operand_types) / sizeof(const char*); ++ii) {
+		const char* cur_type = operand_types[ii];
 		
 		if (0 == cur_type) {
 			break;
@@ -218,7 +219,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 				which_arg = &arg4;
 				break;
 			default:
-				assert(false && "unreachable");
+				assert(0 && "unreachable");
 			}
 
 			memory_args[ii] = malloc(GPR_ARG_SIZE_IN_BYTES);
@@ -232,8 +233,9 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	struct OutState original_state = { 0 };
 	struct OutState transformed_state = { 0 };
 
-	x86compsimptest_ADD64rr_original(&original_state, arg0, arg1, arg2, arg3, arg4);
-	x86compsimptest_ADD64rr_transformed(&transformed_state, arg0, arg1, arg2, arg3, arg4);
+	AUTOMATICALLY_REPLACE_ME_CALLS
+	/* x86compsimptest_ADD64rr_original(&original_state, arg0, arg1, arg2, arg3, arg4); */
+	/* x86compsimptest_ADD64rr_transformed(&transformed_state, arg0, arg1, arg2, arg3, arg4); */
 
 	int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state);
 	assert(is_equivalent);

@@ -192,15 +192,12 @@ def read_test_harness_template(filename):
     with open(filename, "r") as f:
         return f.read()
 
-def generate_harness_filler_code_for_opcode(opcode_str, orig_sym_name, trans_sym_name):
-    was_generated = True
-    
+def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name, trans_sym_name):
     opcode = MirOpcode(opcode_str)
 
     if opcode.is_vector:
         logging.warning(f"skipping generating fuzzer test harnesses for unsupported vector insn: {opcode.string}")
-        was_generated = False
-        return was_generated
+        return None
 
     prototypes = [
         f"void {orig_sym_name}(struct OutState* outstate, uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4);",
@@ -210,21 +207,27 @@ def generate_harness_filler_code_for_opcode(opcode_str, orig_sym_name, trans_sym
 
     operand_types = list(map(lambda optype: str(optype), opcode.operand_types))
     operand_types_str = ", ".join(operand_types)
-
     operand_types_defines_str = "const char* operand_types[5] = { " + operand_types_str + " };"
 
     all_filler_code = prototypes_str + '\n' + operand_types_defines_str + '\n'
 
-    return all_filler_code
+    file_contents = file_contents.replace("AUTOMATICALLY_REPLACE_ME_PROTOTYPES",
+                                          all_filler_code)
 
-def create_copy_with_filler_code(template_contents, filler_code):
-    copy = template_contents[:]
-    copy = str.replace(copy, "AUTOMATICALLY_REPLACE_ME", filler_code)
-    return copy
+    calls = [
+        f"{orig_sym_name}(&original_state, arg0, arg1, arg2, arg3, arg4);\n",
+        f"{trans_sym_name}(&transformed_state, arg0, arg1, arg2, arg3, arg4);\n",
+    ]
+    calls_str = "".join(calls)
+
+    file_contents = file_contents.replace("AUTOMATICALLY_REPLACE_ME_CALLS",
+                                          calls_str)
+    
+    return file_contents
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        logging.critical(f"usage: LLVM_HOME=/path/to/dir/holding/clang python3 this_file.py <dir_to_put_test_files>")
+        print(f"usage: LLVM_HOME=/path/to/dir/holding/clang python3 this_file.py <dir_to_put_test_files>")
         sys.exit(1)
 
     test_dir = Path(sys.argv[1])
@@ -243,6 +246,9 @@ if __name__ == '__main__':
     subprocess.run(compile_cmd, shell=True, check=True)
 
     nm_process = subprocess.run(f"nm {tempObjFile}", check=True, shell=True, text=True, stdout=subprocess.PIPE)
+
+    test_harness_template_filename = "implementation-tester.c"
+    test_harness_template_file_contents = read_test_harness_template(test_harness_template_filename)
     
     for line in nm_process.stdout.split('\n'):
         # this will see each *_original and *_transformed pair. just do this
@@ -255,22 +261,19 @@ if __name__ == '__main__':
         original_symbol_name = f"x86compsimptest_{mir_opcode}_original"
         transformed_symbol_name = f"x86compsimptest_{mir_opcode}_transformed"
 
-        test_harness_template_filename = "implementation-tester.c"
-        test_harness_template_file_contents = read_test_harness_template(test_harness_template_filename)
+        final_code = generate_finalized_code_for_opcode(
+            mir_opcode,
+            test_harness_template_file_contents,
+            original_symbol_name,
+            transformed_symbol_name
+        )
 
-        filler_code = generate_harness_filler_code_for_opcode(mir_opcode, original_symbol_name, transformed_symbol_name)
-
-        opcode_tester_file = create_copy_with_filler_code(test_harness_template_file_contents, filler_code)
-
+        if final_code is None:
+            continue
 
         new_file_name = f"{str(test_dir)}/{mir_opcode}-{test_harness_template_filename}"
         if Path(new_file_name).exists():
             Path(new_file_name).unlink()
             
         with open(new_file_name, "w") as testfile:
-            testfile.write(opcode_tester_file)
-
-        
-        # with open(tempFile + ".asm1", "w+") as asm1, open(tempFile + ".asm2", "w+") as asm2:
-        #     subprocess.run(f"objdump -drwC -Mintel --no-show-raw-insn --disassemble={original_symbol_name} {tempObjFile}", shell=True, stdout=asm1, check=True)
-        #     subprocess.run(f"objdump -drwC -Mintel --no-show-raw-insn --disassemble={transformed_symbol_name} {tempObjFile}", shell=True, stdout=asm2, check=True)
+            testfile.write(final_code)

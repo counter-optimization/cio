@@ -1,10 +1,12 @@
 CFLAGS=-O0 -Werror -std=c18 # for the eval code, don't optimize anything
 
-LLVM_HOME=$(HOME)/llvm-project/build
-OUR_CC=$(HOME)/llvm-project/build/bin/clang
-CC=$(OUR_CC) # default to our fork of llvm's clang
+export LLVM_HOME=$(HOME)/llvm-project/build
+export OUR_CC=$(HOME)/llvm-project/build/bin/clang
+export CC=$(OUR_CC) # default to our fork of llvm's clang
 
-NUM_MAKE_JOB_SLOTS=8
+export NUM_MAKE_JOB_SLOTS=8
+
+export IMPLEMENTATION_TESTING_DIR=./implementation-testing
 
 MITIGATIONS=--ss #--cs default to silent store followed by comp simp
 MITIGATIONS_STR=$(subst ${null} ${null},,$(subst -,,$(subst ${null} --${null},-,$(MITIGATIONS))))
@@ -174,18 +176,4 @@ clean_checker:
 
 clean: clean_eval clean_libsodium
 
-# builds the big object file containing original instructions and
-# transformed instructions
-test.o: $(OUR_CC)
-	LLVM_HOME=$(LLVM_HOME) python3 llvm-test-compsimp-transforms.py
-
-# builds the LLVM libFuzzer test harness and links it with test.o
-# where test.o contains the original instructions and transformed instructions
-implementation-tester: implementation-tester.c test.o
-	clang -g -O0 -Wall -fsanitize=fuzzer-no-link -c implementation-tester.c -o implementation-tester.o
-	clang -g -O0 -Wall -fsanitize=fuzzer test.o implementation-tester.o -o implementation-tester
-
-# runs the LLVM libFuzzer test harness on the original and transformed insns
-test_implementations: implementation-tester
-	./implementation-tester -runs=100000000 -max_len=650 -len_control=0 -timeout=10
 
