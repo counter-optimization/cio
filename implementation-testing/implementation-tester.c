@@ -132,13 +132,32 @@ struct __attribute__((__packed__)) OutState {
       /* mov %[rdi+624], ymm15 //todo */
 };
 
-#define CHECK_GPRS_EQUIV(REG_NAME, S1, S2, OK)	\
-	{ \
-	    if (S1->REG_NAME != S2->REG_NAME) { \
-	        OK = 0; \
-		printf("Output states differed on register %s: expected %" PRIu64 ", given %" PRIu64 "\n", \
-                       #REG_NAME, S1->REG_NAME, S2->REG_NAME); \
-	    } \
+struct OutState original_state = { 0 };
+struct OutState transformed_state = { 0 };
+
+AUTOMATICALLY_REPLACE_ME_PROTOTYPES
+
+#define POINTS_TO_MEM(REG_NAME) ((0 == strcmp(#REG_NAME, "rsi") && operand_types[0] && 0 == strcmp(operand_types[0], "MEM")) || \
+				 (0 == strcmp(#REG_NAME, "rdx") && operand_types[1] && 0 == strcmp(operand_types[1], "MEM")) || \
+				 (0 == strcmp(#REG_NAME, "rcx") && operand_types[2] && 0 == strcmp(operand_types[2], "MEM")) || \
+				 (0 == strcmp(#REG_NAME, "r8") && operand_types[3] && 0 == strcmp(operand_types[3], "MEM")) || \
+				 (0 == strcmp(#REG_NAME, "r9") && operand_types[4] && 0 == strcmp(operand_types[4], "MEM")))
+
+#define CHECK_GPRS_EQUIV(REG_NAME, S1, S2, OK)				\
+	{								\
+	if (POINTS_TO_MEM(REG_NAME)) {					\
+		if (0 != memcmp((const void*) S1->REG_NAME, (const void*) S2->REG_NAME,	GPR_ARG_SIZE_IN_BYTES)) { \
+			    OK = 0;					\
+			    printf("Output states differed on memory pointed to by register REG_NAME: expected %" PRIu64 ", given %" PRIu64 "\n", \
+				   *(const uint64_t*) S1->REG_NAME, *(const uint64_t*) S2->REG_NAME); \
+		    }							\
+		    } else {						\
+				if (S1->REG_NAME != S2->REG_NAME) {	\
+					OK = 0;				\
+					printf("Output states differed on register REG_NAME: expected %" PRIu64 ", given %" PRIu64 "\n", \
+					       S1->REG_NAME, S2->REG_NAME); \
+				}					\
+			}						\
 	}
 
 int
@@ -165,8 +184,6 @@ check_outstates_equivalent(struct OutState* s1, struct OutState* s2)
 	return output_states_equivalent;
 }
 
-AUTOMATICALLY_REPLACE_ME_PROTOTYPES
-
 /* /\* todo, must be changed to handle vector ops *\/ */
 /* void x86compsimptest_ADD64rr_original(struct OutState* outstate, uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4); */
 
@@ -174,7 +191,7 @@ AUTOMATICALLY_REPLACE_ME_PROTOTYPES
 
 /* const char* opcode_types[5] = { 0 }; */
 
-char* memory_args[5] = { 0 };
+uint64_t* memory_args[5] = { 0 };
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
@@ -201,7 +218,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		}
 
 		uint64_t* which_arg = 0;
-		if (strcmp(cur_type, "MEM")) {
+		if (0 == strcmp(cur_type, "MEM")) {
 			switch (ii) {
 			case 0:
 				which_arg = &arg0;
@@ -230,9 +247,6 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		}
 	}
 
-	struct OutState original_state = { 0 };
-	struct OutState transformed_state = { 0 };
-
 	AUTOMATICALLY_REPLACE_ME_CALLS
 	/* x86compsimptest_ADD64rr_original(&original_state, arg0, arg1, arg2, arg3, arg4); */
 	/* x86compsimptest_ADD64rr_transformed(&transformed_state, arg0, arg1, arg2, arg3, arg4); */
@@ -241,7 +255,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	assert(is_equivalent);
 
 	for (int ii = 0; ii < sizeof(memory_args) / sizeof(char*); ++ii) {
-		char* cur_ptr = memory_args[ii];
+		uint64_t* cur_ptr = memory_args[ii];
 		if (cur_ptr) {
 			free(cur_ptr);
 		}
