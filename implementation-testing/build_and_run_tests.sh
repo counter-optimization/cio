@@ -80,20 +80,24 @@ if [[ $NUM_FUZZ_JOBS -eq 1 ]]; then
     # do in serial
     for fuzzer in "${FUZZERS[@]}"; do
 	echo "running fuzzer $fuzzer"
-	$fuzzer -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> $fuzzer.log
+	$fuzzer -close_fd_mask=0 -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> $fuzzer.log
+
+	if [[ $? -ne 0 ]]; then
+	    echo "fuzzer $fuzzer returned non-zero exit status, see $fuzzer.log"
+	fi
     done
 else
     # do in parallel
-    echo "${FUZZERS[@]}" | xargs -I {} --max-procs=$NUM_FUZZ_JOBS bash -c "echo running fuzzer {} && {} -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> {}.log"
+    echo "${FUZZERS[@]}" | xargs -I {} --max-procs=$NUM_FUZZ_JOBS bash -c "echo running fuzzer {} && ({} -close_fd_mask=0 -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> {}.log || echo fuzzer {} returned non-zero exit status, see {}.log)"
 fi
 
 echo "Done running fuzzers"
 
 # Did any errors happen?
 
-ASSERT_FAILS=$(find $FUZZ_HARNESSES_DIR -iname '*.log' -exec grep -Eil 'assert' {} \;)
+MISMATCHES=$(find $FUZZ_HARNESSES_DIR -iname '*.log' -exec grep -Eil 'mismatch' {} \;)
 
-for logfile in $ASSERT_FAILS; do
-    echo "Assertion failure in logfile: $logfile"
+for logfile in $MISMATCHES; do
+    echo "Mismatch in original,transformed output states in logfile: $logfile"
 done
 

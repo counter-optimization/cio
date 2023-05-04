@@ -148,14 +148,14 @@ AUTOMATICALLY_REPLACE_ME_PROTOTYPES
 	if (POINTS_TO_MEM(REG_NAME)) {					\
 		if (0 != memcmp((const void*) S1->REG_NAME, (const void*) S2->REG_NAME,	GPR_ARG_SIZE_IN_BYTES)) { \
 			    OK = 0;					\
-			    printf("Output states differed on memory pointed to by register REG_NAME: expected %" PRIu64 ", given %" PRIu64 "\n", \
-				   *(const uint64_t*) S1->REG_NAME, *(const uint64_t*) S2->REG_NAME); \
+			    printf("Output states differed on memory pointed to by register %s: expected %" PRIu64 ", given %" PRIu64 "\n", \
+				   #REG_NAME, *(const uint64_t*) S1->REG_NAME, *(const uint64_t*) S2->REG_NAME); \
 		    }							\
 		    } else {						\
 				if (S1->REG_NAME != S2->REG_NAME) {	\
 					OK = 0;				\
-					printf("Output states differed on register REG_NAME: expected %" PRIu64 ", given %" PRIu64 "\n", \
-					       S1->REG_NAME, S2->REG_NAME); \
+					printf("Output states differed on register %s: expected %" PRIu64 ", given %" PRIu64 "\n", \
+					       #REG_NAME, S1->REG_NAME, S2->REG_NAME); \
 				}					\
 			}						\
 	}
@@ -184,12 +184,27 @@ check_outstates_equivalent(struct OutState* s1, struct OutState* s2)
 	return output_states_equivalent;
 }
 
-/* /\* todo, must be changed to handle vector ops *\/ */
-/* void x86compsimptest_ADD64rr_original(struct OutState* outstate, uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4); */
-
-/* void x86compsimptest_ADD64rr_transformed(struct OutState* outstate,  uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4); */
-
-/* const char* opcode_types[5] = { 0 }; */
+void
+print_mismatch_instate(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9)
+{
+#define PRINT(REG_NAME) \
+	{\
+		if (POINTS_TO_MEM(REG_NAME)) {\
+			uint64_t* ptr = (uint64_t*) REG_NAME;\
+			printf("\t%s: %" PRIu64 "\n", #REG_NAME, *ptr);	\
+		}\
+		else {\
+			printf("\t%s: %" PRIu64 "\n", #REG_NAME, REG_NAME); \
+		}\
+	}
+	
+	printf("In state causing mismatch:\n");
+	PRINT(rsi);
+	PRINT(rdx);
+	PRINT(rcx);
+	PRINT(r8);
+	PRINT(r9);
+}
 
 uint64_t* memory_args[5] = { 0 };
 
@@ -248,11 +263,26 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	}
 
 	AUTOMATICALLY_REPLACE_ME_CALLS
+
+	/* this part performed in llvm-test-compsimp-transforms.py automagically */
+	/* if (strstr(__FILE_NAME__, "MUL") || strstr(__FILE_NAME__, "DIV")) { */
+	/* 	__asm__ inline volatile( */
+	/* 		"movq %[arg1], %%rax\r\n" */
+	/* 		: */
+	/* 		: [arg1] "rm" (arg1) */
+	/* 		: "rax" */
+	/* 	); */
+	/* } */
 	/* x86compsimptest_ADD64rr_original(&original_state, arg0, arg1, arg2, arg3, arg4); */
 	/* x86compsimptest_ADD64rr_transformed(&transformed_state, arg0, arg1, arg2, arg3, arg4); */
 
 	int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state);
-	assert(is_equivalent);
+	
+	if (!is_equivalent) {
+		print_mismatch_instate(arg0, arg1, arg2, arg3, arg4);
+		fflush(stdout);
+		assert(is_equivalent);
+	}
 
 	for (int ii = 0; ii < sizeof(memory_args) / sizeof(char*); ++ii) {
 		uint64_t* cur_ptr = memory_args[ii];

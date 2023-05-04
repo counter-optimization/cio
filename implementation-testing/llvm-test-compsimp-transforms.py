@@ -97,6 +97,18 @@ class MirOpcode():
         self.is_cmp = self.string.startswith('CMP')
         return self.is_cmp
 
+    def __handle_IMUL_special_case(self):
+        """
+        special casing for IMUL which can be implicit or explicit
+        depending on operand types
+
+        precondition: self.__set_is_implicit_first_arg() already ran
+        
+        to be called in self.__parse_operand_info_str()
+        """
+        if "IMUL" in self.string:
+            self.is_implicit_first_arg = 1 == len(self.operand_types)
+
     def __set_is_implicit_first_arg(self):
         self.is_implicit_first_arg = self.string.startswith('MUL') or \
             self.string.startswith('IMUL') or \
@@ -160,8 +172,11 @@ class MirOpcode():
                 last_operand_was_imm = True
                 self.operand_types.append(OperandType.IMM)
 
+        self.__handle_IMUL_special_case()
+
         if self.is_implicit_first_arg:
-            # like MUL, IMUL, DIV, IDIV: dst is REG, first src is REG
+            # like MUL, IMUL (conditionally),
+            # DIV, IDIV: dst is REG, first src is REG
             self.operand_types.insert(0, OperandType.REG)
             self.operand_types.insert(0, OperandType.REG)
 
@@ -214,8 +229,20 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
     file_contents = file_contents.replace("AUTOMATICALLY_REPLACE_ME_PROTOTYPES",
                                           all_filler_code)
 
+    # use last arg (r9) as implicit arg value in rax
+    set_eax_for_implicit_calls = """\
+                __asm__ inline volatile(
+			"movq %[arg4], %%rax"
+			:
+			: [arg4] "rm" (arg4)
+			: "rax"
+		);
+    """
+
     calls = [
+        set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
         f"{orig_sym_name}(&original_state, arg0, arg1, arg2, arg3, arg4);\n",
+        set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
         f"{trans_sym_name}(&transformed_state, arg0, arg1, arg2, arg3, arg4);\n",
     ]
     calls_str = "".join(calls)
