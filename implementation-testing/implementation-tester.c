@@ -191,7 +191,7 @@ print_mismatch_instate(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, ui
 	{\
 		if (POINTS_TO_MEM(REG_NAME)) {\
 			uint64_t* ptr = (uint64_t*) REG_NAME;\
-			printf("\t%s: %" PRIu64 "\n", #REG_NAME, *ptr);	\
+			printf("\t*%s -points-to-64-bits->: %" PRIu64 "\n", #REG_NAME, *ptr);	\
 		}\
 		else {\
 			printf("\t%s: %" PRIu64 "\n", #REG_NAME, REG_NAME); \

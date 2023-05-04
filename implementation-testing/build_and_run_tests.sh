@@ -18,7 +18,8 @@ fi
 FUZZ_HARNESSES_DIR=./fuzz_harnesses
 TEST_O=./test.o
 
-test "! (-d $FUZZ_HARNESSES_DIR)" && mkdir "$FUZZ_HARNESSES_DIR"
+test "-d $FUZZ_HARNESSES_DIR" && rm -r "$FUZZ_HARNESSES_DIR"
+mkdir "$FUZZ_HARNESSES_DIR"
 
 python3 llvm-test-compsimp-transforms.py "$FUZZ_HARNESSES_DIR"
 
