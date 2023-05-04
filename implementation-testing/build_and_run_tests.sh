@@ -101,3 +101,5 @@ for logfile in $MISMATCHES; do
     echo "Mismatch in original,transformed output states in logfile: $logfile"
 done
 
+echo "cleaning up ./crash-* files. check $FUZZ_HARNESSES_DIR/*.log files for more detailed info"
+rm crash-*

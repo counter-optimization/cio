@@ -206,7 +206,7 @@ print_mismatch_instate(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, ui
 	PRINT(r9);
 }
 
-uint64_t* memory_args[5] = { 0 };
+uint64_t memory_args[5] = { 0 };
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
@@ -224,6 +224,9 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	uint64_t arg2 = data_as_gprs[2];
 	uint64_t arg3 = data_as_gprs[3];
 	uint64_t arg4 = data_as_gprs[4];
+
+	const size_t num_memory_args = sizeof(memory_args) / sizeof(uint64_t);
+	memcpy(memory_args, data_as_gprs, sizeof(uint64_t) * num_memory_args);
 
 	for (int ii = 0; ii < sizeof(operand_types) / sizeof(const char*); ++ii) {
 		const char* cur_type = operand_types[ii];
@@ -254,27 +257,11 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 				assert(0 && "unreachable");
 			}
 
-			memory_args[ii] = malloc(GPR_ARG_SIZE_IN_BYTES);
-			assert(memory_args[ii] &&
-			       "Couldn't allocate memory for mem arg");
-			memcpy(memory_args[ii], which_arg, GPR_ARG_SIZE_IN_BYTES);
-			*which_arg = (uint64_t) memory_args[ii];
+			*which_arg = (uint64_t) &memory_args[ii];
 		}
 	}
 
 	AUTOMATICALLY_REPLACE_ME_CALLS
-
-	/* this part performed in llvm-test-compsimp-transforms.py automagically */
-	/* if (strstr(__FILE_NAME__, "MUL") || strstr(__FILE_NAME__, "DIV")) { */
-	/* 	__asm__ inline volatile( */
-	/* 		"movq %[arg1], %%rax\r\n" */
-	/* 		: */
-	/* 		: [arg1] "rm" (arg1) */
-	/* 		: "rax" */
-	/* 	); */
-	/* } */
-	/* x86compsimptest_ADD64rr_original(&original_state, arg0, arg1, arg2, arg3, arg4); */
-	/* x86compsimptest_ADD64rr_transformed(&transformed_state, arg0, arg1, arg2, arg3, arg4); */
 
 	int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state);
 	
@@ -282,14 +269,6 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		print_mismatch_instate(arg0, arg1, arg2, arg3, arg4);
 		fflush(stdout);
 		assert(is_equivalent);
-	}
-
-	for (int ii = 0; ii < sizeof(memory_args) / sizeof(char*); ++ii) {
-		uint64_t* cur_ptr = memory_args[ii];
-		if (cur_ptr) {
-			free(cur_ptr);
-		}
-		memory_args[ii] = 0;
 	}
 
 	return 0;
