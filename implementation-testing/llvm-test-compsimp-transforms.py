@@ -49,6 +49,7 @@ class MirOpcode():
         self.is_implicit_first_arg = False # like MUL, IMUL, DIV, IDIV
         self.is_test = False
         self.is_cmp = False
+        self.depends_on_carry_flag = False
         self.uses_memory = False
         self.uses_imm = False
         
@@ -142,6 +143,13 @@ class MirOpcode():
             logging.warning(f"testing of vector insns not yet implmented. skipping insn w/ opcode: {self.string}")
             pass
 
+    def __set_depends_on_carry_flag(self):
+        """
+        precondition: self.__split_opcode_str() already ran
+        """
+        self.depends_on_carry_flag = self.opcode == "SBB" or self.opcode == "ADC"
+        return self.depends_on_carry_flag
+
     def __parse_operand_info_str(self):
         imm_width = []
 
@@ -189,7 +197,11 @@ class MirOpcode():
             return
 
         self.__split_opcode_str()
+
+        self.__set_depends_on_carry_flag()
+        
         self.__parse_operand_info_str()
+        
         logging.debug(f"operand types are: {self.operand_types}")
 
 def read_test_harness_template(filename):
@@ -228,10 +240,23 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
 		);
     """
 
+    # like ADC, SBB
+    # compare last arg (r9) to 10,000 to randomly set CF
+    set_cf_for_dependent_insns = """\
+    __asm__ inline volatile(
+        "cmpq $1000, %[arg4]"
+        : 
+        : [arg4] "rm" (arg4)
+        : 
+    );
+    """
+
     calls = [
         set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
+        set_cf_for_dependent_insns if opcode.depends_on_carry_flag else "\n",
         f"{orig_sym_name}(&original_state, arg0, arg1, arg2, arg3, arg4);\n",
         set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
+        set_cf_for_dependent_insns if opcode.depends_on_carry_flag else "\n",
         f"{trans_sym_name}(&transformed_state, arg0, arg1, arg2, arg3, arg4);\n",
     ]
     calls_str = "".join(calls)
