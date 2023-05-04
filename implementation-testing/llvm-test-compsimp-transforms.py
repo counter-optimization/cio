@@ -29,17 +29,6 @@ def parse_nm_stdout(line):
     is_transformed = version == 'transformed'
     return (func_name, mir_opcode, is_original, is_transformed)
 
-def generate_implementations_header(obj_file_name):
-    # header_file_contents = f"
-    # #ifndef IMPLEMENTATIONS_H
-    # #define IMPLEMENTATIONS_H
-
-    # {}
-
-    # #endif // IMPLEMENTATIONS_H
-    # "
-    return
-
 class OperandType(Enum):
     UNDEF = 0
     REG = 1
