@@ -8,26 +8,42 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-def is_compsimp_test_line(line):
-    return "x86compsimptest" in line
+def is_duplicate_fn_def(symname):
+    if "." in symname:
+        logging.critical(f"symbol name {symname} is duplicate, not generating tests for it")
+        return True
+    return False
+
+def is_test_fn_line(line):
+    return "x86compsimptest" in line or \
+        "x86silentstorestest" in line
 
 def parse_nm_stdout(line):
     """
     lines of nm's stdout look like this:
     00000000004020e0 t x86compsimptest_XOR16rr_original
     00000000004020f0 t x86compsimptest_XOR16rr_transformed
+    OR
+    0000000000005a50 T x86silentstorestest_ADD64mr_original
+    0000000000005a60 T x86silentstorestest_ADD64mr_transformed
 
-    precondition: is_compsimp_test_line(line) returns True for this argument line
-    returns a tuple of (function_name_str, mir_opcode_str, is_original_bool, is_transformed_bool)
+    precondition: is_test_fn_line(line) returns True for this argument line
+    returns a tuple of (function_name_str, mir_opcode_str, is_cs, is_ss, s_original_bool, is_transformed_bool)
     
     """
      # split on all whitespace
     v_addr, _, func_name = line.split()
+    
     # version is one of ['original', 'transformed']
-    _, mir_opcode, version = func_name.split('_')
+    testtype, mir_opcode, version = func_name.split('_')
+
+    is_ss = "silentstorestest" in testtype
+    is_cs = "compsimptest" in testtype
+    
     is_original = version == 'original'
     is_transformed = version == 'transformed'
-    return (func_name, mir_opcode, is_original, is_transformed)
+    
+    return (func_name, mir_opcode, is_cs, is_ss, is_original, is_transformed)
 
 class OperandType(Enum):
     UNDEF = 0
@@ -283,7 +299,7 @@ if __name__ == '__main__':
 
     CC = os.environ["LLVM_HOME"] + "/bin/clang"
 
-    compile_cmd = f"{CC} -mllvm -x86-cs -mllvm -x86-cs-test -c {tempFile} -o {tempObjFile}"
+    compile_cmd = f"{CC} -O0 -mllvm -x86-ss -mllvm -x86-cs -mllvm -x86-cs-test -c {tempFile} -o {tempObjFile}"
     subprocess.run(compile_cmd, shell=True, check=True)
 
     nm_process = subprocess.run(f"nm {tempObjFile}", check=True, shell=True, text=True, stdout=subprocess.PIPE)
@@ -294,13 +310,16 @@ if __name__ == '__main__':
     for line in nm_process.stdout.split('\n'):
         # this will see each *_original and *_transformed pair. just do this
         # once for each pair by skipping processing the *_transformed string
-        if not is_compsimp_test_line(line) or "_transformed" in line:
+        if not is_test_fn_line(line) or "_transformed" in line:
             continue
         
-        func_name, mir_opcode, is_original, is_transformed = parse_nm_stdout(line)
+        func_name, mir_opcode, is_cs, is_ss, is_original, is_transformed = parse_nm_stdout(line)
 
-        original_symbol_name = f"x86compsimptest_{mir_opcode}_original"
-        transformed_symbol_name = f"x86compsimptest_{mir_opcode}_transformed"
+        if is_duplicate_fn_def(func_name):
+            continue
+
+        original_symbol_name = func_name
+        transformed_symbol_name = original_symbol_name.replace("original", "transformed")
 
         final_code = generate_finalized_code_for_opcode(
             mir_opcode,
@@ -312,7 +331,9 @@ if __name__ == '__main__':
         if final_code is None:
             continue
 
-        new_file_name = f"{str(test_dir)}/{mir_opcode}-{test_harness_template_filename}"
+        test_type = "cs" if is_cs else "ss"
+        new_file_name = f"{str(test_dir)}/{test_type}-{mir_opcode}-{test_harness_template_filename}"
+        
         if Path(new_file_name).exists():
             Path(new_file_name).unlink()
             
