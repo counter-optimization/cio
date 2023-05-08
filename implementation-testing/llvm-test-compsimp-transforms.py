@@ -247,33 +247,51 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
                                           all_filler_code)
 
     # use last arg (r9) as implicit arg value in rax
-    set_eax_for_implicit_calls = """\
+    orig_set_eax_for_implicit_calls = """\
                 __asm__ inline volatile(
 			"movq %[arg4], %%rax"
 			:
-			: [arg4] "rm" (arg4)
+			: [arg4] "rm" (orig_arg4)
+			: "rax"
+		);
+    """
+
+    trans_set_eax_for_implicit_calls = """\
+                __asm__ inline volatile(
+			"movq %[arg4], %%rax"
+			:
+			: [arg4] "rm" (trans_arg4)
 			: "rax"
 		);
     """
 
     # like ADC, SBB
     # compare last arg (r9) to 10,000 to randomly set CF
-    set_cf_for_dependent_insns = """\
+    orig_set_cf_for_dependent_insns = """\
     __asm__ inline volatile(
         "cmpq $1000, %[arg4]"
         : 
-        : [arg4] "rm" (arg4)
+        : [arg4] "rm" (orig_arg4)
+        : 
+    );
+    """
+
+    trans_set_cf_for_dependent_insns = """\
+    __asm__ inline volatile(
+        "cmpq $1000, %[arg4]"
+        : 
+        : [arg4] "rm" (trans_arg4)
         : 
     );
     """
 
     calls = [
-        set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
-        set_cf_for_dependent_insns if opcode.depends_on_carry_flag else "\n",
-        f"{orig_sym_name}(&original_state, arg0, arg1, arg2, arg3, arg4);\n",
-        set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
-        set_cf_for_dependent_insns if opcode.depends_on_carry_flag else "\n",
-        f"{trans_sym_name}(&transformed_state, arg0, arg1, arg2, arg3, arg4);\n",
+        orig_set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
+        orig_set_cf_for_dependent_insns if opcode.depends_on_carry_flag else "\n",
+        f"{orig_sym_name}(&original_state, orig_arg0, orig_arg1, orig_arg2, orig_arg3, orig_arg4);\n",
+        trans_set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
+        trans_set_cf_for_dependent_insns if opcode.depends_on_carry_flag else "\n",
+        f"{trans_sym_name}(&transformed_state, trans_arg0, trans_arg1, trans_arg2, trans_arg3, trans_arg4);\n",
     ]
     calls_str = "".join(calls)
 

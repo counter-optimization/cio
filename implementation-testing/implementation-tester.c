@@ -206,7 +206,8 @@ print_mismatch_instate(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, ui
 	PRINT(r9);
 }
 
-uint64_t memory_args[5] = { 0 };
+uint64_t orig_memory_args[5] = { 0 };
+uint64_t trans_memory_args[5] = { 0 };
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
@@ -219,14 +220,21 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	const uint64_t* data_as_gprs = (const uint64_t*) data;
 
 	/* todo, must be changed to handle vector ops */
-	uint64_t arg0 = data_as_gprs[0];
-	uint64_t arg1 = data_as_gprs[1];
-	uint64_t arg2 = data_as_gprs[2];
-	uint64_t arg3 = data_as_gprs[3];
-	uint64_t arg4 = data_as_gprs[4];
+	uint64_t orig_arg0 = data_as_gprs[0];
+	uint64_t orig_arg1 = data_as_gprs[1];
+	uint64_t orig_arg2 = data_as_gprs[2];
+	uint64_t orig_arg3 = data_as_gprs[3];
+	uint64_t orig_arg4 = data_as_gprs[4];
 
-	const size_t num_memory_args = sizeof(memory_args) / sizeof(uint64_t);
-	memcpy(memory_args, data_as_gprs, sizeof(uint64_t) * num_memory_args);
+	uint64_t trans_arg0 = data_as_gprs[0];
+	uint64_t trans_arg1 = data_as_gprs[1];
+	uint64_t trans_arg2 = data_as_gprs[2];
+	uint64_t trans_arg3 = data_as_gprs[3];
+	uint64_t trans_arg4 = data_as_gprs[4];
+
+	const size_t num_memory_args = sizeof(orig_memory_args) / sizeof(uint64_t);
+	memcpy(orig_memory_args, data_as_gprs, sizeof(uint64_t) * num_memory_args);
+	memcpy(trans_memory_args, data_as_gprs, sizeof(uint64_t) * num_memory_args);
 
 	for (int ii = 0; ii < sizeof(operand_types) / sizeof(const char*); ++ii) {
 		const char* cur_type = operand_types[ii];
@@ -235,29 +243,36 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 			break;
 		}
 
-		uint64_t* which_arg = 0;
+		uint64_t* orig_which_arg = 0;
+		uint64_t* trans_which_arg = 0;
 		if (0 == strcmp(cur_type, "MEM")) {
 			switch (ii) {
 			case 0:
-				which_arg = &arg0;
+				orig_which_arg = &orig_arg0;
+				trans_which_arg = &trans_arg0;
 				break;
 			case 1:
-				which_arg = &arg1;
+				orig_which_arg = &orig_arg1;
+				trans_which_arg = &trans_arg1;
 				break;
 			case 2:
-				which_arg = &arg2;
+				orig_which_arg = &orig_arg2;
+				trans_which_arg = &trans_arg2;
 				break;
 			case 3:
-				which_arg = &arg3;
+				orig_which_arg = &orig_arg3;
+				trans_which_arg = &trans_arg3;
 				break;
 			case 4:
-				which_arg = &arg4;
+				orig_which_arg = &orig_arg4;
+				trans_which_arg = &trans_arg4;
 				break;
 			default:
 				assert(0 && "unreachable");
 			}
 
-			*which_arg = (uint64_t) &memory_args[ii];
+			*orig_which_arg = (uint64_t) &orig_memory_args[ii];
+			*trans_which_arg = (uint64_t) &trans_memory_args[ii];
 		}
 	}
 
@@ -266,7 +281,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state);
 	
 	if (!is_equivalent) {
-		print_mismatch_instate(arg0, arg1, arg2, arg3, arg4);
+		print_mismatch_instate(orig_arg0, orig_arg1, orig_arg2, orig_arg3, orig_arg4);
 		fflush(stdout);
 		assert(is_equivalent);
 	}
