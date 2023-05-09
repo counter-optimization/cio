@@ -29,13 +29,21 @@ def parse_nm_stdout(line):
 
     precondition: is_test_fn_line(line) returns True for this argument line
     returns a tuple of (function_name_str, mir_opcode_str, is_cs, is_ss, s_original_bool, is_transformed_bool)
+
+    some functions have names like 
+    x86silentstorestest_MOV8mr_NOREX_original, but these
+    are special cased
     
     """
      # split on all whitespace
     v_addr, _, func_name = line.split()
     
     # version is one of ['original', 'transformed']
-    testtype, mir_opcode, version = func_name.split('_')
+    if "NOREX" in func_name:
+        testtype, mir_opcode, dontcare, version = func_name.split('_')
+        mir_opcode = mir_opcode + '_NOREX'
+    else:
+        testtype, mir_opcode, version = func_name.split('_')
 
     is_ss = "silentstorestest" in testtype
     is_cs = "compsimptest" in testtype
