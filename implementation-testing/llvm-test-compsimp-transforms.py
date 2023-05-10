@@ -101,9 +101,9 @@ def parse_nm_stdout(line):
     returns a tuple of (function_name_str, mir_opcode_str, is_cs, is_ss, s_original_bool, is_transformed_bool)
 
     some functions have names like 
-    x86silentstorestest_MOV8mr_NOREX_original, but these
-    are special cased
-    
+    x86silentstorestest_MOV8mr_NOREX_original
+    x86silentstorestest_LEA64_32r_original
+    but these are special cased
     """
      # split on all whitespace
     v_addr, _, func_name = line.split()
@@ -112,6 +112,9 @@ def parse_nm_stdout(line):
     if "NOREX" in func_name:
         testtype, mir_opcode, dontcare, version = func_name.split('_')
         mir_opcode = mir_opcode + '_NOREX'
+    elif "LEA64_32r" in func_name:
+        testtype, mir_opcode, dontcare, version = func_name.split('_')
+        mir_opcode = mir_opcode + '_32r'
     else:
         testtype, mir_opcode, version = func_name.split('_')
 
