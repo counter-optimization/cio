@@ -256,7 +256,7 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
 
     # use last arg (r9) as implicit arg value in rax
     orig_set_eax_for_implicit_calls = """\
-                __asm__ inline volatile(
+                __asm__ __inline__ __volatile__(
 			"movq %[arg4], %%rax"
 			:
 			: [arg4] "rm" (orig_arg4)
@@ -265,7 +265,7 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
     """
 
     trans_set_eax_for_implicit_calls = """\
-                __asm__ inline volatile(
+                __asm__ __inline__ __volatile__(
 			"movq %[arg4], %%rax"
 			:
 			: [arg4] "rm" (trans_arg4)
@@ -273,32 +273,24 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
 		);
     """
 
-    # like ADC, SBB
-    # compare last arg (r9) to 10,000 to randomly set CF
-    orig_set_cf_for_dependent_insns = """\
-    __asm__ inline volatile(
-        "cmpq $1000, %[arg4]"
-        : 
-        : [arg4] "rm" (orig_arg4)
-        : 
-    );
-    """
-
-    trans_set_cf_for_dependent_insns = """\
-    __asm__ inline volatile(
-        "cmpq $1000, %[arg4]"
-        : 
-        : [arg4] "rm" (trans_arg4)
-        : 
-    );
+    set_eflags = """\
+    __asm__ __inline__ __volatile__(
+                "movq %%rax, %[rax_save]\\r\\n"
+		"movq %[lahf_load], %%rax\\r\\n"
+		"sahf\\r\\n"
+                "movq %[rax_save], %%rax\\r\\n"
+		:
+		: [lahf_load] "rm" (lahf_load),
+                  [rax_save] "rm" (rax_save)
+		: "rax", "cc" );
     """
 
     calls = [
         orig_set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
-        orig_set_cf_for_dependent_insns if opcode.depends_on_carry_flag else "\n",
+        set_eflags + "\n"
         f"{orig_sym_name}(&original_state, orig_arg0, orig_arg1, orig_arg2, orig_arg3, orig_arg4);\n",
         trans_set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
-        trans_set_cf_for_dependent_insns if opcode.depends_on_carry_flag else "\n",
+        set_eflags + "\n"
         f"{trans_sym_name}(&transformed_state, trans_arg0, trans_arg1, trans_arg2, trans_arg3, trans_arg4);\n",
     ]
     calls_str = "".join(calls)

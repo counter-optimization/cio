@@ -92,9 +92,21 @@
  */
 
 #define GPR_ARG_SIZE_IN_BYTES 8
-#define TESTING_ABI_NUM_GPR_ARGS 5
+#define TESTING_ABI_NUM_GPR_ARGS 6
 /* todo, must be changed to handle vector ops */
 #define INPUT_STATE_SIZE ((TESTING_ABI_NUM_GPR_ARGS * GPR_ARG_SIZE_IN_BYTES))
+
+#define LAHF_SF(rax) (((rax) & 0x80ULL) >> 7)
+#define LAHF_ZF(rax) (((rax) & 0x40ULL) >> 6)
+#define LAHF_AF(rax) (((rax) & 0x10ULL) >> 4)
+#define LAHF_PF(rax) (((rax) & 0x4ULL) >> 2)
+#define LAHF_CF(rax) ((rax) & 0x1ULL)
+
+#define PUT_LAHF_SF(rax,val) ((val) == 1 ? (rax) | 0x80ULL : (rax) & ~0x80ULL)
+#define PUT_LAHF_ZF(rax,val) ((val) == 1 ? (rax) | 0x40ULL : (rax) & ~0x40ULL)
+#define PUT_LAHF_AF(rax,val) ((val) == 1 ? (rax) | 0x10ULL : (rax) & ~0x10ULL)
+#define PUT_LAHF_PF(rax,val) ((val) == 1 ? (rax) | 0x4ULL : (rax) & ~0x4ULL)
+#define PUT_LAHF_CF(rax,val) ((val) == 1 ? (rax) | 0x1ULL : (rax) & ~0x1ULL)
 
 struct __attribute__((__packed__)) OutState {
 	uint64_t rax;
@@ -113,6 +125,8 @@ struct __attribute__((__packed__)) OutState {
 	uint64_t r13;
 	uint64_t r14;
 	uint64_t r15;
+
+	uint64_t lahf_rax_res; // idx 16 at 8 scale
 	/* todo, must be changed to handle vector ops */
       /* mov %[rdi+144], ymm0 //todo */
       /* mov %[rdi+176], ymm1 //todo */
@@ -231,6 +245,9 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	uint64_t trans_arg2 = data_as_gprs[2];
 	uint64_t trans_arg3 = data_as_gprs[3];
 	uint64_t trans_arg4 = data_as_gprs[4];
+
+	volatile uint64_t rax_save = 0;
+	volatile uint64_t lahf_load = data_as_gprs[5];
 
 	const size_t num_memory_args = sizeof(orig_memory_args) / sizeof(uint64_t);
 	memcpy(orig_memory_args, data_as_gprs, sizeof(uint64_t) * num_memory_args);
