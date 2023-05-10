@@ -96,17 +96,25 @@
 /* todo, must be changed to handle vector ops */
 #define INPUT_STATE_SIZE ((TESTING_ABI_NUM_GPR_ARGS * GPR_ARG_SIZE_IN_BYTES))
 
-#define LAHF_SF(rax) (((rax) & 0x80ULL) >> 7)
-#define LAHF_ZF(rax) (((rax) & 0x40ULL) >> 6)
-#define LAHF_AF(rax) (((rax) & 0x10ULL) >> 4)
-#define LAHF_PF(rax) (((rax) & 0x4ULL) >> 2)
-#define LAHF_CF(rax) ((rax) & 0x1ULL)
+#define LAHF_SF(rax) (((rax) & 0x80ull) >> 7ull)
+#define LAHF_ZF(rax) (((rax) & 0x40ull) >> 6ull)
+#define LAHF_AF(rax) (((rax) & 0x10ull) >> 4ull)
+#define LAHF_PF(rax) (((rax) & 0x4ull) >> 2ull)
+#define LAHF_CF(rax) ((rax) & 0x1ull)
 
-#define PUT_LAHF_SF(rax,val) ((val) == 1 ? (rax) | 0x80ULL : (rax) & ~0x80ULL)
-#define PUT_LAHF_ZF(rax,val) ((val) == 1 ? (rax) | 0x40ULL : (rax) & ~0x40ULL)
-#define PUT_LAHF_AF(rax,val) ((val) == 1 ? (rax) | 0x10ULL : (rax) & ~0x10ULL)
-#define PUT_LAHF_PF(rax,val) ((val) == 1 ? (rax) | 0x4ULL : (rax) & ~0x4ULL)
-#define PUT_LAHF_CF(rax,val) ((val) == 1 ? (rax) | 0x1ULL : (rax) & ~0x1ULL)
+#define PUT_LAHF_SF(rax,val) ((val) == 1 ? (rax) | 0x80ull : (rax) & ~0x80ull)
+#define PUT_LAHF_ZF(rax,val) ((val) == 1 ? (rax) | 0x40ull : (rax) & ~0x40ull)
+#define PUT_LAHF_AF(rax,val) ((val) == 1 ? (rax) | 0x10ull : (rax) & ~0x10ull)
+#define PUT_LAHF_PF(rax,val) ((val) == 1 ? (rax) | 0x4ull : (rax) & ~0x4ull)
+#define PUT_LAHF_CF(rax,val) ((val) == 1 ? (rax) | 0x1ull : (rax) & ~0x1ull)
+
+enum EFLAGS {
+	SF = 1,
+	ZF = 2,
+	AF = 3,
+	PF = 4,
+	CF = 5,
+};
 
 struct __attribute__((__packed__)) OutState {
 	uint64_t rax;
@@ -175,8 +183,11 @@ AUTOMATICALLY_REPLACE_ME_PROTOTYPES
 	}
 
 int
-check_outstates_equivalent(struct OutState* s1, struct OutState* s2)
+check_outstates_equivalent(struct OutState* restrict s1,
+			   struct OutState* restrict s2,
+			   const uint64_t orig_lahf)
 {
+	// check x86_64 GPRS
 	int output_states_equivalent = 1;
 	CHECK_GPRS_EQUIV(rax, s1, s2, output_states_equivalent);
 	CHECK_GPRS_EQUIV(rbx, s1, s2, output_states_equivalent);
@@ -195,6 +206,83 @@ check_outstates_equivalent(struct OutState* s1, struct OutState* s2)
 	CHECK_GPRS_EQUIV(r13, s1, s2, output_states_equivalent);
 	CHECK_GPRS_EQUIV(r14, s1, s2, output_states_equivalent);
 	CHECK_GPRS_EQUIV(r15, s1, s2, output_states_equivalent);
+
+	// check flags
+	const uint64_t s1_out_lahf = s1->lahf_rax_res;
+	const uint64_t s2_out_lahf = s2->lahf_rax_res;
+
+#define PRESERVED(ORIG, TRANS, GET, OK) \
+	{				\
+		if (GET(ORIG) != GET(TRANS)) {	\
+			OK = 0;					\
+			printf("transform did not preserve flag: %s\n", #GET); \
+		}\
+	}
+
+#define SETTED(ORIG, TRANS, GET, OK) \
+	{				\
+		if (GET(ORIG) != GET(TRANS)) {	\
+			OK = 0;					\
+			printf("transform did not set flag %s. expected: %llu, given %llu\n", #GET, GET(ORIG), GET(TRANS)); \
+		}\
+	}
+	
+	if (must_preserve_flags) {
+		for (int ii = 0; ii < 5; ++ii) {
+			if (0 == preserves[ii]) {
+				break;
+			}
+			
+			switch (preserves[ii]) {
+			case SF:
+				PRESERVED(s1_out_lahf, s2_out_lahf, LAHF_SF, output_states_equivalent);
+				break;
+			case ZF:
+				PRESERVED(s1_out_lahf, s2_out_lahf, LAHF_ZF, output_states_equivalent);
+				break;
+			case AF:
+				PRESERVED(s1_out_lahf, s2_out_lahf, LAHF_AF, output_states_equivalent);
+				break;
+			case PF:
+				PRESERVED(s1_out_lahf, s2_out_lahf, LAHF_PF, output_states_equivalent);
+				break;
+			case CF:
+				PRESERVED(s1_out_lahf, s2_out_lahf, LAHF_CF, output_states_equivalent);
+				break;
+			default:
+				assert(0 && "unreachable");
+			}
+		}
+	}
+
+	if (must_set_flags) {
+		for (int ii = 0; ii < 5; ++ii) {
+			if (0 == sets[ii]) {
+				break;
+			}
+			
+			switch (sets[ii]) {
+			case SF:
+				SETTED(s1_out_lahf, s2_out_lahf, LAHF_SF, output_states_equivalent);
+				break;
+			case ZF:
+				SETTED(s1_out_lahf, s2_out_lahf, LAHF_ZF, output_states_equivalent);
+				break;
+			case AF:
+				SETTED(s1_out_lahf, s2_out_lahf, LAHF_AF, output_states_equivalent);
+				break;
+			case PF:
+				SETTED(s1_out_lahf, s2_out_lahf, LAHF_PF, output_states_equivalent);
+				break;
+			case CF:
+				SETTED(s1_out_lahf, s2_out_lahf, LAHF_CF, output_states_equivalent);
+				break;
+			default:
+				assert(0 && "unreachable");
+			}
+		}
+	}
+	
 	return output_states_equivalent;
 }
 
@@ -295,7 +383,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
 	AUTOMATICALLY_REPLACE_ME_CALLS
 
-	int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state);
+		int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state, lahf_load);
 	
 	if (!is_equivalent) {
 		print_mismatch_instate(orig_arg0, orig_arg1, orig_arg2, orig_arg3, orig_arg4);

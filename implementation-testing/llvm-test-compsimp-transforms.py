@@ -8,6 +8,76 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+# some commented out. always an overapprox
+# since the BAP IR contains no info
+# e.g., about LEA, so heuristics have to be
+# used, and it's not worth tuning to all
+# of these
+sets_flags = {
+    "ADD64mr": ['CF'],
+    "ADD64ri8": ['CF'],
+    "ADD64rm": ['CF'],
+    "ADD64rr": ['CF'],
+    "ADD32ri8": ['CF'],
+    "IMUL32rr": ['CF'],
+    # "LEA64_32r": ['CF'],
+    "ADD32rm": ['CF'],
+    "ADD32rr": ['CF'],
+    "ADD8ri": ['CF'],
+    "AND64ri8": ['CF'],
+    # "LEA64r": ['CF'],
+    "ADD64mi8": ['CF'],
+    "ADD64ri32": ['CF'],
+    "ADD32mi8": ['CF'],
+    "ADC64mi8": ['CF'],
+    "ADD64mi32": ['CF'],
+    "SUB64rr": ['CF'],
+    "AND32ri8": ['CF'],
+    "SHL64ri": ['CF'],
+    "IMUL64rr": ['CF'],
+    "IMUL64rri8": ['CF'],
+    "MUL64m": ['CF'],
+    "MUL64r": ['CF'],
+    "ADD64i32": ['CF'],
+    "IMUL32rm": ['CF'],
+    "ADD8rm": ['CF'],
+    "IMUL64rm": ['CF'],
+    "IMUL64rmi32": ['CF'],
+    "IMUL64rri32": ['CF'],
+    "OR32rr": ['CF'],
+    "ADD32i32": ['CF']    
+}
+
+# this is really "flags live in", so some commented out
+# that don't need to preserve
+preserves_flags = {
+    "MOV64mr": ['ZF', 'CF'],
+    # "ROL64ri": ['CF'],
+    # "ROR64r1": ['CF'],
+    # "SHR64ri": ['ZF'],
+    # "ROL64r1": ['CF'],
+    "MOV32mi": ['ZF'],
+    # "ADC32ri8": ['CF'],
+    # "ROL32ri": ['CF'],
+    "MOV32mr": ['ZF'],
+    "MOVDQAmr": ['ZF'],
+    # "ADC64mi8": ['CF'],
+    # "ADC64mr": ['CF'],
+    # "SBB32rr": ['CF'],
+    # "ADC64ri8": ['CF'],
+    # "ADC64rm": ['CF'],
+    # "ADC64rr": ['CF'],
+    # "SBB32ri8": ['CF']    
+}
+
+def flag(name):
+    """
+    indices of the flag name str correspond to C enum values
+    of enum EFLAGS in ./implementation-tester.c
+    """
+    flags_at_indices_of_enum_val = [None, 'SF', 'ZF', 'AF', 'PF', 'CF']
+    return flags_at_indices_of_enum_val.index(name)
+
 def is_duplicate_fn_def(symname):
     if "." in symname:
         logging.critical(f"symbol name {symname} is duplicate, not generating tests for it")
@@ -76,6 +146,9 @@ class MirOpcode():
         self.depends_on_carry_flag = False
         self.uses_memory = False
         self.uses_imm = False
+
+        self.preserve_flags = None
+        self.set_flags = None
         
         self.bitwidth = None
         self.opcode = None
@@ -83,6 +156,30 @@ class MirOpcode():
         self.operand_types = []
 
         self.__parse()
+        self.__set_sets_flags()
+        self.__set_preserves_flags()
+
+    def must_preserve_flags(self):
+        return self.preserve_flags is not None
+
+    def must_set_flags(self):
+        return self.set_flags is not None
+
+    def __set_sets_flags(self):
+        """
+        precondition: self.string already set
+        """
+        if self.string in sets_flags:
+            flags_need_to_be_set = sets_flags[self.string]
+            self.set_flags = list(map(flag, flags_need_to_be_set))
+
+    def __set_preserves_flags(self):
+        """
+        precondition: self.string already set
+        """
+        if self.string in preserves_flags:
+            flags_preserved = preserves_flags[self.string]
+            self.preserve_flags = list(map(flag, flags_preserved))
 
     def __set_is_vector_op(self):
         """
@@ -249,7 +346,24 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
     operand_types_str = ", ".join(operand_types)
     operand_types_defines_str = "const char* operand_types[5] = { " + operand_types_str + " };"
 
-    all_filler_code = prototypes_str + '\n' + operand_types_defines_str + '\n'
+    preserve_flags_str = "int must_preserve_flags = 0;\n" + \
+        "enum EFLAGS preserves[5] = {0};\n"
+    if opcode.must_preserve_flags():
+        preserve_flags_str = "int must_preserve_flags = 1;\n"
+        flags_str = ", ".join(map(str, opcode.reserve_flags))
+        preserve_flags_str += "enum EFLAGS preserves[5] = {" + flags_str + ", 0, };\n"
+
+    set_flags_str = "int must_set_flags = 0;\n" + \
+        "enum EFLAGS sets[5] = {0};\n"
+    if opcode.must_set_flags():
+        set_flags_str = "int must_set_flags = 1;\n"
+        flags_str = ", ".join(map(str, opcode.set_flags))
+        set_flags_str += "enum EFLAGS sets[5] = {" + flags_str + ", 0, };\n"
+
+    all_filler_code = preserve_flags_str + '\n' + \
+        set_flags_str + '\n' + \
+        prototypes_str + '\n' + \
+        operand_types_defines_str + '\n'
 
     file_contents = file_contents.replace("AUTOMATICALLY_REPLACE_ME_PROTOTYPES",
                                           all_filler_code)
