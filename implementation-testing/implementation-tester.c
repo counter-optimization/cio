@@ -212,12 +212,6 @@ check_outstates_equivalent(struct OutState* restrict s1,
 	CHECK_GPRS_EQUIV(r14, s1, s2, output_states_equivalent);
 	CHECK_GPRS_EQUIV(r15, s1, s2, output_states_equivalent);
 
-	// check flags
-	__asm__ __inline__ __volatile__(
-		"cpuid\r\n"
-		:
-		:
-		:);
 	const uint64_t s1_out_lahf = s1->lahf_rax_res;
 	const uint64_t s2_out_lahf = s2->lahf_rax_res;
 
