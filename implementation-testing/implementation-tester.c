@@ -108,6 +108,11 @@
 #define PUT_LAHF_PF(rax,val) ((val) == 1 ? (rax) | 0x4ull : (rax) & ~0x4ull)
 #define PUT_LAHF_CF(rax,val) ((val) == 1 ? (rax) | 0x1ull : (rax) & ~0x1ull)
 
+#define PRINT_LAHF(rax) {\
+		printf("SF: %llu, ZF: %llu, AF: %llu, PF: %llu, CF: %llu\n",	\
+		       LAHF_SF(rax), LAHF_ZF(rax), LAHF_AF(rax), LAHF_PF(rax), LAHF_CF(rax)); \
+	}
+
 enum EFLAGS {
 	SF = 1,
 	ZF = 2,
@@ -208,8 +213,22 @@ check_outstates_equivalent(struct OutState* restrict s1,
 	CHECK_GPRS_EQUIV(r15, s1, s2, output_states_equivalent);
 
 	// check flags
+	__asm__ __inline__ __volatile__(
+		"cpuid\r\n"
+		:
+		:
+		:);
 	const uint64_t s1_out_lahf = s1->lahf_rax_res;
 	const uint64_t s2_out_lahf = s2->lahf_rax_res;
+
+	/* printf("input EFLAGS:"); */
+	/* PRINT_LAHF(orig_lahf); */
+
+	/* printf("orig EFLAGS out:"); */
+	/* PRINT_LAHF(s1_out_lahf); */
+
+	/* printf("transformed EFLAGS out:"); */
+	/* PRINT_LAHF(s2_out_lahf); */
 
 #define PRESERVED(ORIG, TRANS, GET, OK) \
 	{				\
