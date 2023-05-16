@@ -35,6 +35,8 @@ sets_flags = {
     "CMP32rm": ['CF', 'ZF'],
     "CMP64mr": ['CF', 'ZF'],
     "CMP32rr": ['CF', 'ZF'],
+    "TEST8ri": ['CF', 'ZF'],
+    "TEST8mi": ['CF', 'ZF'],
     "SUB64rr": ['CF'],
     "AND32ri8": ['CF'],
     "SHL64ri": ['CF'],
