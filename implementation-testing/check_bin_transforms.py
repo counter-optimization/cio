@@ -51,10 +51,9 @@ def get_verified_transforms():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('insns', nargs='*',
+    parser.add_argument('insns', nargs='+',
                         help='name(s) of the opcode(s) to test. Must exactly '
-                             'match the names used in LLVM. Default is to '
-                             'test everything.')
+                             'match the names used in LLVM.')
     args = parser.parse_args()
 
     dump = get_binary_dump(args)
@@ -66,7 +65,7 @@ def main():
         # extract transformed function from binary dump
         trans = f'<x86compsimptest_{insn}_transformed>:'
         if trans not in dump:
-            print(f'ERROR: Could not find transform for {insn}. Skipping\n')
+            print(f'Could not find transform for {insn}. Skipping\n')
             continue
 
         bin_start = dump.index(trans) + 7 # add prefix lines
@@ -86,12 +85,12 @@ def main():
         num_ref_transforms = verified.count(ref)
 
         if num_ref_transforms == 0:
-            print(f'ERROR: Could not find matching verified transform '
-                  f'(searched: {ref_insn}). Skipping\n')
+            print(f'Could not find matching verified transform for {ref_insn}. Skipping\n')
             continue
         else:
             os.system(f'echo "Found {num_ref_transforms} possible verified transforms. Emitting diffs...\n"')
 
+        # check each verified transform option
         ver_start = 0
         count = 0
         while ref in verified[ver_start:]:
