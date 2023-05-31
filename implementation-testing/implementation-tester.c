@@ -93,8 +93,12 @@
 
 #define GPR_ARG_SIZE_IN_BYTES 8
 #define TESTING_ABI_NUM_GPR_ARGS 6
-/* todo, must be changed to handle vector ops */
-#define INPUT_STATE_SIZE ((TESTING_ABI_NUM_GPR_ARGS * GPR_ARG_SIZE_IN_BYTES))
+
+#define VECTOR_ARG_SIZE_IN_BYTES 32
+#define TESTING_ABI_NUM_VECTOR_ARGS 8
+
+#define INPUT_STATE_SIZE ((TESTING_ABI_NUM_GPR_ARGS) * (GPR_ARG_SIZE_IN_BYTES) + \
+			  (VECTOR_ARG_SIZE_IN_BYTES) * (TESTING_ABI_NUM_VECTOR_ARGS))
 
 #define LAHF_SF(rax) (((rax) & 0x80ull) >> 7ull)
 #define LAHF_ZF(rax) (((rax) & 0x40ull) >> 6ull)
@@ -140,23 +144,30 @@ struct __attribute__((__packed__)) OutState {
 	uint64_t r15;
 
 	uint64_t lahf_rax_res; // idx 16 at 8 scale
-	/* todo, must be changed to handle vector ops */
-      /* mov %[rdi+144], ymm0 //todo */
-      /* mov %[rdi+176], ymm1 //todo */
-      /* mov %[rdi+208], ymm2 //todo */
-      /* mov %[rdi+240], ymm3 //todo */
-      /* mov %[rdi+272], ymm4 //todo */
-      /* mov %[rdi+304], ymm5 //todo */
-      /* mov %[rdi+336], ymm6 //todo */
-      /* mov %[rdi+368], ymm7 //todo */
-      /* mov %[rdi+400], ymm8 //todo */
-      /* mov %[rdi+432], ymm9 //todo */
-      /* mov %[rdi+464], ymm10 //todo */
-      /* mov %[rdi+496], ymm11 //todo */
-      /* mov %[rdi+528], ymm12 //todo */
-      /* mov %[rdi+560], ymm13 //todo */
-      /* mov %[rdi+592], ymm14 //todo */
-      /* mov %[rdi+624], ymm15 //todo */
+
+	uint64_t xmm0lo;
+	uint64_t xmm0hi;
+
+	uint64_t xmm1lo;
+	uint64_t xmm1hi;
+
+	uint64_t xmm2lo;
+	uint64_t xmm2hi;
+
+	uint64_t xmm3lo;
+	uint64_t xmm3hi;
+
+	uint64_t xmm4lo;
+	uint64_t xmm4hi;
+
+	uint64_t xmm5lo;
+	uint64_t xmm5hi;
+
+	uint64_t xmm6lo;
+	uint64_t xmm6hi;
+
+	uint64_t xmm7lo;
+	uint64_t xmm7hi; 
 };
 
 struct OutState original_state = { 0 };
@@ -331,10 +342,8 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		return -1;
 	}
 
-	/* todo, must be changed to handle vector ops */
 	const uint64_t* data_as_gprs = (const uint64_t*) data;
 
-	/* todo, must be changed to handle vector ops */
 	uint64_t orig_arg0 = data_as_gprs[0];
 	uint64_t orig_arg1 = data_as_gprs[1];
 	uint64_t orig_arg2 = data_as_gprs[2];
@@ -349,6 +358,8 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
 	volatile uint64_t rax_save = 0;
 	volatile uint64_t lahf_load = data_as_gprs[5];
+
+	const uint64_t* vector_arg_data = &data_as_gprs[6];
 
 	const size_t num_memory_args = sizeof(orig_memory_args) / sizeof(uint64_t);
 	memcpy(orig_memory_args, data_as_gprs, sizeof(uint64_t) * num_memory_args);
@@ -394,8 +405,59 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		}
 	}
 
+	__asm__ __inline__ __volatile__(
+		"pushq %%r10\n"
+		"movq (%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm0\n"
+		"movq 0x8(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm1\n"
+		"movq 0x10(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm2\n"
+		"movq 0x18(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm3\n"
+		"movq 0x20(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm4\n"
+		"movq 0x28(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm5\n"
+		"movq 0x30(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm6\n"
+		"movq 0x38(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm7\n"
+		"popq %%r10\n"
+		: 
+		: "r" (vector_arg_data)
+		: "ymm0", "ymm1", "ymm2", "ymm3",
+		  "ymm4", "ymm5", "ymm6", "ymm7",
+		  "r10", "memory"
+		);
+
 	AUTOMATICALLY_REPLACE_ME_ORIG_CALLS
 
+	__asm__ __inline__ __volatile__(
+		"pushq %%r10\n"
+		"movq (%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm0\n"
+		"movq 0x8(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm1\n"
+		"movq 0x10(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm2\n"
+		"movq 0x18(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm3\n"
+		"movq 0x20(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm4\n"
+		"movq 0x28(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm5\n"
+		"movq 0x30(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm6\n"
+		"movq 0x38(%0), %%r10\n"
+		"vpbroadcastq %%r10, %%ymm7\n"
+		"popq %%r10\n"
+		: 
+		: "r" (vector_arg_data)
+		: "ymm0", "ymm1", "ymm2", "ymm3",
+		  "ymm4", "ymm5", "ymm6", "ymm7",
+		"r10", "memory"
+		);
 
 	AUTOMATICALLY_REPLACE_ME_TRANS_CALLS
 
