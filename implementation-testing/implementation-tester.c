@@ -91,6 +91,8 @@
 
  */
 
+#define BYTES_IN_XMM (128 / 8)
+
 #define GPR_ARG_SIZE_IN_BYTES 8
 #define TESTING_ABI_NUM_GPR_ARGS 6
 
@@ -126,47 +128,49 @@ enum EFLAGS {
 };
 
 struct __attribute__((__packed__)) OutState {
-	uint64_t rax;
-	uint64_t rbx;
-	uint64_t rcx;
-	uint64_t rdx;
-	uint64_t rsp;
-	uint64_t rbp;
-	uint64_t rsi;
-	uint64_t rdi;
-	uint64_t r8;
-	uint64_t r9;
-	uint64_t r10;
-	uint64_t r11;
-	uint64_t r12;
-	uint64_t r13;
-	uint64_t r14;
-	uint64_t r15;
+	uint64_t rax; // 0
+	uint64_t rbx; // 8
+	uint64_t rcx; // 10
+	uint64_t rdx; // 18
+	uint64_t rsp; // 20
+	uint64_t rbp; // 28
+	uint64_t rsi; // 30
+	uint64_t rdi; // 38
+	uint64_t r8; // 40
+	uint64_t r9; // 48
+	uint64_t r10; // 50
+	uint64_t r11; // 58
+	uint64_t r12; // 60
+	uint64_t r13; // 68
+	uint64_t r14; // 70
+	uint64_t r15; // 78
 
-	uint64_t lahf_rax_res; // idx 16 at 8 scale
+	uint64_t lahf_rax_res; // idx 16 at 8 scale (80)
 
-	uint64_t xmm0lo;
-	uint64_t xmm0hi;
+	uint64_t padding;
 
-	uint64_t xmm1lo;
-	uint64_t xmm1hi;
+	uint64_t xmm0lo; // idx 17 at 8 scale (88)
+	uint64_t xmm0hi; // 90
 
-	uint64_t xmm2lo;
+	uint64_t xmm1lo; // 98
+	uint64_t xmm1hi; // A0
+
+	uint64_t xmm2lo; // A8
 	uint64_t xmm2hi;
 
-	uint64_t xmm3lo;
+	uint64_t xmm3lo; // B8
 	uint64_t xmm3hi;
 
-	uint64_t xmm4lo;
+	uint64_t xmm4lo; // C8
 	uint64_t xmm4hi;
 
-	uint64_t xmm5lo;
+	uint64_t xmm5lo; // D8
 	uint64_t xmm5hi;
 
-	uint64_t xmm6lo;
+	uint64_t xmm6lo; // E8
 	uint64_t xmm6hi;
 
-	uint64_t xmm7lo;
+	uint64_t xmm7lo; // F8
 	uint64_t xmm7hi; 
 };
 
@@ -198,6 +202,18 @@ AUTOMATICALLY_REPLACE_ME_PROTOTYPES
 			}						\
 	}
 
+#define CHECK_VECTOR_REG_EQUIV(REGNAME, S1, S2, OK)			\
+	{								\
+		int is_equal = 0 == memcmp(&S1->REGNAME##lo, &S2->REGNAME##lo, BYTES_IN_XMM); \
+		if (!is_equal) {					\
+			printf("mismatch on %s, given: %#0lX %#0lX, expected: %#0lX %#0lX\n", \
+			       #REGNAME,				\
+			       s1->REGNAME ## hi, s1->REGNAME ## lo,	\
+			       s2->REGNAME ## hi, s2->REGNAME ## lo);	\
+			OK = 0;						\
+		}							\
+	}
+
 int
 check_outstates_equivalent(struct OutState* restrict s1,
 			   struct OutState* restrict s2,
@@ -222,6 +238,16 @@ check_outstates_equivalent(struct OutState* restrict s1,
 	CHECK_GPRS_EQUIV(r13, s1, s2, output_states_equivalent);
 	CHECK_GPRS_EQUIV(r14, s1, s2, output_states_equivalent);
 	CHECK_GPRS_EQUIV(r15, s1, s2, output_states_equivalent);
+		
+	CHECK_VECTOR_REG_EQUIV(xmm0, s1, s2, output_states_equivalent);
+	CHECK_VECTOR_REG_EQUIV(xmm1, s1, s2, output_states_equivalent);
+	CHECK_VECTOR_REG_EQUIV(xmm2, s1, s2, output_states_equivalent);
+	CHECK_VECTOR_REG_EQUIV(xmm3, s1, s2, output_states_equivalent);
+	CHECK_VECTOR_REG_EQUIV(xmm4, s1, s2, output_states_equivalent);
+	CHECK_VECTOR_REG_EQUIV(xmm5, s1, s2, output_states_equivalent);
+	CHECK_VECTOR_REG_EQUIV(xmm6, s1, s2, output_states_equivalent);
+	CHECK_VECTOR_REG_EQUIV(xmm7, s1, s2, output_states_equivalent);
+
 
 	const uint64_t s1_out_lahf = s1->lahf_rax_res;
 	const uint64_t s2_out_lahf = s2->lahf_rax_res;
@@ -341,6 +367,9 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	if (size < INPUT_STATE_SIZE) {
 		return -1;
 	}
+
+	memset(&original_state, 0, sizeof(struct OutState));
+	memset(&transformed_state, 0, sizeof(struct OutState));
 
 	const uint64_t* data_as_gprs = (const uint64_t*) data;
 
