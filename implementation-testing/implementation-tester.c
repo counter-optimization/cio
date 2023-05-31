@@ -94,12 +94,13 @@
 #define BYTES_IN_XMM (128 / 8)
 
 #define GPR_ARG_SIZE_IN_BYTES 8
+#define TEST_GPR_ARG_SIZE_IN_BYTES 16
 #define TESTING_ABI_NUM_GPR_ARGS 6
 
 #define VECTOR_ARG_SIZE_IN_BYTES 32
 #define TESTING_ABI_NUM_VECTOR_ARGS 8
 
-#define INPUT_STATE_SIZE ((TESTING_ABI_NUM_GPR_ARGS) * (GPR_ARG_SIZE_IN_BYTES) + \
+#define INPUT_STATE_SIZE ((TESTING_ABI_NUM_GPR_ARGS) * (TEST_GPR_ARG_SIZE_IN_BYTES) + \
 			  (VECTOR_ARG_SIZE_IN_BYTES) * (TESTING_ABI_NUM_VECTOR_ARGS))
 
 #define LAHF_SF(rax) (((rax) & 0x80ull) >> 7ull)
@@ -358,8 +359,13 @@ print_mismatch_instate(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, ui
 	PRINT(r9);
 }
 
-uint64_t orig_memory_args[5] = { 0 };
-uint64_t trans_memory_args[5] = { 0 };
+typedef struct __attribute__((__packed__)) Test128BitType {
+	uint64_t hi;
+	uint64_t lo;
+} Test128BitType;
+
+Test128BitType orig_memory_args[5] = { 0 };
+Test128BitType trans_memory_args[5] = { 0 };
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
@@ -371,28 +377,32 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	memset(&original_state, 0, sizeof(struct OutState));
 	memset(&transformed_state, 0, sizeof(struct OutState));
 
-	const uint64_t* data_as_gprs = (const uint64_t*) data;
+	const Test128BitType* data_as_gprs = (const Test128BitType*) data;
 
-	uint64_t orig_arg0 = data_as_gprs[0];
-	uint64_t orig_arg1 = data_as_gprs[1];
-	uint64_t orig_arg2 = data_as_gprs[2];
-	uint64_t orig_arg3 = data_as_gprs[3];
-	uint64_t orig_arg4 = data_as_gprs[4];
+	uint64_t orig_arg0 = data_as_gprs[0].lo;
+	uint64_t orig_arg1 = data_as_gprs[1].lo;
+	uint64_t orig_arg2 = data_as_gprs[2].lo;
+	uint64_t orig_arg3 = data_as_gprs[3].lo;
+	uint64_t orig_arg4 = data_as_gprs[4].lo;
 
-	uint64_t trans_arg0 = data_as_gprs[0];
-	uint64_t trans_arg1 = data_as_gprs[1];
-	uint64_t trans_arg2 = data_as_gprs[2];
-	uint64_t trans_arg3 = data_as_gprs[3];
-	uint64_t trans_arg4 = data_as_gprs[4];
+	uint64_t trans_arg0 = data_as_gprs[0].lo;
+	uint64_t trans_arg1 = data_as_gprs[1].lo;
+	uint64_t trans_arg2 = data_as_gprs[2].lo;
+	uint64_t trans_arg3 = data_as_gprs[3].lo;
+	uint64_t trans_arg4 = data_as_gprs[4].lo;
 
 	volatile uint64_t rax_save = 0;
-	volatile uint64_t lahf_load = data_as_gprs[5];
+	volatile uint64_t lahf_load = data_as_gprs[5].lo;
 
-	const uint64_t* vector_arg_data = &data_as_gprs[6];
+	const Test128BitType* vector_arg_data = &data_as_gprs[6];
 
-	const size_t num_memory_args = sizeof(orig_memory_args) / sizeof(uint64_t);
-	memcpy(orig_memory_args, data_as_gprs, sizeof(uint64_t) * num_memory_args);
-	memcpy(trans_memory_args, data_as_gprs, sizeof(uint64_t) * num_memory_args);
+	const size_t num_memory_args = sizeof(orig_memory_args) / sizeof(Test128BitType);
+	memcpy(orig_memory_args,
+	       data_as_gprs,
+	       sizeof(Test128BitType) * num_memory_args);
+	memcpy(trans_memory_args,
+	       data_as_gprs,
+	       sizeof(Test128BitType) * num_memory_args);
 
 	for (int ii = 0; ii < sizeof(operand_types) / sizeof(const char*); ++ii) {
 		const char* cur_type = operand_types[ii];
