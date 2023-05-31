@@ -74,7 +74,11 @@ if [[ ! -v NUM_FUZZ_RUNS ]]; then
 fi
 
 if [[ ! -v MAX_SEED_LEN ]]; then
-    MAX_SEED_LEN=650
+    # 6 input GPRs each of size 8 bytes
+    # 8 input vector regs each of size 32 bytes (ymms 256 bit)
+    # quadruple the actual size so it doesn't try a bunch of small sizes
+    # that the fuzzers reject
+    MAX_SEED_LEN=$((4 * (8 * 6 + 32 * 8)))
 fi
 
 if [[ $NUM_FUZZ_JOBS -eq 1 ]]; then

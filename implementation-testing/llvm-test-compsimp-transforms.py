@@ -270,8 +270,20 @@ class MirOpcode():
             logging.debug(f"all: {self.string}; opcode: {self.opcode}; bitwidth: {self.bitwidth}; operand_info: {self.operand_info_str}")
         else:
             # this prints twice currently, but leaving it in just in case it isn't fixed in both places
-            logging.warning(f"testing of vector insns not yet implmented. skipping insn w/ opcode: {self.string}")
-            pass
+            # find first lower case letter
+            idx_start_operand_types = None
+            for idx, letter in enumerate(self.string):
+                if letter.islower():
+                    idx_start_operand_types = idx
+                    break
+                
+            if idx_start_operand_types is None:
+                logging.critical(f"couldnt parse vector MIR opcode string: {self.string}")
+                
+            self.opcode = self.string[:idx_start_operand_types]
+            self.operand_info_str = self.string[idx_start_operand_types:]
+            logging.debug(f"all: {self.string}; opcode: {self.opcode}; bitwidth: ?; operand_info: {self.operand_info_str}")
+                
 
     def __set_depends_on_carry_flag(self):
         """
@@ -322,10 +334,6 @@ class MirOpcode():
         self.__set_is_cmp()
         self.__set_is_implicit_first_arg()
 
-        if self.is_vector:
-            logging.warning(f"testing of vector insns not yet implmented. skipping insn w/ opcode: {self.string}")
-            return
-
         self.__split_opcode_str()
 
         self.__set_depends_on_carry_flag()
@@ -340,10 +348,6 @@ def read_test_harness_template(filename):
 
 def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name, trans_sym_name):
     opcode = MirOpcode(opcode_str)
-
-    if opcode.is_vector:
-        logging.warning(f"skipping generating fuzzer test harnesses for unsupported vector insn: {opcode.string}")
-        return None
 
     prototypes = [
         f"void {orig_sym_name}(struct OutState* outstate, uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3, uint64_t i4);",
@@ -369,10 +373,13 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
         flags_str = ", ".join(map(str, opcode.set_flags))
         set_flags_str += "enum EFLAGS sets[5] = {" + flags_str + ", 0, };\n"
 
+    is_vector_op_str = f"int is_vector = {1 if opcode.is_vector else 0};"
+
     all_filler_code = preserve_flags_str + '\n' + \
         set_flags_str + '\n' + \
         prototypes_str + '\n' + \
-        operand_types_defines_str + '\n'
+        operand_types_defines_str + '\n' + \
+        is_vector_op_str + '\n'
 
     file_contents = file_contents.replace("AUTOMATICALLY_REPLACE_ME_PROTOTYPES",
                                           all_filler_code)
@@ -408,18 +415,23 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
 		: "rax", "cc" );
     """
 
-    calls = [
+    orig_calls = [
         orig_set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
         set_eflags + "\n"
-        f"{orig_sym_name}(&original_state, orig_arg0, orig_arg1, orig_arg2, orig_arg3, orig_arg4);\n",
+        f"{orig_sym_name}(&original_state, orig_arg0, orig_arg1, orig_arg2, orig_arg3, orig_arg4);\n"
+    ]
+    
+    trans_calls = [
         trans_set_eax_for_implicit_calls if opcode.is_implicit_first_arg else "\n",
         set_eflags + "\n"
         f"{trans_sym_name}(&transformed_state, trans_arg0, trans_arg1, trans_arg2, trans_arg3, trans_arg4);\n",
     ]
-    calls_str = "".join(calls)
+    
+    file_contents = file_contents.replace("AUTOMATICALLY_REPLACE_ME_ORIG_CALLS",
+                                          "".join(orig_calls))
 
-    file_contents = file_contents.replace("AUTOMATICALLY_REPLACE_ME_CALLS",
-                                          calls_str)
+    file_contents = file_contents.replace("AUTOMATICALLY_REPLACE_ME_TRANS_CALLS",
+                                          "".join(trans_calls))
     
     return file_contents
 

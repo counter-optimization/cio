@@ -394,7 +394,10 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		}
 	}
 
-	AUTOMATICALLY_REPLACE_ME_CALLS
+	AUTOMATICALLY_REPLACE_ME_ORIG_CALLS
+
+
+	AUTOMATICALLY_REPLACE_ME_TRANS_CALLS
 
 		int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state, lahf_load);
 	
