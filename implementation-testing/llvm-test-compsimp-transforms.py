@@ -1,12 +1,19 @@
 import os
 import re
 import subprocess
+import argparse
 import sys 
 from enum import Enum
 from pathlib import Path
 import logging
 
 logging.basicConfig(level=logging.INFO)
+
+argparser = argparse.ArgumentParser('generate test harnesses')
+
+argparser.add_argument('--record-cycle-counts',
+                       default=False, type=bool)
+argparser.add_argument('test_dir')
 
 # some commented out. always an overapprox
 # since the BAP IR contains no info
@@ -436,11 +443,16 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
     return file_contents
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print(f"usage: LLVM_HOME=/path/to/dir/holding/clang python3 this_file.py <dir_to_put_test_files>")
-        sys.exit(1)
+    args = argparser.parse_args()
+    
+    # if len(sys.argv) != 2:
+    #     print(f"usage: LLVM_HOME=/path/to/dir/holding/clang python3 this_file.py <dir_to_put_test_files>")
+    #     sys.exit(1)
 
-    test_dir = Path(sys.argv[1])
+    # test_dir = Path(sys.argv[1])
+
+    test_dir = Path(args.test_dir)
+    
     if not test_dir.exists():
         test_dir.mkdir()
         
@@ -452,7 +464,9 @@ if __name__ == '__main__':
 
     CC = os.environ["LLVM_HOME"] + "/bin/clang"
 
-    compile_cmd = f"{CC} -O0 -mllvm -x86-ss -mllvm -x86-cs -mllvm -x86-cs-test -c {tempFile} -o {tempObjFile}"
+    cc_optional_flags = "-mllvm -x86-cs-test-cycle-counts" if args.record_cycle_counts else ""
+
+    compile_cmd = f"{CC} -O0 -mllvm -x86-ss -mllvm -x86-cs -mllvm -x86-cs-test {cc_optional_flags} -c {tempFile} -o {tempObjFile}"
     subprocess.run(compile_cmd, shell=True, check=True)
 
     nm_process = subprocess.run(f"nm {tempObjFile}", check=True, shell=True, text=True, stdout=subprocess.PIPE)

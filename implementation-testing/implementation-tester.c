@@ -172,7 +172,9 @@ struct __attribute__((__packed__)) OutState {
 	uint64_t xmm6hi;
 
 	uint64_t xmm7lo; // F8
-	uint64_t xmm7hi; 
+	uint64_t xmm7hi;
+
+	uint64_t cyclecount;
 };
 
 struct OutState original_state = { 0 };
