@@ -148,8 +148,6 @@ struct __attribute__((__packed__)) OutState {
 
 	uint64_t lahf_rax_res; // idx 16 at 8 scale (80)
 
-	uint64_t padding;
-
 	uint64_t xmm0lo; // idx 17 at 8 scale (88)
 	uint64_t xmm0hi; // 90
 
@@ -177,8 +175,8 @@ struct __attribute__((__packed__)) OutState {
 	uint64_t cyclecount;
 };
 
-struct OutState original_state = { 0 };
-struct OutState transformed_state = { 0 };
+_Alignas(16) struct OutState original_state = { 0 };
+_Alignas(16) struct OutState transformed_state = { 0 };
 
 AUTOMATICALLY_REPLACE_ME_PROTOTYPES
 
@@ -375,6 +373,14 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	if (size < INPUT_STATE_SIZE) {
 		return -1;
 	}
+
+	// check alignment of struct OutState to make sure
+	// the aligned register indirect vector reads and stores
+	// will not cause mysterious segfaults
+	assert((uintptr_t) &original_state % 16 == 0 &&
+	       (uintptr_t) &transformed_state % 16 == 0 &&
+	       "original state or transformed state global structs "
+	       "are not 16 byte aligned");
 
 	memset(&original_state, 0, sizeof(struct OutState));
 	memset(&transformed_state, 0, sizeof(struct OutState));
