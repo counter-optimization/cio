@@ -358,7 +358,7 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
         "enum EFLAGS preserves[5] = {0};\n"
     if opcode.must_preserve_flags():
         preserve_flags_str = "int must_preserve_flags = 1;\n"
-        flags_str = ", ".join(map(str, opcode.reserve_flags))
+        flags_str = ", ".join(map(str, opcode.preserve_flags))
         preserve_flags_str += "enum EFLAGS preserves[5] = {" + flags_str + ", 0, };\n"
 
     set_flags_str = "int must_set_flags = 0;\n" + \
