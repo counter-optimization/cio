@@ -136,7 +136,7 @@ libsodium_init:
 	touch libsodium_init
 
 $(LIBSODIUM_BUILT_AR): libsodium_init checker
-	./cio --is-libsodium --nosymex $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1
+	./cio --is-libsodium $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1
 	mkdir $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 	cp $(LIBSODIUM_AR) $(LIBSODIUM_BUILT_AR)
 
