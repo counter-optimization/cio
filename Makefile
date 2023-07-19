@@ -121,7 +121,7 @@ eval_chacha20_poly1305_decrypt: eval_prereqs $(EVAL_CHACHA20_POLY1305_DECRYPT)
 eval_argon2id: eval_prereqs $(EVAL_ARGON2ID)
 	$(CC) $(EVAL_ARGON2ID) $(LIBSODIUM_BUILT_AR) -o $@
 
-eval_prereqs: $(LIBSODIUM_BUILT).$(MITIGATIONS_STR) $(CHECKER_BUILT)
+eval_prereqs: $(LIBSODIUM_BUILT_AR) $(CHECKER_BUILT)
 
 libsodium_init:
 	git submodule init -- $(LIBSODIUM_DIR)
@@ -130,12 +130,12 @@ libsodium_init:
 	cd $(LIBSODIUM_DIR); \
 		git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
 		git apply ../chacha20_impl_renames.patch; \
-		git apply ../poly1305_impl_renames.patch; \
+		# git apply ../poly1305_impl_renames.patch; \
 		git apply ../argon2_impl_renames.patch; \
 		git apply ../salsa20_ref_impl.patch
 	touch libsodium_init
 
-$(LIBSODIUM_BUILT).$(MITIGATIONS_STR): libsodium_init checker
+$(LIBSODIUM_BUILT_AR): libsodium_init checker
 	./cio --is-libsodium --nosymex $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1
 	mkdir $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 	cp $(LIBSODIUM_AR) $(LIBSODIUM_BUILT_AR)
@@ -145,6 +145,7 @@ checker: $(CHECKER_BUILT)
 checker_init:
 	git submodule init -- $(CHECKER_DIR)
 	git submodule update --remote -- $(CHECKER_DIR)
+	touch checker_init
 
 $(CHECKER_BUILT): checker_init
 	$(MAKE) -e -C $(CHECKER_PLUGIN_PATH) BAPBUILD_JOB_SLOTS=$(NUM_MAKE_JOB_SLOTS) debug

@@ -100,13 +100,21 @@ done
 mkdir $TOP_EVAL_DIR
 echo "$EVAL_MSG" > $TOP_EVAL_DIR/msg.txt
 
+make libsodium_init
+make checker_init
+
 # baseline
 make clean
+
 if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
+	cd $LIBSODIUM_DIR
+	./configure --disable-asm
+	make -j "$NUM_MAKE_JOB_SLOTS"
+	cd ..
 	mkdir $LIBSODIUM_BASELINE_DIR
-	make --directory=$LIBSODIUM_DIR
 	cp $LIBSODIUM_AR $LIBSODIUM_BASELINE_DIR/libsodium.a
 fi
+
 taskset -c 0 make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
@@ -119,22 +127,27 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # with register reservation only
-# make clean
-# if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
-# 	mkdir $LIBSODIUM_REG_RES_DIR
-# 	make --directory=$LIBSODIUM_DIR CC=$CC
-# 	cp $LIBSODIUM_AR $LIBSODIUM_REG_RES_DIR/libsodium.a
-# fi
-# taskset -c 0 make MITIGATIONS="$REG_RES_DIR" EVAL_DIR="$TOP_EVAL_DIR/$REG_RES_DIR" \
-#     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-#     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-# 	EVAL_MSG=$EVAL_MSG \
-#     run_eval
+make clean
 
-# if [[ $? -ne 0 ]]; then
-#        echo "Error running with register reservation only"
-#        exit -1
-# fi
+if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
+	cd $LIBSODIUM_DIR
+	./configure --disable-asm CC=$CC
+	make -j "$NUM_MAKE_JOB_SLOTS" --directory=$LIBSODIUM_DIR CC=$CC
+	cd ..
+	mkdir $LIBSODIUM_REG_RES_DIR
+	cp $LIBSODIUM_AR $LIBSODIUM_REG_RES_DIR/libsodium.a
+fi
+
+taskset -c 0 make MITIGATIONS="$REG_RES_DIR" EVAL_DIR="$TOP_EVAL_DIR/$REG_RES_DIR" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+	EVAL_MSG=$EVAL_MSG \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running with register reservation only"
+       exit -1
+fi
 
 # ss only
 make clean

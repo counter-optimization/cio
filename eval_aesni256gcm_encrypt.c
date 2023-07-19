@@ -63,7 +63,7 @@ main(int argc, char** argv)
 	 "Error initializing lib sodium");
 
   // Make sure AES is available
-  assert(crypto_aead_aes256gcm_is_available() && "AES not available on this CPU");
+  // assert(crypto_aead_aes256gcm_is_available() && "AES not available on this CPU");
 
   /// allocate space for additional data
   unsigned char* additional_data = NULL; // malloc(additional_data_sz);

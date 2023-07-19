@@ -2,4 +2,6 @@
 *.o
 libsodium.built.*
 checker.built
+libsodium_init
+checker_init
 __pycache__
