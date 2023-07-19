@@ -236,7 +236,7 @@ THEIR_CFLAGS=$(grep -E '^CFLAGS[ =]' ./libsodium/src/libsodium/Makefile)
 THEIR_CFLAGS_FILE="$BUILD_DIR/their-cflags.txt"
 echo "$THEIR_CFLAGS" > "$THEIR_CFLAGS_FILE"
 # source "$THEIR_CFLAGS_FILE"
-CFLAGS="-DHAVE_AMD64_ASM=0 -g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic"
+CFLAGS="-g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic"
 echo "THEIR_CFLAGS are: $CFLAGS"
 
 COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $CFLAGS $EXTRA_CFLAGS"
@@ -425,7 +425,7 @@ echo "CIOTOTAL,$CIO_START_SECS,$CIO_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
 
 if [[ $IS_LIBSODIUM -eq 1 ]]; then
     echo -n "Running libsodium unit tests..."
-    make --directory=$TARGET_DIR check
+    make --directory=$TARGET_DIR check CC=$CC
     echo done
 fi
 
