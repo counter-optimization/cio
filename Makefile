@@ -130,7 +130,7 @@ libsodium_init:
 	cd $(LIBSODIUM_DIR); \
 		git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
 		git apply ../chacha20_impl_renames.patch; \
-		# git apply ../poly1305_impl_renames.patch; \
+		git apply ../chacha20_refref_rename.patch; \
 		git apply ../argon2_impl_renames.patch; \
 		git apply ../salsa20_ref_impl.patch
 	touch libsodium_init
