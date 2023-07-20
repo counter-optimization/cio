@@ -110,6 +110,7 @@ if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
 	cd $LIBSODIUM_DIR
 	./configure --disable-asm
 	make -j "$NUM_MAKE_JOB_SLOTS"
+	make check
 	cd ..
 	mkdir $LIBSODIUM_BASELINE_DIR
 	cp $LIBSODIUM_AR $LIBSODIUM_BASELINE_DIR/libsodium.a
@@ -132,7 +133,8 @@ make clean
 if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
 	cd $LIBSODIUM_DIR
 	./configure --disable-asm CC=$CC
-	make -j "$NUM_MAKE_JOB_SLOTS" --directory=$LIBSODIUM_DIR CC=$CC
+	make -j "$NUM_MAKE_JOB_SLOTS" CC=$CC
+	make check CC=$CC
 	cd ..
 	mkdir $LIBSODIUM_REG_RES_DIR
 	cp $LIBSODIUM_AR $LIBSODIUM_REG_RES_DIR/libsodium.a
@@ -195,10 +197,10 @@ if [[ "$VALIDATE" -eq 1 ]]; then
 	python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR "../$VALIDATION_DIR/$BASELINE_DIR"
 	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/baseline_validation_data.txt
 
-	# echo ""
-	# echo "Validating register reservation only..."
-	# python3 process_eval_data.py $TOP_EVAL_DIR $REG_RES_DIR "../$VALIDATION_DIR/$REG_RES_DIR"
-	# mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/rr_validation_data.txt
+	echo ""
+	echo "Validating register reservation only..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $REG_RES_DIR "../$VALIDATION_DIR/$REG_RES_DIR"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/rr_validation_data.txt
 
 	echo ""
 	echo "Validating SS..."
@@ -219,4 +221,4 @@ fi
 echo ""
 echo "Overheads vs baseline:"
 python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
-    $SS_DIR $CS_DIR $SS_CS_DIR # $REG_RES_DIR
+    $SS_DIR $CS_DIR $SS_CS_DIR $REG_RES_DIR
