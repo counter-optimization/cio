@@ -381,6 +381,23 @@ typedef struct __attribute__((__packed__)) Test128BitType {
 Test128BitType orig_memory_args[5] = { 0 };
 Test128BitType trans_memory_args[5] = { 0 };
 
+static int measure_cycle_run = 0;
+int
+LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+	const char* measure_cycle_run_arg = "-measure_cycles";
+	
+	for (int ii = 0; ii < *argc; ++ii) {
+		char* arg = (*argv)[ii];
+		if (0 == strcmp(arg, measure_cycle_run_arg)) {
+			measure_cycle_run = 1;
+			return 0;
+		}
+	}
+	
+	return 0;
+}
+
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -399,19 +416,21 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	memset(&original_state, 0, sizeof(struct OutState));
 	memset(&transformed_state, 0, sizeof(struct OutState));
 
-	if (0 == capacity_transformed_cycles && 0 == capacity_orig_cycles) {
-		capacity_orig_cycles = capacity_transformed_cycles = ORIG_CC_CAPACITY;
+	if (measure_cycle_run) {
+		if (0 == capacity_transformed_cycles && 0 == capacity_orig_cycles) {
+			capacity_orig_cycles = capacity_transformed_cycles = ORIG_CC_CAPACITY;
 		
-		orig_cycles = calloc(capacity_orig_cycles, sizeof(uint64_t));
-		assert(orig_cycles &&
-		       "Couldn't allocate space for cycle counts");
+			orig_cycles = calloc(capacity_orig_cycles, sizeof(uint64_t));
+			assert(orig_cycles &&
+			       "Couldn't allocate space for cycle counts");
 
-		transformed_cycles = calloc(capacity_transformed_cycles, sizeof(uint64_t));
-		assert(transformed_cycles &&
-		       "Couldn't allocate space for cycle counts");
+			transformed_cycles = calloc(capacity_transformed_cycles, sizeof(uint64_t));
+			assert(transformed_cycles &&
+			       "Couldn't allocate space for cycle counts");
 
-		// not sure if libfuzzer likes this, but...
-		atexit(print_cycle_counts);
+			// not sure if libfuzzer likes this, but...
+			atexit(print_cycle_counts);
+		}
 	}
 
 	const Test128BitType* data_as_gprs = (const Test128BitType*) data;
@@ -538,32 +557,38 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	AUTOMATICALLY_REPLACE_ME_TRANS_CALLS
 
 		int is_equivalent = check_outstates_equivalent(&original_state, &transformed_state, lahf_load);
-	
-	if (!is_equivalent) {
+
+	/* Don't check equivalence when measuring cycles. amortization, */
+	/* cycle reader, end - start cycle subtraction, all mess with */
+	/* equivalence checks. run equivalence checks before measuring */
+	/* cycles instead. */
+	if (!measure_cycle_run && !is_equivalent) {
 		print_mismatch_instate(orig_arg0, orig_arg1, orig_arg2, orig_arg3, orig_arg4);
 		fflush(stdout);
 		assert(is_equivalent);
 	}
 
-	orig_cycles[num_orig_cycles++] = original_state.cyclecount;
-	transformed_cycles[num_transformed_cycles++] = transformed_state.cyclecount;
+	if (measure_cycle_run) {
+		orig_cycles[num_orig_cycles++] = original_state.cyclecount;
+		transformed_cycles[num_transformed_cycles++] = transformed_state.cyclecount;
 
-	assert(num_transformed_cycles == num_orig_cycles);
-	if (num_transformed_cycles == capacity_transformed_cycles) {
-		capacity_orig_cycles = capacity_transformed_cycles =
-			2 * capacity_transformed_cycles;
+		assert(num_transformed_cycles == num_orig_cycles);
+		if (num_transformed_cycles == capacity_transformed_cycles) {
+			capacity_orig_cycles = capacity_transformed_cycles =
+				2 * capacity_transformed_cycles;
 
-		orig_cycles = reallocarray(orig_cycles,
-					   capacity_orig_cycles,
-					   sizeof(uint64_t));
-		assert(orig_cycles &&
-		       "Couldn't reallocate space for cycle counts");
+			orig_cycles = reallocarray(orig_cycles,
+						   capacity_orig_cycles,
+						   sizeof(uint64_t));
+			assert(orig_cycles &&
+			       "Couldn't reallocate space for cycle counts");
 
-		transformed_cycles = reallocarray(transformed_cycles,
-						  capacity_transformed_cycles,
-						  sizeof(uint64_t));
-		assert(transformed_cycles &&
-		       "Couldn't reallocate space for cycle counts");
+			transformed_cycles = reallocarray(transformed_cycles,
+							  capacity_transformed_cycles,
+							  sizeof(uint64_t));
+			assert(transformed_cycles &&
+			       "Couldn't reallocate space for cycle counts");
+		}
 	}
 
 	return 0;

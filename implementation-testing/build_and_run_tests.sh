@@ -81,11 +81,17 @@ if [[ ! -v MAX_SEED_LEN ]]; then
     MAX_SEED_LEN=$((4 * (8 * 6 + 32 * 8)))
 fi
 
+if [[ ! -v MEASURE_CYCLE_RUN ]]; then
+    MEASURE_CYCLE_ARG="-measure_cycles"
+else
+    MEASURE_CYCLE_ARG=""
+fi
+
 if [[ $NUM_FUZZ_JOBS -eq 1 ]]; then
     # do in serial
     for fuzzer in "${FUZZERS[@]}"; do
 	echo "running fuzzer $fuzzer"
-	$fuzzer -close_fd_mask=0 -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> $fuzzer.log
+	$fuzzer -close_fd_mask=0 $MEASURE_CYCLE_ARG -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> $fuzzer.log
 
 	if [[ $? -ne 0 ]]; then
 	    echo "fuzzer $fuzzer returned non-zero exit status, see $fuzzer.log"

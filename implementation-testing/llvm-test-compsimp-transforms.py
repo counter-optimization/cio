@@ -447,7 +447,7 @@ if __name__ == '__main__':
 
     CC = os.environ["LLVM_HOME"] + "/bin/clang"
 
-    cc_optional_flags = "-mllvm -x86-cs-test-cycle-counts" if args.record_cycle_counts else ""
+    cc_optional_flags = "-mllvm -x86-cs-test-cycle-counts -mllvm -x86-ss-test-cycle-counts" if args.record_cycle_counts else ""
     gen_idx_flags = "-mllvm -x86-gen-idx" if args.gen_idx else ""
 
     compile_cmd = f"{CC} -O0 {gen_idx_flags} -mllvm -x86-ss -mllvm -x86-cs -mllvm -x86-cs-test {cc_optional_flags} -c {tempFile} -o {tempObjFile}"
