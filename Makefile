@@ -48,6 +48,7 @@ CHACHA20_POLY1305_WARMUP_ITER=25
 
 EVAL_START_TIME ::= $(shell TZ='America/Los_Angeles' date +%F-%H:%M:%S-%Z)
 EVAL_DIR=$(EVAL_START_TIME)-eval
+CIO_BUILD_DIR=$(EVAL_START_TIME)-cio-build
 FILE_EVAL_CMDS=$(EVAL_DIR)/eval-cmds.txt
 FILE_WHICH_CC_FOR_EVAL_BUILD=$(EVAL_DIR)/eval-cc.txt
 FILE_WHICH_CFLAGS_FOR_EVAL_BUILD=$(EVAL_DIR)/eval-cflags.txt
@@ -136,7 +137,7 @@ libsodium_init:
 	touch libsodium_init
 
 $(LIBSODIUM_BUILT_AR): libsodium_init checker
-	./cio --is-libsodium $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1
+	./cio --is-libsodium $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1 -b $(CIO_BUILD_DIR)
 	mkdir $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 	cp $(LIBSODIUM_AR) $(LIBSODIUM_BUILT_AR)
 
