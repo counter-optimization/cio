@@ -147,36 +147,59 @@ struct __attribute__((__packed__)) OutState {
 	uint64_t r15; // 78
 
 	uint64_t lahf_rax_res; // idx 16 at 8 scale (80)
+	uint64_t padding;
 
-	uint64_t xmm0lo; // idx 17 at 8 scale (88)
-	uint64_t xmm0hi; // 90
+	uint64_t xmm0lo; // idx 17 at 8 scale (90
+	uint64_t xmm0hi; //
 
-	uint64_t xmm1lo; // 98
-	uint64_t xmm1hi; // A0
+	uint64_t xmm1lo; // A0
+	uint64_t xmm1hi; // 
 
-	uint64_t xmm2lo; // A8
+	uint64_t xmm2lo; // b0
 	uint64_t xmm2hi;
 
-	uint64_t xmm3lo; // B8
+	uint64_t xmm3lo; // c0
 	uint64_t xmm3hi;
 
-	uint64_t xmm4lo; // C8
+	uint64_t xmm4lo; // d0
 	uint64_t xmm4hi;
 
-	uint64_t xmm5lo; // D8
+	uint64_t xmm5lo; // e0
 	uint64_t xmm5hi;
 
-	uint64_t xmm6lo; // E8
+	uint64_t xmm6lo; // f0
 	uint64_t xmm6hi;
 
-	uint64_t xmm7lo; // F8
-	uint64_t xmm7hi;
+	uint64_t xmm7lo; // 100
+	uint64_t xmm7hi; // 
 
-	uint64_t cyclecount;
+	uint64_t cyclecount; // 110
 };
 
-_Alignas(16) struct OutState original_state = { 0 };
-_Alignas(16) struct OutState transformed_state = { 0 };
+static _Alignas(16) struct OutState original_state = { 0 };
+static _Alignas(16) struct OutState transformed_state = { 0 };
+
+#define ORIG_CC_CAPACITY 10000
+
+static uint64_t* orig_cycles;
+static uint64_t capacity_orig_cycles = 0;
+static uint64_t num_orig_cycles = 0;
+
+static uint64_t* transformed_cycles;
+static uint64_t capacity_transformed_cycles = 0;
+static uint64_t num_transformed_cycles = 0;
+
+static void
+print_cycle_counts()
+{
+	assert(num_transformed_cycles == num_orig_cycles);
+	printf("orig,transformed\n");
+	for (uint64_t ii = 0; ii < num_orig_cycles; ++ii) {
+		printf("%" PRIu64 ",%" PRIu64 "\n",
+		       orig_cycles[ii],
+		       transformed_cycles[ii]);
+	}
+}
 
 AUTOMATICALLY_REPLACE_ME_PROTOTYPES
 
@@ -252,15 +275,6 @@ check_outstates_equivalent(struct OutState* restrict s1,
 
 	const uint64_t s1_out_lahf = s1->lahf_rax_res;
 	const uint64_t s2_out_lahf = s2->lahf_rax_res;
-
-	/* printf("input EFLAGS:"); */
-	/* PRINT_LAHF(orig_lahf); */
-
-	/* printf("orig EFLAGS out:"); */
-	/* PRINT_LAHF(s1_out_lahf); */
-
-	/* printf("transformed EFLAGS out:"); */
-	/* PRINT_LAHF(s2_out_lahf); */
 
 #define PRESERVED(ORIG, TRANS, GET, OK) \
 	{				\
@@ -384,6 +398,21 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
 	memset(&original_state, 0, sizeof(struct OutState));
 	memset(&transformed_state, 0, sizeof(struct OutState));
+
+	if (0 == capacity_transformed_cycles && 0 == capacity_orig_cycles) {
+		capacity_orig_cycles = capacity_transformed_cycles = ORIG_CC_CAPACITY;
+		
+		orig_cycles = calloc(capacity_orig_cycles, sizeof(uint64_t));
+		assert(orig_cycles &&
+		       "Couldn't allocate space for cycle counts");
+
+		transformed_cycles = calloc(capacity_transformed_cycles, sizeof(uint64_t));
+		assert(transformed_cycles &&
+		       "Couldn't allocate space for cycle counts");
+
+		// not sure if libfuzzer likes this, but...
+		atexit(print_cycle_counts);
+	}
 
 	const Test128BitType* data_as_gprs = (const Test128BitType*) data;
 
@@ -514,6 +543,27 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		print_mismatch_instate(orig_arg0, orig_arg1, orig_arg2, orig_arg3, orig_arg4);
 		fflush(stdout);
 		assert(is_equivalent);
+	}
+
+	orig_cycles[num_orig_cycles++] = original_state.cyclecount;
+	transformed_cycles[num_transformed_cycles++] = transformed_state.cyclecount;
+
+	assert(num_transformed_cycles == num_orig_cycles);
+	if (num_transformed_cycles == capacity_transformed_cycles) {
+		capacity_orig_cycles = capacity_transformed_cycles =
+			2 * capacity_transformed_cycles;
+
+		orig_cycles = reallocarray(orig_cycles,
+					   capacity_orig_cycles,
+					   sizeof(uint64_t));
+		assert(orig_cycles &&
+		       "Couldn't reallocate space for cycle counts");
+
+		transformed_cycles = reallocarray(transformed_cycles,
+						  capacity_transformed_cycles,
+						  sizeof(uint64_t));
+		assert(transformed_cycles &&
+		       "Couldn't reallocate space for cycle counts");
 	}
 
 	return 0;

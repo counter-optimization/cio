@@ -10,7 +10,6 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 argparser = argparse.ArgumentParser('generate test harnesses')
-
 argparser.add_argument('--gen-idx',
                        action=argparse.BooleanOptionalAction)
 argparser.add_argument('--record-cycle-counts',
@@ -434,12 +433,6 @@ def generate_finalized_code_for_opcode(opcode_str, file_contents, orig_sym_name,
 
 if __name__ == '__main__':
     args = argparser.parse_args()
-    
-    # if len(sys.argv) != 2:
-    #     print(f"usage: LLVM_HOME=/path/to/dir/holding/clang python3 this_file.py <dir_to_put_test_files>")
-    #     sys.exit(1)
-
-    # test_dir = Path(sys.argv[1])
 
     test_dir = Path(args.test_dir)
     
