@@ -189,16 +189,22 @@ class MirOpcode():
     def __set_is_vector_op(self):
         """
         a vector instruction starts with V... or P... and has no bitwidth
+        (or is MOVDQA, MOVAPS, MOVDQU, MOVUPS) from our list of
+        transforms needed. these will be hardcoded below
         """
         starts_with_v = self.string[0] == 'V'
         starts_with_p = self.string[0] == 'P'
+        is_our_vector_mov = "MOVDQA" in self.string or \
+            "MOVAPS" in self.string or \
+            "MOVDQU" in self.string or \
+            "MOVUPS" in self.string
         
         has_bitwidth = False
         for letter in self.string:
             if letter.isnumeric():
                 has_bitwidth = True
                 
-        self.is_vector = not has_bitwidth and (starts_with_p or starts_with_v)
+        self.is_vector = not has_bitwidth and (starts_with_p or starts_with_v or is_our_vector_mov)
         return self.is_vector
 
     def __set_is_push(self):
