@@ -126,7 +126,7 @@ eval_prereqs: $(LIBSODIUM_BUILT_AR) $(CHECKER_BUILT)
 
 libsodium_init:
 	git submodule init -- $(LIBSODIUM_DIR)
-	git submodule update --remote -- $(LIBSODIUM_DIR)
+	git submodule update --remote -f -- $(LIBSODIUM_DIR)
 	git submodule foreach 'git fetch --tags'
 	cd $(LIBSODIUM_DIR); \
 		git checkout $(LIBSODIUM_TARGET_RELEASE_TAG); \
@@ -136,8 +136,9 @@ libsodium_init:
 		git apply ../salsa20_ref_impl.patch
 	touch libsodium_init
 
-$(LIBSODIUM_BUILT_AR): libsodium_init checker
-	./cio --is-libsodium $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1 -b $(CIO_BUILD_DIR)
+$(LIBSODIUM_BUILT_AR): checker
+	$(MAKE) clean_libsodium
+	./cio --is-libsodium $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1 -b $(CIO_BUILD_DIR) -c $(CC)
 	mkdir $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 	cp $(LIBSODIUM_AR) $(LIBSODIUM_BUILT_AR)
 
@@ -165,12 +166,13 @@ clean_eval:
 	-rm -f eval_chacha20_poly1305_decrypt
 
 clean_libsodium:
-	-$(MAKE) -C $(LIBSODIUM_DIR) clean
 	find libsodium -type f -name '*.secrets.csv' -delete
 	find libsodium -type f -name '*.ciocc' -delete
 	find libsodium -type f -name '*.ll' -delete
 	find libsodium -type f -name '*.mir' -delete
 	find libsodium -type f -name '*.s' -delete
+	-rm libsodium_init
+	$(MAKE) libsodium_init
 
 clean_checker:
 	-rm $(CHECKER_BUILT)

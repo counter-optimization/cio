@@ -4,17 +4,20 @@ EVAL_START_TIME=$(TZ='America/Los_Angeles' date +%F-%H:%M:%S-%Z)
 TOP_EVAL_DIR=$EVAL_START_TIME-eval
 
 # defaults, set by user
+BASELINE_CC=`realpath /usr/bin/clang`
 CC=`realpath ~/llvm-project/build/bin/clang`
 CHECKER_DIR=`realpath ./checker`
 LIBSODIUM_DIR=`realpath ./libsodium`
 LIBSODIUM_AR=$LIBSODIUM_DIR/src/libsodium/.libs/libsodium.a
 LIBSODIUM_BASELINE_DIR="libsodium.built."
+LIBSODIUM_ASM_DIR="libsodium.built.asm"
 LIBSODIUM_REG_RES_DIR="libsodium.built.rr"
 NUM_MAKE_JOB_SLOTS=8
 
 EXTRA_MAKEFILE_FLAGS=""
 
 BASELINE_DIR="baseline"
+ASM_DIR="asm"
 REG_RES_DIR="rr" # register reservation only, no mitigations
 CS_DIR="cs"
 SS_DIR="ss"
@@ -104,13 +107,20 @@ make libsodium_init
 make checker_init
 
 # baseline
+echo "Running baseline microbenchmarks..."
 make clean
 
 if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
 	cd $LIBSODIUM_DIR
-	./configure --disable-asm
-	make -j "$NUM_MAKE_JOB_SLOTS"
-	make check
+	./configure --disable-asm CC=$BASELINE_CC
+	make -j "$NUM_MAKE_JOB_SLOTS" CC=$BASELINE_CC
+
+	if [[ $? -ne 0 ]]; then
+		echo "Error building baseline libsodium. Exiting"
+		exit -1
+	fi
+	
+	make check CC=$BASELINE_CC
 	cd ..
 	mkdir $LIBSODIUM_BASELINE_DIR
 	cp $LIBSODIUM_AR $LIBSODIUM_BASELINE_DIR/libsodium.a
@@ -127,13 +137,40 @@ if [[ $? -ne 0 ]]; then
        exit -1
 fi
 
+# with inline asm
+echo "Running microbenchmarks with inline asm enabled..."
+make clean
+
+if [ ! -d "$LIBSODIUM_ASM_DIR" ]; then
+	cd $LIBSODIUM_DIR
+	./configure CC=$BASELINE_CC
+	make -j "$NUM_MAKE_JOB_SLOTS" CC=$BASELINE_CC
+	make check CC=$BASELINE_CC
+	cd ..
+	mkdir $LIBSODIUM_ASM_DIR
+	cp $LIBSODIUM_AR $LIBSODIUM_ASM_DIR/libsodium.a
+fi
+
+taskset -c 0 make MITIGATIONS="$ASM_DIR" EVAL_DIR="$TOP_EVAL_DIR/$ASM_DIR" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+	EVAL_MSG=$EVAL_MSG \
+    run_eval
+
 # with register reservation only
+echo "Running microbenchmarks with register reservation.."
 make clean
 
 if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
 	cd $LIBSODIUM_DIR
 	./configure --disable-asm CC=$CC
 	make -j "$NUM_MAKE_JOB_SLOTS" CC=$CC
+	
+	if [[ $? -ne 0 ]]; then
+		echo "Error building libsodium with register reservation. Exiting"
+		exit -1
+	fi
+
 	make check CC=$CC
 	cd ..
 	mkdir $LIBSODIUM_REG_RES_DIR
@@ -152,6 +189,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # ss only
+echo "Running microbenchmarks with silent store mitigations.."
 make clean
 taskset -c 0 make MITIGATIONS="--ss" EVAL_DIR="$TOP_EVAL_DIR/$SS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
@@ -165,6 +203,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # cs only
+echo "Running microbenchmarks with comp simp mitigations.."
 make clean
 taskset -c 0 make MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
@@ -178,6 +217,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # ss and cs
+echo "Running microbenchmarks with silent store and comp simp mitigations.."
 make clean
 taskset -c 0 make MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
