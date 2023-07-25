@@ -114,6 +114,9 @@ def parse_nm_stdout(line):
     if "NOREX" in func_name:
         testtype, mir_opcode, dontcare, version = func_name.split('_')
         mir_opcode = mir_opcode + '_NOREX'
+    elif "HIGHBYTE" in func_name:
+        testtype, mir_opcode, dontcare, version = func_name.split('_')
+        mir_opcode = mir_opcode + '_HIGHBYTE'
     elif "LEA64_32r" in func_name:
         testtype, mir_opcode, dontcare, version = func_name.split('_')
         mir_opcode = mir_opcode + '_32r'
@@ -235,7 +238,8 @@ class MirOpcode():
         self.is_implicit_first_arg = self.string.startswith('MUL') or \
             self.string.startswith('IMUL') or \
             self.string.startswith('DIV') or \
-            self.string.startswith('IDIV')
+            self.string.startswith('IDIV') or \
+            'HIGHBYTE' in self.string
         return self.is_implicit_first_arg
 
     def __find_index_of_insn_bitwidth(self):
@@ -291,7 +295,8 @@ class MirOpcode():
         """
         precondition: self.__split_opcode_str() already ran
         """
-        self.depends_on_carry_flag = self.opcode == "SBB" or self.opcode == "ADC"
+        self.depends_on_carry_flag = self.opcode == "SBB" or \
+            self.opcode == "ADC"
         return self.depends_on_carry_flag
 
     def __parse_operand_info_str(self):
@@ -315,7 +320,7 @@ class MirOpcode():
 
         self.__handle_IMUL_special_case()
 
-        if self.is_implicit_first_arg:
+        if self.is_implicit_first_arg and "HIGHBYTE" not in self.string:
             # like MUL, IMUL (conditionally),
             # DIV, IDIV: dst is REG, first src is REG
             self.operand_types.insert(0, OperandType.REG)
