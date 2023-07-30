@@ -399,6 +399,7 @@ echo "logging to ${BAP_LOGS}"
 bap \
     --plugin-path=$CHECKER_PLUGIN_PATH \
     --pass=uarch-checker \
+    --uarch-checker-double-check \
     --no-optimization --bil-optimization=0 \
     --uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
     $CHECKER_CS_FLAGS \
