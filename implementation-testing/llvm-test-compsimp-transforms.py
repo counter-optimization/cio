@@ -10,7 +10,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 argparser = argparse.ArgumentParser('generate test harnesses')
-argparser.add_argument('--gen-idx',
+argparser.add_argument('--verifiable-tests',
                        action=argparse.BooleanOptionalAction)
 argparser.add_argument('--record-cycle-counts',
                        action=argparse.BooleanOptionalAction)
@@ -459,9 +459,9 @@ if __name__ == '__main__':
     CC = os.environ["LLVM_HOME"] + "/bin/clang"
 
     cc_optional_flags = "-mllvm -x86-cs-test-cycle-counts -mllvm -x86-ss-test-cycle-counts" if args.record_cycle_counts else ""
-    gen_idx_flags = "-mllvm -x86-gen-idx" if args.gen_idx else ""
+    verifiable_tests_flags = "-mllvm -x86-ss-verifiable-tests -mllvm -x86-cs-verifiable-tests" if args.verifiable_tests else ""
 
-    compile_cmd = f"{CC} -O0 {gen_idx_flags} -mllvm -x86-ss -mllvm -x86-cs -mllvm -x86-cs-test {cc_optional_flags} -c {tempFile} -o {tempObjFile}"
+    compile_cmd = f"{CC} -O0 {verifiable_tests_flags} -mllvm -x86-ss -mllvm -x86-cs -mllvm -x86-cs-test {cc_optional_flags} -c {tempFile} -o {tempObjFile}"
     subprocess.run(compile_cmd, shell=True, check=True)
 
     nm_process = subprocess.run(f"nm {tempObjFile}", check=True, shell=True, text=True, stdout=subprocess.PIPE)

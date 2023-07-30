@@ -106,7 +106,7 @@ echo "Done running fuzzers"
 
 # Did any errors happen?
 
-MISMATCHES=$(find $FUZZ_HARNESSES_DIR -iname '*.log' -exec grep -Eil 'mismatch' {} \;)
+MISMATCHES=$(find $FUZZ_HARNESSES_DIR -iname '*.log' -exec grep -Eil 'mismatch|differ' {} \;)
 
 for logfile in $MISMATCHES; do
     echo "Mismatch in original,transformed output states in logfile: $logfile"
