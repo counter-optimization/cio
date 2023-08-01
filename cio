@@ -338,10 +338,10 @@ make --directory=$TARGET_DIR clean
 echo done
 
 if [[ "$MITIGATE_CS" -eq 1 && "$MITIGATE_SS" -eq 1 ]]; then
-    MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx $CFLAGS"
+    MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx -mllvm -global-scratch -mllvm -gs-size=8 $CFLAGS"
 else
     if [[ "$MITIGATE_CS" -eq 1 ]]; then
-	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx $CFLAGS"
+	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx -mllvm -global-scratch -mllvm -gs-size=8 $CFLAGS"
     fi
     
     if [[ "$MITIGATE_SS" -eq 1 ]]; then

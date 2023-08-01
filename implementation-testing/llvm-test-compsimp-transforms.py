@@ -461,7 +461,7 @@ if __name__ == '__main__':
     cc_optional_flags = "-mllvm -x86-cs-test-cycle-counts -mllvm -x86-ss-test-cycle-counts" if args.record_cycle_counts else ""
     verifiable_tests_flags = "-mllvm -x86-ss-verifiable-tests -mllvm -x86-cs-verifiable-tests" if args.verifiable_tests else ""
 
-    compile_cmd = f"{CC} -O0 {verifiable_tests_flags} -mllvm -x86-ss -mllvm -x86-cs -mllvm -x86-cs-test {cc_optional_flags} -c {tempFile} -o {tempObjFile}"
+    compile_cmd = f"{CC} -O0 {verifiable_tests_flags} -mllvm -x86-ss -mllvm -x86-cs -mllvm -x86-cs-test -mllvm -global-scratch -mllvm -gs-size=8 {cc_optional_flags} -c {tempFile} -o {tempObjFile}"
     subprocess.run(compile_cmd, shell=True, check=True)
 
     nm_process = subprocess.run(f"nm {tempObjFile}", check=True, shell=True, text=True, stdout=subprocess.PIPE)
