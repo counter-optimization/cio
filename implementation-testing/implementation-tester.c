@@ -189,9 +189,15 @@ static uint64_t* transformed_cycles;
 static uint64_t capacity_transformed_cycles = 0;
 static uint64_t num_transformed_cycles = 0;
 
+static int measure_cycle_run = 0;
+
 static void
 print_cycle_counts()
 {
+	if (!measure_cycle_run) {
+		return;
+	}
+	
 	assert(num_transformed_cycles == num_orig_cycles);
 	printf("orig,transformed\n");
 	for (uint64_t ii = 0; ii < num_orig_cycles; ++ii) {
@@ -381,7 +387,6 @@ typedef struct __attribute__((__packed__)) Test128BitType {
 Test128BitType orig_memory_args[5] = { 0 };
 Test128BitType trans_memory_args[5] = { 0 };
 
-static int measure_cycle_run = 0;
 int
 LLVMFuzzerInitialize(int *argc, char ***argv)
 {
