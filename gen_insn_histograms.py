@@ -1,5 +1,22 @@
 import os
 
+def get_binary_contents(binary_filepath : str):
+    if not os.path.exists(binary_filepath):
+        print(f"Couldn't find binary file {binary_filepath}")
+        return
+
+    # dump disassembled binary into a temp file
+    dump_filepath = '__gen_insn_histograms_temp'
+    os.system(f'objdump -d --no-addresses --no-show-raw-insn -M suffix {binary_filepath} > {dump_filepath}')
+        
+    file = open(dump_filepath)
+    contents = file.read()
+    file.close()
+
+    os.system(f'rm {dump_filepath}')
+    return contents
+
+
 def get_histogram_for_function(file_contents : str, func_name : str):
     ''' Get instruction histogram for a function. The resulting histogram
         is a dict with instruction names as keys and counts of the
@@ -76,15 +93,7 @@ def gen_reference_histograms():
                    "Please run ./build_and_run_tests from the implementation-testing directory.")
             exit(-1)
     
-    # dump disassembled binary into a temp file
-    ref_dump_filepath = '__gen_insn_histograms_temp'
-    os.system(f'objdump -d --no-addresses --no-show-raw-insn -M suffix {ref_binary_filepath} > {ref_dump_filepath}')
-        
-    file = open(ref_dump_filepath)
-    ref_binary = file.read()
-    file.close()
-
-    os.system(f'rm {ref_dump_filepath}')
+    ref_binary = get_binary_contents(ref_binary_filepath)
 
     # extract instruction histograms from disassembled binary
     histograms = dict()
@@ -134,7 +143,10 @@ def gen_reference_histograms():
         # update search index
         search_idx = ref_binary.find(func_start_key, trns_start)
     # end while search_idx != -1
+
+    return histograms
 # gen_reference_histograms()
+
 
 def main():
     gen_reference_histograms()
