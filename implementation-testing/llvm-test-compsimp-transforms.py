@@ -22,54 +22,37 @@ argparser.add_argument('test_dir')
 # used, and it's not worth tuning to all
 # of these
 sets_flags = {
-    "ADD64rm": ['CF'],
-    "ADD64rr": ['CF'],
-    "AND64rr": ['CF'],
-    "XOR64rm": ['CF'],
-    "XOR64rr": ['CF'],
-    "CMP64rm": ['ZF'],
+    "CMP64rm": ['CF', 'ZF'],
     "CMP32rm": ['CF'],
-    "CMP32rr": ['CF'],
-    "ADD64mr": ['CF'],
     "ADD32mi8": ['ZF'],
     "ADD32ri8": ['CF', 'ZF'],
     "ADD64ri8": ['ZF'],
-    "AND64ri8": ['ZF'],
     "CMP64rr": ['CF', 'ZF'],
     "TEST8ri": ['ZF'],
-    "XOR32rm": ['CF'],
-    "XOR32rr": ['CF'],
+    "AND64ri8": ['ZF'],
     "CMP64mr": ['CF', 'ZF'],
     "TEST8mi": ['ZF'],
     "TEST8i8": ['ZF'],
     "ADD64mi32": ['CF'],
-    "SUB64rr": ['CF', 'ZF'],
+    "ADD64mr": ['CF'],
+    "ADD64rr": ['CF'],
     "OR64rr": ['ZF'],
-    "IMUL64rr": ['CF'],
+    "SUB64rr": ['CF', 'ZF'],
+    "ADD64rm": ['CF'],
     "AND32ri8": ['ZF'],
+    "CMP32rr": ['CF'],
+    "AND32mr": ['ZF']
 }
 
 # this is really "flags live in", so some commented out
 # that don't need to preserve
 preserves_flags = {
-    'LEA64r': ['CF'],
-    "MOV64mr": ['ZF', 'CF'],
-    # "ROL64ri": ['CF'],
-    # "ROR64r1": ['CF'],
-    # "SHR64ri": ['ZF'],
-    # "ROL64r1": ['CF'],
+    "SHR64ri": ['ZF'],
     "MOV32mi": ['ZF'],
-    # "ADC32ri8": ['CF'],
-    # "ROL32ri": ['CF'],
+    "MOV64mr": ['CF', 'ZF'],
     "MOV32mr": ['CF', 'ZF'],
     "MOVDQAmr": ['ZF'],
-    # "ADC64mi8": ['CF'],
-    # "ADC64mr": ['CF'],
-    # "SBB32rr": ['CF'],
-    # "ADC64ri8": ['CF'],
-    # "ADC64rm": ['CF'],
-    # "ADC64rr": ['CF'],
-    # "SBB32ri8": ['CF']    
+    "LEA64r": ['CF'],
 }
 
 def flag(name):
