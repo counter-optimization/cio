@@ -1,4 +1,6 @@
 import os
+import csv
+import argparse
 
 def get_binary_contents(binary_filepath : str):
     if not os.path.exists(binary_filepath):
@@ -78,6 +80,7 @@ def diff_histograms(original : dict[str,int], transformed : dict[str,int]):
 
 
 def gen_reference_histograms():
+    print('Generating reference histograms...')
     ref_binary_filepath = os.path.join(
         '.',
         'implementation-testing',
@@ -108,7 +111,6 @@ def gen_reference_histograms():
         trns_start = ref_binary.find(trns_start_key, search_idx)
 
         name = ref_binary[ref_binary.find('_', search_idx) + 1 : orig_start]
-        print(f"Reading reference histograms for {name}")
         
         # count instructions in original and transformed functions
         orig_histo = dict()
@@ -120,7 +122,7 @@ def gen_reference_histograms():
             else:
                 orig_histo[insn] = 1
         
-        print(f"Original histogram: {orig_histo}")
+        # print(f"Original histogram: {orig_histo}")
         
         trns_histo = dict()
         trns_lines = ref_binary[trns_start : ref_binary.find(func_end_key, trns_start)].split('\n\t')[1:]
@@ -131,14 +133,14 @@ def gen_reference_histograms():
             else:
                 trns_histo[insn] = 1
         
-        print(f"Transformed histogram: {trns_histo}")
+        # print(f"Transformed histogram: {trns_histo}")
         
         # save difference between transformed and original instruction counts
         histograms[name] = diff_histograms(orig_histo, trns_histo)
         
-        print(f"Generated histogram for {name}:")
-        print(histograms[name])
-        print()
+        # print(f"Generated histogram for {name}:")
+        # print(histograms[name])
+        # print()
         
         # update search index
         search_idx = ref_binary.find(func_start_key, trns_start)
@@ -148,8 +150,89 @@ def gen_reference_histograms():
 # gen_reference_histograms()
 
 
+def gen_expected_histograms(alerts_csv_filepath : str, ref_histograms : dict[str,dict[str,int]]):
+    print('Generating expected difference histograms...')
+
+    if not os.path.exists(alerts_csv_filepath):
+        print(f"Couldn't find alerts CSV {alerts_csv_filepath}")
+        return
+    
+    histograms = dict()
+    alerts_csv = open(alerts_csv_filepath, newline='')
+    reader = csv.DictReader(alerts_csv)
+
+    for row in reader:
+        func = row['subroutine_name']
+        insn = row['mir_opcode']
+
+        if insn not in ref_histograms.keys():
+            print(f"Could not find reference data for instruction {insn}. Skipping")
+            continue
+
+        if func not in histograms.keys():
+            histograms[func] = ref_histograms[insn]
+        else:
+            for i in ref_histograms[insn].keys():
+                if i in histograms[func].keys():
+                    histograms[func][i] += ref_histograms[insn][i]
+                else:
+                    histograms[func][i] = ref_histograms[insn][i]
+    
+    return histograms
+
+
+def check_histograms(
+        original_filepath : str, 
+        transformed_filepath : str,
+        alerts_csv_filepath : str, 
+        ref_histograms : dict[str,dict[str,int]]
+):
+    ''' Compare actual and expected histograms differences between original and
+        transformed binary files, using an alerts CSV and set of reference 
+        histograms to calculate the expected histogram.
+    '''
+    expected = gen_expected_histograms(alerts_csv_filepath, ref_histograms)
+    assert expected is not None, f"Couldn't generate expected histograms with alerts CSV {alerts_csv_filepath}"
+    
+    original_contents = get_binary_contents(original_filepath)
+    assert original_contents is not None, f"Couldn't retrieve contents from binary {original_filepath}"
+    
+    transformed_contents = get_binary_contents(transformed_filepath)
+    assert transformed_contents is not None, f"Couldn't retrieve contents from binary {transformed_filepath}"
+    
+    actual = dict()
+    for func in expected.keys():
+        original_histo = get_histogram_for_function(original_contents, func)
+        assert original_histo is not None, f"Couldn't generate histogram for {func} in {original_filepath}"
+        
+        transformed_histo = get_histogram_for_function(transformed_contents, func)
+        assert transformed_histo is not None, f"Couldn't generate histogram for {func} in {transformed_filepath}"
+        
+        actual[func] = diff_histograms(original_histo, transformed_histo)
+
+        print(f"Expected histogram difference for function {func}:\n{expected[func]}")
+        print(f"Actual histogram difference:\n{actual[func]}")
+
+        diff = diff_histograms(expected[func], actual[func])
+        if len(diff.keys()) == 0:
+            print("Actual matches expected\n")
+        else:
+            print(f"WARNING: Actual differs from expected. Diff (actual - expected):\n{diff}\n")
+
+
 def main():
-    gen_reference_histograms()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('alerts_csv',
+                        help='CSV file containing data on which instructions received alerts '
+                             'in each function. Emitted by checker.')
+    parser.add_argument('original_binary',
+                        help='Path to the original or baseline binary file, without transformations.')
+    parser.add_argument('transformed_binary', help='Path to the transformed binary file.')
+
+    args = parser.parse_args()
+
+    ref_histograms = gen_reference_histograms()
+    check_histograms(args.original_binary, args.transformed_binary, args.alerts_csv, ref_histograms)
 
 
 if __name__ == "__main__":
