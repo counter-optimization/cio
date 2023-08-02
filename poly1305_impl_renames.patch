@@ -1,0 +1,58 @@
+diff --git a/src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c b/src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c
+index e80c961d..9344d587 100644
+--- a/src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c
++++ b/src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c
+@@ -193,7 +193,7 @@ poly1305_init_ext(poly1305_state_internal_t *st, const unsigned char key[32],
+ }
+ 
+ static POLY1305_NOINLINE void
+-poly1305_blocks(poly1305_state_internal_t *st, const unsigned char *m,
++poly1305_blocks_sse2(poly1305_state_internal_t *st, const unsigned char *m,
+                 unsigned long long bytes)
+ {
+     CRYPTO_ALIGN(64)
+@@ -777,7 +777,7 @@ poly1305_update(poly1305_state_internal_t *st, const unsigned char *m,
+         if (st->leftover < poly1305_block_size) {
+             return;
+         }
+-        poly1305_blocks(st, st->buffer, poly1305_block_size);
++        poly1305_blocks_sse2(st, st->buffer, poly1305_block_size);
+         st->leftover = 0;
+     }
+ 
+@@ -785,7 +785,7 @@ poly1305_update(poly1305_state_internal_t *st, const unsigned char *m,
+     if (bytes >= poly1305_block_size) {
+         unsigned long long want = (bytes & ~(poly1305_block_size - 1));
+ 
+-        poly1305_blocks(st, m, want);
++        poly1305_blocks_sse2(st, m, want);
+         m += want;
+         bytes -= want;
+     }
+@@ -814,7 +814,7 @@ poly1305_finish_ext(poly1305_state_internal_t *st, const unsigned char *m,
+         }
+         st->flags |=
+             (leftover >= 16) ? poly1305_final_shift8 : poly1305_final_shift16;
+-        poly1305_blocks(st, final, 32);
++        poly1305_blocks_sse2(st, final, 32);
+     }
+ 
+     if (st->flags & poly1305_started) {
+@@ -824,7 +824,7 @@ poly1305_finish_ext(poly1305_state_internal_t *st, const unsigned char *m,
+         } else {
+             st->flags |= poly1305_final_r_1;
+         }
+-        poly1305_blocks(st, NULL, 32);
++        poly1305_blocks_sse2(st, NULL, 32);
+     }
+ 
+     h0 = st->H.h[0];
+@@ -913,7 +913,7 @@ crypto_onetimeauth_poly1305_sse2(unsigned char *out, const unsigned char *m,
+     poly1305_init_ext(&st, key, inlen);
+     blocks = inlen & ~31;
+     if (blocks > 0) {
+-        poly1305_blocks(&st, m, blocks);
++        poly1305_blocks_sse2(&st, m, blocks);
+         m += blocks;
+         inlen -= blocks;
+     }
