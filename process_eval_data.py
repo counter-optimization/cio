@@ -62,11 +62,18 @@ def get_data(args):
                 if len(fn_data) <= 1:
                     # No data, skip
                     continue
+
+                # Filter outliers
+                quartiles = np.quantile(fn_data[1:], [0.1, 0.9])
+                iqr = quartiles[1] - quartiles[0]
+                upper_bound = quartiles[1] + iqr * 8
+                cycles_data = np.array(fn_data[1:])
+                cycles_data = cycles_data[cycles_data < upper_bound]
                 
                 # cycles data
                 data[lib][abl][fn] = dict()
                 data[lib][abl][fn][TITLE] = fn_data[0]
-                data[lib][abl][fn][RAW_CYCLES] = np.array(fn_data[1:])
+                data[lib][abl][fn][RAW_CYCLES] = cycles_data
                 data[lib][abl][fn][MEAN] = np.mean(data[lib][abl][fn][RAW_CYCLES])
                 data[lib][abl][fn][STD] = np.std(data[lib][abl][fn][RAW_CYCLES])
 
@@ -98,31 +105,35 @@ def gen_cycle_curves(eval_dir, data):
     Generate cycle line charts for each crypto func test case in a subdirectory.
     Useful for gauging number of warmup iterations.
     '''
+    print("Generating cycle graphs for each benchmark...")
     for lib in data.keys():
         for abl in data[lib].keys():
             for fn in data[lib][abl].keys():
                 title = data[lib][abl][fn][TITLE]
                 cycles_data = data[lib][abl][fn][RAW_CYCLES]
 
-                # # Calculate reasonable bounds for y-axis
-                # quartiles = np.quantile(cycles_data, [0.25, 0.75])
-                # iqr = quartiles[1] - quartiles[0]
-                # upper_bound = quartiles[1] + iqr * 4
-                # lower_bound = quartiles[0] - iqr * 2
+                # Calculate reasonable bounds for y-axis
+                quartiles = np.quantile(cycles_data, [0.1, 0.9])
+                iqr = quartiles[1] - quartiles[0]
+                upper_bound = quartiles[1] + iqr * 8
+                lower_bound = quartiles[0] - iqr * 2
 
                 # Plot
                 fig, ax = plt.subplots()
                 ax.plot(cycles_data)
-                ax.set_ylim(bottom=Y_BOUNDS[fn][0], top=Y_BOUNDS[fn][1])
+                ax.set_ylim(bottom=lower_bound, top=upper_bound)
                 ax.set_title(title)
                 ax.set_ylabel('Cycles')
                 ax.set_xlabel('Iteration')
                 fig.savefig(os.path.join(eval_dir, abl, f'{lib}-{fn}-cycles.png'))
+                print(f"Saved {abl} {fn} ({lib}) graph to "
+                      f"{os.path.join(eval_dir, abl, f'{lib}-{fn}-cycles.png')}")
                 plt.close()
 
 
 def gen_overhead_plot(target_dir, baseline_dir, data):
     ''' Create plot of runtime overhead for each ablation vs baseline.'''
+    print("Generating bar chart of normalized overheads...")
     for lib in data.keys():
         abls = list(data[lib].keys())
         abls.remove(baseline_dir)
@@ -161,6 +172,7 @@ def gen_overhead_plot(target_dir, baseline_dir, data):
         plt.savefig(
             os.path.join(target_dir, 'microbench-overheads.png'),
             bbox_inches='tight')
+        print(f"Saved bar chart to {os.path.join(target_dir, 'microbench-overheads.png')}")
         plt.close()
 
 
