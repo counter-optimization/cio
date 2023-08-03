@@ -119,7 +119,7 @@ main(int argc, char** argv)
   }
 
   // output the timer results
-  printf("eval_argon2id cycle counts for %d iterations with %d warmup iterations\n",
+  printf("argon2id cycle counts (%d iterations, %d warmup)\n",
         num_iter, num_warmup);
   for (int ii = 0; ii < num_iter; ++ii) {
     printf("%" PRIu64 "\n", times[ii]);
