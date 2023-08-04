@@ -70,37 +70,48 @@ run_eval: build_eval
 	echo "$(MITIGATIONS)" > $(FILE_WHICH_MITIGATIONS_FOR_EVAL_BUILD)
 	echo "$(CC)" > $(FILE_WHICH_CC_FOR_LIBSODIUM_BUILD) #todo
 	echo "$(CFLAGS)" > $(FILE_WHICH_CFLAGS_FOR_LIBSODIUM_BUILD) #todo
+
 	echo "./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_WARMUP_ITER) $(EVAL_MSG)"\
 		> $(FILE_EVAL_CMDS)
 	stat --format="%s" eval_ed25519 > $(EVAL_DIR)/libsodium-ed25519-bytesize.txt
-	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_WARMUP_ITER) $(EVAL_MSG) $(EVAL_DIR)/libsodium-ed25519-cyclecounts.csv $(EVAL_DIR)/libsodium-ed25519-dynhitcounts.csv \
+	./eval_ed25519  $(ED25519_NUM_ITER) $(ED25519_WARMUP_ITER) $(EVAL_MSG) \
+		$(EVAL_DIR)/libsodium-ed25519-cyclecounts.csv \
+		$(EVAL_DIR)/libsodium-ed25519-dynhitcounts.csv \
 		> $(EVAL_DIR)/libsodium-ed25519.log 2>&1
+
 	echo "./eval_chacha20_poly1305_encrypt $(CHACHA20_POLY1305_NUM_ITER) $(CHACHA20_POLY1305_WARMUP_ITER) $(EVAL_MSG) $(CHACHA20_POLY1305_AD_LEN)" \
 		>> $(FILE_EVAL_CMDS)
 	stat --format="%s" eval_chacha20_poly1305_encrypt > $(EVAL_DIR)/libsodium-chacha20-poly1305-encrypt-bytesize.txt
-	./eval_chacha20_poly1305_encrypt $(CHACHA20_POLY1305_NUM_ITER) $(CHACHA20_POLY1305_WARMUP_ITER) $(EVAL_MSG) $(CHACHA20_POLY1305_AD_LEN) $(EVAL_DIR)/libsodium-chacha20-poly1305-encrypt-cyclecounts.csv $(EVAL_DIR)/libsodium-chacha20-poly1305-encrypt-dynhitcounts.csv\
+	./eval_chacha20_poly1305_encrypt $(CHACHA20_POLY1305_NUM_ITER) $(CHACHA20_POLY1305_WARMUP_ITER) $(EVAL_MSG) $(CHACHA20_POLY1305_AD_LEN) \
+		$(EVAL_DIR)/libsodium-chacha20-poly1305-encrypt-cyclecounts.csv $(EVAL_DIR)/libsodium-chacha20-poly1305-encrypt-dynhitcounts.csv\
 		> $(EVAL_DIR)/libsodium-chacha20-poly1305-encrypt.log 2>&1
+
 	echo "./eval_chacha20_poly1305_decrypt $(CHACHA20_POLY1305_NUM_ITER) $(CHACHA20_POLY1305_WARMUP_ITER) $(EVAL_MSG) $(CHACHA20_POLY1305_AD_LEN)" \
 		>> $(FILE_EVAL_CMDS)
 	stat --format="%s" eval_chacha20_poly1305_decrypt > $(EVAL_DIR)/libsodium-chacha20-poly1305-decrypt-bytesize.txt
-	./eval_chacha20_poly1305_decrypt $(CHACHA20_POLY1305_NUM_ITER) $(CHACHA20_POLY1305_WARMUP_ITER) $(EVAL_MSG) $(CHACHA20_POLY1305_AD_LEN) $(EVAL_DIR)/libsodium-chacha20-poly1305-decrypt-cyclecounts.csv $(EVAL_DIR)/libsodium-chacha20-poly1305-decrypt-dynhitcounts.csv \
+	./eval_chacha20_poly1305_decrypt $(CHACHA20_POLY1305_NUM_ITER) $(CHACHA20_POLY1305_WARMUP_ITER) $(EVAL_MSG) $(CHACHA20_POLY1305_AD_LEN) \
+		$(EVAL_DIR)/libsodium-chacha20-poly1305-decrypt-cyclecounts.csv $(EVAL_DIR)/libsodium-chacha20-poly1305-decrypt-dynhitcounts.csv \
 		> $(EVAL_DIR)/libsodium-chacha20-poly1305-decrypt.log 2>&1
+
 	echo "./eval_aesni256gcm_encrypt  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_WARMUP_ITER) $(EVAL_MSG) $(AESNI256GCM_AD_LEN)" \
 		>> $(FILE_EVAL_CMDS)
 	stat --format="%s" eval_aesni256gcm_encrypt > $(EVAL_DIR)/libsodium-aesni256gcm-encrypt-bytesize.txt
-	./eval_aesni256gcm_encrypt  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_WARMUP_ITER) $(EVAL_MSG) $(AESNI256GCM_AD_LEN) $(EVAL_DIR)/libsodium-aesni256gcm-encrypt-cyclecounts.csv \
-		$(EVAL_DIR)/libsodium-aesni256gcm-encrypt-dynhitcounts.csv \
+	./eval_aesni256gcm_encrypt  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_WARMUP_ITER) $(EVAL_MSG) $(AESNI256GCM_AD_LEN) \
+		$(EVAL_DIR)/libsodium-aesni256gcm-encrypt-cyclecounts.csv $(EVAL_DIR)/libsodium-aesni256gcm-encrypt-dynhitcounts.csv \
 		> $(EVAL_DIR)/libsodium-aesni256gcm-encrypt.log 2>&1
+
 	echo "./eval_aesni256gcm_decrypt  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_WARMUP_ITER) $(EVAL_MSG) $(AESNI256GCM_AD_LEN)" \
 		>> $(FILE_EVAL_CMDS)
 	stat --format="%s" eval_aesni256gcm_decrypt > $(EVAL_DIR)/libsodium-aesni256gcm-decrypt-bytesize.txt
-	./eval_aesni256gcm_decrypt  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_WARMUP_ITER) $(EVAL_MSG) $(AESNI256GCM_AD_LEN) $(EVAL_DIR)/libsodium-aesni256gcm-decrypt-cyclecounts.csv \
-		$(EVAL_DIR)/libsodium-aesni256gcm-decrypt-dynhitcounts.csv \
+	./eval_aesni256gcm_decrypt  $(AESNI256GCM_NUM_ITER) $(AESNI256GCM_WARMUP_ITER) $(EVAL_MSG) $(AESNI256GCM_AD_LEN) \
+		$(EVAL_DIR)/libsodium-aesni256gcm-decrypt-cyclecounts.csv $(EVAL_DIR)/libsodium-aesni256gcm-decrypt-dynhitcounts.csv \
 		> $(EVAL_DIR)/libsodium-aesni256gcm-decrypt.log 2>&1
+
 	echo "./eval_argon2id  $(ARGON2ID_NUM_ITER) $(ARGON2ID_WARMUP_ITER) $(EVAL_MSG) $(ARGON2ID_OUT_LEN)" \
 		>> $(FILE_EVAL_CMDS)
 	stat --format="%s" eval_argon2id > $(EVAL_DIR)/libsodium-argon2id-bytesize.txt
-	./eval_argon2id  $(ARGON2ID_NUM_ITER) $(ARGON2ID_WARMUP_ITER) $(EVAL_MSG) $(ARGON2ID_OUT_LEN) $(EVAL_DIR)/libsodium-argon2id-cyclecounts.csv $(EVAL_DIR)/libsodium-argon2id-dynhitcounts.csv \
+	./eval_argon2id  $(ARGON2ID_NUM_ITER) $(ARGON2ID_WARMUP_ITER) $(EVAL_MSG) $(ARGON2ID_OUT_LEN) \
+		$(EVAL_DIR)/libsodium-argon2id-cyclecounts.csv $(EVAL_DIR)/libsodium-argon2id-dynhitcounts.csv \
 		> $(EVAL_DIR)/libsodium-argon2id.log 2>&1
 	echo done
 

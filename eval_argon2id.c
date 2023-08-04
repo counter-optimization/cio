@@ -6,7 +6,7 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 7
+#define EXPECTED_ARGC 6
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
 #define PASSWD_ARG_IDX 3
@@ -32,12 +32,12 @@ extern int crypto_pwhash(unsigned char * const out, unsigned long long outlen,
 int
 main(int argc, char** argv)
 {
-  if (argc != EXPECTED_ARGC) {
+  if (argc < EXPECTED_ARGC) {
     printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
-	   " <size_of_password>"
-	   " <size_of_output>"
-	   " <file_to_write_cycle_counts_to>"
-	   " <file_to_write_hit_counts_to>\n", argv[0]);
+           " <password>"
+           " <size_of_output>"
+           " <file_to_write_cycle_counts_to>"
+           " [<file_to_write_hit_counts_to>]\n", argv[0]);
     exit(-1);
   }
 
@@ -134,7 +134,12 @@ main(int argc, char** argv)
   }
   assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
 
-  print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  #ifndef NO_DYN_HIT_COUNTS
+  // record dynamic hitcounts, if applicable
+  if (argc > DYNAMIC_HITCOUNTS_FILE) {
+    print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  }
+  #endif
 
   return 0;
 }

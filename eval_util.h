@@ -80,6 +80,8 @@ ciocc_eval_rand_fill_buf(unsigned char* buf, int buf_len)
   }
 }
 
+#ifndef NO_DYN_HIT_COUNTS
+
 extern int32_t* llvm_stats;
 
 /* this needs to be kept in sync with X86CompSimpMap.csv 
@@ -364,4 +366,5 @@ print_dynamic_hitcounts(const char* outfilename)
 	       "Couldn't close dynamic hit counts file after writing");
 }
 
+#endif // NO_DYN_HIT_COUNTS
 #endif // EVAL_UTIL_H

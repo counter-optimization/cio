@@ -6,7 +6,7 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 6
+#define EXPECTED_ARGC 5
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
 #define MSG_ARG_IDX 3
@@ -28,9 +28,9 @@ extern int crypto_sign_open(unsigned char *m, unsigned long long *mlen_p,
 int
 main(int argc, char** argv)
 {
-  if (argc != EXPECTED_ARGC) {
+  if (argc < EXPECTED_ARGC) {
     printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
-	   " <size_of_message>\n", argv[0]);
+	         " <message> <cycle_counts_file> [<dynamic_hitcounts_file>]\n", argv[0]);
   }
 
   // init libsodium, must be called before other libsodium functions are called
@@ -125,7 +125,12 @@ main(int argc, char** argv)
   }
   assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
 
-  print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  #ifndef NO_DYN_HIT_COUNTS
+  // record dynamic hitcounts, if applicable
+  if (argc > DYNAMIC_HITCOUNTS_FILE) {
+    print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  }
+  #endif
 
   return 0;
 }

@@ -6,7 +6,7 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 7
+#define EXPECTED_ARGC 6
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
 #define MSG_ARG_IDX 3
@@ -36,10 +36,10 @@ extern int crypto_aead_aes256gcm_decrypt(unsigned char *m,
 int
 main(int argc, char** argv)
 {
-  if (argc != EXPECTED_ARGC) {
+  if (argc < EXPECTED_ARGC) {
     printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
-	   " <size_of_message>"
-	   " <size_of_associated_data>\n", argv[0]);
+	   " <messagee> <size_of_associated_data>"
+     " <cycle_counts_file> [<dynamic_hitcounts_file>]\n", argv[0]);
     exit(-1);
   }
 
@@ -152,7 +152,12 @@ main(int argc, char** argv)
   }
   assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
 
-  print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  #ifndef NO_DYN_HIT_COUNTS
+  // record dynamic hitcounts, if applicable
+  if (argc > DYNAMIC_HITCOUNTS_FILE) {
+    print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  }
+  #endif
 
   return 0;
 }
