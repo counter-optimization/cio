@@ -6,11 +6,13 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 5
+#define EXPECTED_ARGC 7
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
 #define MSG_ARG_IDX 3
 #define AD_SIZE_ARG_IDX 4
+#define CYCLE_COUNTS_FILE 5
+#define DYNAMIC_HITCOUNTS_FILE 6
 
 extern int strncmp(const char *str1, const char *str2, size_t n);
 extern size_t crypto_aead_aes256gcm_keybytes(void);
@@ -138,10 +140,19 @@ main(int argc, char** argv)
     }
   }
 
+  FILE* ccounts_out = fopen(argv[CYCLE_COUNTS_FILE], "w");
+  assert(ccounts_out != NULL && "Couldn't open cycle counts file for writing");
+  
   // output the timer results
-  printf("aesni256gcm_decrypt cycle counts (%d iterations, %d warmup)\n",
-        num_iter, num_warmup);
+  fprintf(ccounts_out,
+	  "aesni256gcm_decrypt cycle counts (%d iterations, %d warmup)\n",
+	  num_iter, num_warmup);
   for (int ii = 0; ii < num_iter; ++ii) {
-    printf("%" PRIu64 "\n", times[ii]);
+	  fprintf(ccounts_out, "%" PRIu64 "\n", times[ii]);
   }
+  assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
+
+  print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+
+  return 0;
 }

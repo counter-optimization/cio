@@ -122,7 +122,7 @@ if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
 		exit -1
 	fi
 	
-	make check CC=$BASELINE_CC
+	make check CC=$BASELINE_CC -j "$NUM_MAKE_JOB_SLOTS"
 	cd ..
 	mkdir $LIBSODIUM_BASELINE_DIR
 	cp $LIBSODIUM_AR $LIBSODIUM_BASELINE_DIR/libsodium.a
@@ -147,7 +147,7 @@ if [ ! -d "$LIBSODIUM_ASM_DIR" ]; then
 	cd $LIBSODIUM_DIR
 	./configure CC=$BASELINE_CC
 	make -j "$NUM_MAKE_JOB_SLOTS" CC=$BASELINE_CC
-	make check CC=$BASELINE_CC
+	make check CC=$BASELINE_CC -j "$NUM_MAKE_JOB_SLOTS"
 	cd ..
 	mkdir $LIBSODIUM_ASM_DIR
 	cp $LIBSODIUM_AR $LIBSODIUM_ASM_DIR/libsodium.a
@@ -173,7 +173,7 @@ if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
 		exit -1
 	fi
 
-	make check CC=$CC
+	make check CC=$CC -j "$NUM_MAKE_JOB_SLOTS"
 	cd ..
 	mkdir $LIBSODIUM_REG_RES_DIR
 	cp $LIBSODIUM_AR $LIBSODIUM_REG_RES_DIR/libsodium.a

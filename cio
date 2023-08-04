@@ -26,6 +26,7 @@ IS_LIBSODIUM=0
 MITIGATE_SS=0
 MITIGATE_CS=0
 DO_SYMEX=1
+SKIP_DOUBLE_CHECK=0
 
 function usage
 {
@@ -40,6 +41,7 @@ function usage
 			   [ --is-libsodium <run libsodium init> ]
 			   [ --ss (do silent store checks and mitigations) ]
 			   [ --cs (do comp simp checks and mitigaitons) ]
+			   [ --skip-double-check (skip verification run of bap/checkers) on the transformed binary ]
 			   -f | --config-file <path to uarch checker config file for checking>
 			   -t | --crypto-dir <path to the crypto lib project that has the root makefile>
 			  
@@ -48,7 +50,7 @@ function usage
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex" -n $TOOLNAME -- "$@")
+PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -129,6 +131,11 @@ while true; do
 	'-t' | '--crypto-dir')
 	    TARGET_DIR=$2
 	    shift 2
+	    continue
+	    ;;
+	'--skip-double-check')
+	    SKIP_DOUBLE_CHECK=1
+	    shift
 	    continue
 	    ;;
 	'--')
@@ -393,23 +400,27 @@ echo "Starting double-checking step"
 DOUBLECHECKING_START_SECS=$(date +%s)
 echo "DOUBLECHECKING_START_SECS=$DOUBLECHECKING_START_SECS"
 
-echo -n Running verification pass...
-echo "Start time is: $(TZ='America/Los_angeles' date +%F-%T-%Z)"
-echo "logging to ${BAP_LOGS}"
-bap \
-    --plugin-path=$CHECKER_PLUGIN_PATH \
-    --pass=uarch-checker \
-    --uarch-checker-double-check \
-    --no-optimization --bil-optimization=0 \
-    --uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
-    $CHECKER_CS_FLAGS \
-    $CHECKER_SS_FLAGS \
-    $CHECKER_SYMEX_FLAGS \
-    --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
-    --uarch-checker-config-file=$CONFIG_FILE \
-    ${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
-echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%F-%T-%Z)"
-echo done
+if [[ $SKIP_DOUBLE_CHECK -eq 0 ]]; then 
+    echo -n Running verification pass...
+    echo "Start time is: $(TZ='America/Los_angeles' date +%F-%T-%Z)"
+    echo "logging to ${BAP_LOGS}"
+    bap \
+	--plugin-path=$CHECKER_PLUGIN_PATH \
+	--pass=uarch-checker \
+	--uarch-checker-double-check \
+	--no-optimization --bil-optimization=0 \
+	--uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
+	$CHECKER_CS_FLAGS \
+	$CHECKER_SS_FLAGS \
+	$CHECKER_SYMEX_FLAGS \
+	--uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
+	--uarch-checker-config-file=$CONFIG_FILE \
+	${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
+    echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%F-%T-%Z)"
+    echo done
+else
+    echo "Skip double check arg provided, skipping double check"
+fi
 
 echo "Finished double-checking step"
 DOUBLECHECKING_FINISH_SECS=$(date +%s)
@@ -430,14 +441,16 @@ if [[ $IS_LIBSODIUM -eq 1 ]]; then
     echo done
 fi
 
-# LINES_IN_BAP_VERIF_ALERTS=$(wc -l "${CHECKER_ALERTS_CSV}.verification.csv" | awk '{ print $1 }')
-# if [[ $LINES_IN_BAP_VERIF_ALERTS -gt 1 ]]; then
-#     echo "ERROR: BAP and checkers couldn't verify that the final code is free of leaks"
-#     echo "ERROR: See ${CHECKER_ALERTS_CSV}.verification.csv and ${BAP_LOGS}.verification.log for more info"
-#     echo "ERROR: exiting"
-#     exit 4
-# else
-#     exit 0
+# if [[ $SKIP_DOUBLE_CHECK -eq 0 ]]; then 
+#     LINES_IN_BAP_VERIF_ALERTS=$(wc -l "${CHECKER_ALERTS_CSV}.verification.csv" | awk '{ print $1 }')
+#     if [[ $LINES_IN_BAP_VERIF_ALERTS -gt 1 ]]; then
+# 	echo "ERROR: BAP and checkers couldn't verify that the final code is free of leaks"
+# 	echo "ERROR: See ${CHECKER_ALERTS_CSV}.verification.csv and ${BAP_LOGS}.verification.log for more info"
+# 	echo "ERROR: exiting"
+# 	exit 4
+#     else
+# 	exit 0
+#     fi
 # fi
 
 

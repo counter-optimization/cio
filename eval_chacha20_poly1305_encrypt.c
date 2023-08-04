@@ -6,11 +6,13 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 5
+#define EXPECTED_ARGC 7
 #define NUM_BENCH_ITER_ARG_IDX 1
 #define NUM_WARMUP_ITER_ARG_IDX 2
 #define MSG_ARG_IDX 3
 #define AD_SIZE_ARG_IDX 4
+#define CYCLE_COUNTS_FILE 5
+#define DYNAMIC_HITCOUNTS_FILE 6
 
 extern int sodium_init();
 extern size_t crypto_aead_chacha20poly1305_ietf_npubbytes(void);
@@ -141,9 +143,18 @@ main(int argc, char** argv)
   }
 
   // output the timer results
-  printf("chacha20-poly1305-encrypt cycle counts (%d iterations, %d warmup)\n",
-        num_iter, num_warmup);
+  FILE* ccounts_out = fopen(argv[CYCLE_COUNTS_FILE], "w");
+  assert(ccounts_out != NULL && "Couldn't open cycle counts file for writing");
+  
+  fprintf(ccounts_out,
+	  "chacha20-poly1305-encrypt cycle counts (%d iterations, %d warmup)\n",
+	  num_iter, num_warmup);
   for (int ii = 0; ii < num_iter; ++ii) {
-    printf("%" PRIu64 "\n", times[ii]);
+	  fprintf(ccounts_out, "%" PRIu64 "\n", times[ii]);
   }
+  assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
+
+  print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+
+  return 0;
 }
