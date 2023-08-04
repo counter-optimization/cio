@@ -185,24 +185,29 @@ def gen_latex_table_inserts(target_dir, baseline_dir, data):
 
         # Baseline
         mean = data[lib][baseline_dir][fn][MEAN]
-        output += "{0:4.5g} & ".format(mean)
+        oh = data[lib][baseline_dir][fn][OVERHEAD]
+        output += f"{format(mean, '.4g')} ({format(oh, '.2f')})"
+        output += ' & '
 
         # SS
         if 'ss' in data[lib].keys():
             mean = data[lib]['ss'][fn][MEAN]
-            output += "{0:4.5g}".format(mean)
+            oh = data[lib]['ss'][fn][OVERHEAD]
+            output += f"{format(mean, '.4g')} ({format(oh, '.2f')})"
         output += ' & '
 
         # CS
         if 'cs' in data[lib].keys():
             mean = data[lib]['cs'][fn][MEAN]
-            output += "{0:4.5g}".format(mean)
+            oh = data[lib]['cs'][fn][OVERHEAD]
+            output += f"{format(mean, '.4g')} ({format(oh, '.2f')})"
         output += ' & '
 
         # SS + CS
         if 'ss+cs' in data[lib].keys():
             mean = data[lib]['ss+cs'][fn][MEAN]
-            output += "{0:4.5g}".format(mean)
+            oh = data[lib]['ss+cs'][fn][OVERHEAD]
+            output += f"{format(mean, '.4g')} ({format(oh, '.2f')})"
         
         # save output
         file = open(filepath, 'w')
