@@ -31,6 +31,8 @@ VALIDATION_DIR=""
 EVAL_MSG_LEN=100
 EVAL_MSG=$(timeout 0.01s cat /dev/urandom | tr -dc '[:alnum:]' | fold -w $EVAL_MSG_LEN | head -n 1)
 
+DYNAMIC_HIT_COUNTS=0
+
 function usage
 {
     echo "Usage: ./eval.sh [ -h | --help (displays this message) ]
@@ -39,11 +41,12 @@ function usage
 			   [ -t | --crypto-dir <path to the crypto lib project that has the root makefile> ]
 			   [ -v | --validate <path to a prior eval directory against which to validate results> ]
 			   [ -m | --makefile-flags \"<~double quoted string~ of extra flags for the Makefile>\" ]
+			   [ -d | --dynamic-hit-counts (record dynamic hit counts) ]
 			   [ -j <num make job slots> ]"
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "hc:p:t:v:m:j:" -l "help,cc:,checker-dir:,crypto-dir:,validate:,makefile-flags:" -n eval.sh -- "$@")
+PARSED_ARGS=$(getopt -o "dhc:p:t:v:m:j:" -l "help,cc:,checker-dir:,dynamic-hit-counts,crypto-dir:,validate:,makefile-flags:" -n eval.sh -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -90,6 +93,11 @@ while true; do
 	    shift 2
 	    continue
 	    ;;
+	'-d' | '--dynamic-hit-counts')
+	    DYNAMIC_HIT_COUNTS=1
+	    shift
+	    continue
+	    ;;
 	'--')
 	    shift
 	    break
@@ -112,6 +120,12 @@ make checker_init
 echo "Running baseline microbenchmarks..."
 make clean
 
+if [[ $DYNAMIC_HIT_COUNTS -eq 1 ]]; then
+    EXTRA_CIO_FLAGS="--dynamic-hit-counts"
+else
+    EXTRA_CIO_FLAGS=""
+fi
+
 if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
 	cd $LIBSODIUM_DIR
 	./configure --disable-asm CC=$BASELINE_CC
@@ -131,7 +145,7 @@ fi
 taskset -c 0 make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-	EVAL_MSG=$EVAL_MSG CFLAGS="-O0 -Werror -std=c18 -DNO_DYN_HIT_COUNTS" \
+    EVAL_MSG=$EVAL_MSG EXTRA_EVAL_CFLAGS="-DBASELINE_COMPILE" EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
     run_eval
 
 if [[ $? -ne 0 ]]; then
@@ -156,7 +170,7 @@ fi
 taskset -c 0 make MITIGATIONS="$ASM_DIR" EVAL_DIR="$TOP_EVAL_DIR/$ASM_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-	EVAL_MSG=$EVAL_MSG CFLAGS="-O0 -Werror -std=c18 -DNO_DYN_HIT_COUNTS" \
+	EVAL_MSG=$EVAL_MSG  \
     run_eval
 
 # with register reservation only
@@ -196,7 +210,7 @@ make clean
 taskset -c 0 make -j 32 MITIGATIONS="--ss" EVAL_DIR="$TOP_EVAL_DIR/$SS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-	EVAL_MSG=$EVAL_MSG \
+	EVAL_MSG=$EVAL_MSG EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
     run_eval
 
 if [[ $? -ne 0 ]]; then
@@ -210,7 +224,7 @@ make clean
 taskset -c 0 make -j 32 MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    EVAL_MSG=$EVAL_MSG \
+    EVAL_MSG=$EVAL_MSG EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
     run_eval
 
 if [[ $? -ne 0 ]]; then
@@ -224,7 +238,7 @@ make clean
 taskset -c 0 make -j 32 MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    EVAL_MSG=$EVAL_MSG \
+    EVAL_MSG=$EVAL_MSG EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
     run_eval
 
 if [[ $? -ne 0 ]]; then

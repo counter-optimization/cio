@@ -75,14 +75,10 @@ uint64_t ciocc_eval_rdtscp() {
 void
 ciocc_eval_rand_fill_buf(unsigned char* buf, int buf_len)
 {
-  for (int ii = 0; ii < buf_len; ++ii) {
-    buf[ii] = rand() % UCHAR_MAX;
-  }
+	for (int ii = 0; ii < buf_len; ++ii) {
+		buf[ii] = rand();
+	}
 }
-
-#ifndef NO_DYN_HIT_COUNTS
-
-extern int32_t* llvm_stats;
 
 /* this needs to be kept in sync with X86CompSimpMap.csv 
    in llvm-project repo. to avoid more csv parsing scripts
@@ -222,14 +218,33 @@ enum StatsOffsetIndices {
 	OR8i8 = 136,
 };
 
-#define PRINT_STAT(OPCODE, F) {			\
-	int hitcount = llvm_stats[(int)OPCODE]; \
-	fprintf(F, "%s,%d\n", #OPCODE, hitcount);	\
-	}
+/* volatile is important, we are breaking
+   C boundaries, and making libsodium
+   write to this array */
+volatile int llvm_stats[300] = {0};
+
+void
+updateStats(const register int64_t idx)
+{
+	__asm__ __inline__ __volatile__(
+		"addq $0x1, (%0, %1, 4)\n"
+		:
+		: "r" (llvm_stats),
+		  "r" (idx)
+		: "memory");
+	/* llvm_stats[idx] += 1; */
+}
 
 void
 print_dynamic_hitcounts(const char* outfilename)
 {
+#ifndef BASELINE_COMPILE	
+#define PRINT_STAT(OPCODE, F) {			\
+	int hitcount = 0; \
+	hitcount = llvm_stats[(int)OPCODE]; \
+	fprintf(F, "%s,%d\n", #OPCODE, hitcount);	\
+	}
+
 	FILE* ff = fopen(outfilename, "w");
 	assert(ff != NULL && "Couldn't open dynamic hit counts file for writing");
 	PRINT_STAT(ADD64ri8, ff);
@@ -364,7 +379,6 @@ print_dynamic_hitcounts(const char* outfilename)
 	PRINT_STAT(OR8i8, ff);
 	assert(EOF != fclose(ff) &&
 	       "Couldn't close dynamic hit counts file after writing");
+#endif // #ifndef BASELINE_COMPILE
 }
-
-#endif // NO_DYN_HIT_COUNTS
 #endif // EVAL_UTIL_H

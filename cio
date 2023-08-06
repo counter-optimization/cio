@@ -27,6 +27,7 @@ MITIGATE_SS=0
 MITIGATE_CS=0
 DO_SYMEX=1
 SKIP_DOUBLE_CHECK=0
+DYNAMIC_HIT_COUNTS=0
 
 function usage
 {
@@ -42,6 +43,7 @@ function usage
 			   [ --ss (do silent store checks and mitigations) ]
 			   [ --cs (do comp simp checks and mitigaitons) ]
 			   [ --skip-double-check (skip verification run of bap/checkers) on the transformed binary ]
+			   [ -d | --dynamic-hit-counts (record dynamic hit counts) ]
 			   -f | --config-file <path to uarch checker config file for checking>
 			   -t | --crypto-dir <path to the crypto lib project that has the root makefile>
 			  
@@ -50,7 +52,7 @@ function usage
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
+PARSED_ARGS=$(getopt -o "dhc:p:b:o:f:e:p:t:j:" -l "dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -135,6 +137,11 @@ while true; do
 	    ;;
 	'--skip-double-check')
 	    SKIP_DOUBLE_CHECK=1
+	    shift
+	    continue
+	    ;;
+	'-d' | '--dynamic-hit-counts')
+	    DYNAMIC_HIT_COUNTS=1
 	    shift
 	    continue
 	    ;;
@@ -354,6 +361,10 @@ else
     if [[ "$MITIGATE_SS" -eq 1 ]]; then
 	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx $CFLAGS"
     fi
+fi
+
+if [[ $DYNAMIC_HIT_COUNTS -eq 1 ]]; then
+    MITIGATION_PASS_CFLAGS="-mllvm --x86-cs-dyn-stat -mllvm --x86-dyn-stat-decl $MITIGATION_PASS_CFLAGS"
 fi
 
 # MITIGATION STEP

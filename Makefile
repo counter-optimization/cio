@@ -1,4 +1,6 @@
-CFLAGS=-O0 -Werror -std=c18 # for the eval code, don't optimize anything
+CFLAGS=-fomit-frame-pointer -O0 -Werror -std=c18 # for the eval code, don't optimize anything
+EXTRA_EVAL_CFLAGS=""
+EXTRA_CIO_FLAGS=""
 
 export LLVM_HOME=$(HOME)/llvm-project/build
 export OUR_CC=$(HOME)/llvm-project/build/bin/clang
@@ -152,7 +154,7 @@ libsodium_init:
 
 $(LIBSODIUM_BUILT_AR): checker
 	$(MAKE) clean_libsodium
-	./cio --skip-double-check --is-libsodium $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1 -b $(CIO_BUILD_DIR) -c $(CC)
+	./cio $(EXTRA_CIO_FLAGS) --skip-double-check --is-libsodium $(MITIGATIONS) --crypto-dir=./libsodium --config-file=./libsodium.uarch_checker.config -j 1 -b $(CIO_BUILD_DIR) -c $(CC)
 	mkdir $(LIBSODIUM_BUILT).$(MITIGATIONS_STR)
 	cp $(LIBSODIUM_AR) $(LIBSODIUM_BUILT_AR)
 
@@ -168,7 +170,7 @@ $(CHECKER_BUILT): checker_init
 	touch $(CHECKER_BUILT)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(EXTRA_EVAL_CFLAGS) $(CFLAGS) -c $< -o $@
 
 clean_eval:
 	-rm *.o
