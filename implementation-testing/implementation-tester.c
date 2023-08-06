@@ -598,3 +598,63 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
 	return 0;
 }
+
+#ifdef OUR_MAIN
+static int runs = 0;
+static int max_len = 0;
+static const char* runs_pre = "-runs=";
+static const char* max_len_pre = "-max_len=";
+
+static void
+fill_buf_rand(uint8_t* restrict bytes, int bytes_len)
+{
+	for (int ii = 0; ii < bytes_len; ++ii) {
+		bytes[ii] = rand();
+	}
+}
+
+static void
+parse_args(int argc, const char** restrict argv)
+{
+	char* strtol_errs = 0;
+	for (int ii = 0; ii < argc; ++ii) {
+		if (0 == strncmp(argv[ii], runs_pre, strlen(runs_pre))) {
+			const char* runs_s = argv[ii] + strlen(runs_pre);
+			runs = strtol(runs_s, &strtol_errs, 10);
+			assert(*strtol_errs == '\0' && "-runs=... param is invalid int");
+		}
+
+		if (0 == strncmp(argv[ii], max_len_pre, strlen(max_len_pre))) {
+			const char* max_len_s = argv[ii] + strlen(max_len_pre);
+			max_len = strtol(max_len_s, &strtol_errs, 10);
+			assert(*strtol_errs == '\0' && "-max_len=... param is invalid int");
+			assert(max_len >= INPUT_STATE_SIZE &&
+			       "Max len of fuzz buffer is less than needed");
+		}
+	}
+
+	assert(max_len != 0 && "Need -max_len=... cl arg");
+	assert(runs != 0 && "Need -runs=... cl arg");
+}
+
+#define RAND_SEED 172812
+
+int
+main(int argc, char** argv)
+{
+	uint8_t bytes[INPUT_STATE_SIZE] = {0};
+
+	srand(RAND_SEED);
+	parse_args(argc, argv);
+	LLVMFuzzerInitialize(&argc, &argv);
+	
+	int fuzz_result = 0;
+	for (int ii = 0; ii < runs; ++ii) {
+		fill_buf_rand(bytes, INPUT_STATE_SIZE);
+		fuzz_result = LLVMFuzzerTestOneInput(bytes, INPUT_STATE_SIZE);
+		assert(fuzz_result == 0 && "fuzzer returned non-zero");
+	}
+	
+	return 0;
+}
+#endif // OUR_MAIN

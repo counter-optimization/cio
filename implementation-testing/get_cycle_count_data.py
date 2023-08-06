@@ -109,11 +109,16 @@ if __name__ == '__main__':
 
         # discard the first 100 since the first 3 or so can have
         # ramp up times (50,000 cycles which is unrealistic)
-        discard_how_many = 100
-        record_how_many = len(cycle_count_lines) - discard_how_many if use_n_measurements == -1 else use_n_measurements
-        start = discard_how_many
-        end = discard_how_many + record_how_many + 1
-        cycle_count_lines = cycle_count_lines[start:end]
+        default_discard_amount = 100 # from the start
+        if use_n_measurements == -1:
+            cycle_count_lines = cycle_count_lines[default_discard_amount:]
+        else:
+            if use_n_measurements < len(cycle_count_lines):
+                # otherwise, take the last `use_n_measurements` measurements
+                cycle_count_lines = cycle_count_lines[-use_n_measurements:]
+            else:
+                print(f"{log.name} only has {len(cycle_count_lines)} measurements, so cannot use --use-n-measurements={use_n_measurements}")
+                sys.exit(2)
 
         # compute least_csv_lines
         cur_num_csv_lines = len(cycle_count_lines)

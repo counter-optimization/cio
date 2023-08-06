@@ -1,10 +1,11 @@
 #!/bin/bash
 
+set -u
+set -x
+
 # this will be logged to the csv file at the very end of the file
 CIO_START_SECS=$(date +%s)
 echo "CIO_START_SECS=$CIO_START_SECS"
-
-set -x
 
 # SET BY USER
 CC=`realpath ~/llvm-project/build/bin/clang`
@@ -16,6 +17,7 @@ TOOLNAME=cio
 TZ='America/Los_Angeles'
 TIMESTAMP=$(date +%F-%T-%Z)
 BUILD_DIR="./${TIMESTAMP}-${TOOLNAME}-build"
+LATEST_BUILD_DIR="latest-cio-build"
 NUM_MAKE_JOB_SLOTS=8
 
 EXTRA_CFLAGS=""
@@ -28,6 +30,8 @@ MITIGATE_CS=0
 DO_SYMEX=1
 SKIP_DOUBLE_CHECK=0
 DYNAMIC_HIT_COUNTS=0
+
+SYSCLANG="/usr/bin/clang"
 
 function usage
 {
@@ -159,6 +163,9 @@ done
 
 BUILD_DIR=$(realpath "$BUILD_DIR")
 mkdir "$BUILD_DIR"
+test -e "$LATEST_BUILD_DIR" && rm "$LATEST_BUILD_DIR"
+ln -s "$BUILD_DIR" "$LATEST_BUILD_DIR"
+
 NORMAL_MAKE_LOG="${BUILD_DIR}/normal.make.log"
 BIG_OBJ="${BUILD_DIR}/jammed.together.o"
 ALL_SECRETS_CSV="${BUILD_DIR}/secrets.csv"
@@ -226,7 +233,7 @@ pushd .
 # need the underlying clang driver that ciocc uses in configure.
 # ciocc currently does not work here
 if [[ -e "$TARGET_DIR/configure" ]]; then
-    cd $TARGET_DIR; ./configure CC=$CLANG --disable-asm
+    cd $TARGET_DIR; ./configure CC="$SYSCLANG" --disable-asm
     CONFIG_RES=$?
     popd
 

@@ -37,8 +37,13 @@ for harness_file in $HARNESS_C_FILES; do
     obj_file=${harness_file/%.c/.o}
     final_file=${harness_file/%.c/}
     echo "Building $final_file..."
+
+    if [[ -n $MEASURE_CYCLE_ARG ]]; then
+	clang -DOUR_MAIN -g -O0 -Wall -Wextra -c $harness_file -o $obj_file
+    else
+	clang -g -O0 -Wall -Wextra -fsanitize=fuzzer-no-link -c $harness_file -o $obj_file
+    fi
     
-    clang -g -O0 -Wall -fsanitize=fuzzer-no-link -c $harness_file -o $obj_file
 
     COMPILE_STATUS=$?
 
@@ -46,8 +51,12 @@ for harness_file in $HARNESS_C_FILES; do
 	echo "error compiling harness file $harness_file with exit status: $COMPILE_STATUS"
 	exit "$COMPILE_STATUS"
     fi
-    
-    clang -g -O0 -Wall -fsanitize=fuzzer $TEST_O $obj_file -o $final_file
+
+    if [[ -n $MEASURE_CYCLE_ARG ]]; then
+	clang -g -O0 -Wall -Wextra $TEST_O $obj_file -o $final_file
+    else
+	clang -g -O0 -Wall -Wextra -fsanitize=fuzzer $TEST_O $obj_file -o $final_file
+    fi
 
     LINK_STATUS=$?
 
@@ -91,6 +100,7 @@ if [[ $NUM_FUZZ_JOBS -eq 1 ]]; then
     # do in serial
     for fuzzer in "${FUZZERS[@]}"; do
 	echo "running fuzzer $fuzzer"
+
 	$fuzzer -close_fd_mask=0 $MEASURE_CYCLE_ARG -runs=$NUM_FUZZ_RUNS -max_len=$MAX_SEED_LEN -len_control=0 -timeout=10 &> $fuzzer.log
 
 	if [[ $? -ne 0 ]]; then
