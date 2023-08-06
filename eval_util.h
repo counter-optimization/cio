@@ -216,6 +216,10 @@ enum StatsOffsetIndices {
 	ADD64i32 = 134,
 	AND8i8 = 135,
 	OR8i8 = 136,
+	IMUL32rri8 = 137,
+	SAR32ri = 138,
+	SHL8ri = 139,
+	OR64ri32 = 140,
 };
 
 /* volatile is important, we are breaking
@@ -377,6 +381,10 @@ print_dynamic_hitcounts(const char* outfilename)
 	PRINT_STAT(ADD64i32, ff);
 	PRINT_STAT(AND8i8, ff);
 	PRINT_STAT(OR8i8, ff);
+	PRINT_STAT(IMUL32rri8, ff);
+	PRINT_STAT(SAR32ri, ff);
+	PRINT_STAT(SHL8ri, ff);
+	PRINT_STAT(OR64ri32, ff);
 	assert(EOF != fclose(ff) &&
 	       "Couldn't close dynamic hit counts file after writing");
 #endif // #ifndef BASELINE_COMPILE
