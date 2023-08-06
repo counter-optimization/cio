@@ -36,6 +36,7 @@ DYNAMIC_HIT_COUNTS=0
 function usage
 {
     echo "Usage: ./eval.sh [ -h | --help (displays this message) ]
+			   [ -b | --baseline-cc <path to baseline c compiler> ]
 			   [ -c | --cc <path to c compiler> ]
 			   [ -p | --checker-dir <path to root checker dir> ]
 			   [ -t | --crypto-dir <path to the crypto lib project that has the root makefile> ]
@@ -46,7 +47,7 @@ function usage
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "dhc:p:t:v:m:j:" -l "help,cc:,checker-dir:,dynamic-hit-counts,crypto-dir:,validate:,makefile-flags:" -n eval.sh -- "$@")
+PARSED_ARGS=$(getopt -o "dhb:c:p:t:v:m:j:" -l "help,baseline-cc:,cc:,checker-dir:,dynamic-hit-counts,crypto-dir:,validate:,makefile-flags:" -n eval.sh -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -63,6 +64,12 @@ while true; do
 	    ;;
 	'-j')
 	    NUM_MAKE_JOB_SLOTS=$2
+	    shift 2
+	    continue
+	    ;;
+	'-b' | '--baseline-cc')
+	    echo BASELINE_CC opt
+	    BASELINE_CC=$2
 	    shift 2
 	    continue
 	    ;;
@@ -143,7 +150,7 @@ if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
 fi
 
 taskset -c 0 make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    CC=$BASELINE_CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
     EVAL_MSG=$EVAL_MSG EXTRA_EVAL_CFLAGS="-DBASELINE_COMPILE" EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
     run_eval
@@ -168,7 +175,7 @@ if [ ! -d "$LIBSODIUM_ASM_DIR" ]; then
 fi
 
 taskset -c 0 make MITIGATIONS="$ASM_DIR" EVAL_DIR="$TOP_EVAL_DIR/$ASM_DIR" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    CC=$BASELINE_CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
 	EVAL_MSG=$EVAL_MSG  \
     run_eval
