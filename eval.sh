@@ -121,7 +121,7 @@ done
 
 mkdir $TOP_EVAL_DIR
 echo "$EVAL_MSG" > $TOP_EVAL_DIR/msg.txt
-test -e "$LATEST_EVAL_DIR" && rm "$LATEST_EVAL_DIR"
+test -L "$LATEST_EVAL_DIR" && rm "$LATEST_EVAL_DIR"
 ln -s "$TOP_EVAL_DIR" "$LATEST_EVAL_DIR"
 
 make libsodium_init

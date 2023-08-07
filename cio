@@ -163,7 +163,7 @@ done
 
 BUILD_DIR=$(realpath "$BUILD_DIR")
 mkdir "$BUILD_DIR"
-test -e "$LATEST_BUILD_DIR" && rm "$LATEST_BUILD_DIR"
+test -L "$LATEST_BUILD_DIR" && rm "$LATEST_BUILD_DIR"
 ln -s "$BUILD_DIR" "$LATEST_BUILD_DIR"
 
 NORMAL_MAKE_LOG="${BUILD_DIR}/normal.make.log"
