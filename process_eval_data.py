@@ -6,12 +6,12 @@ import numpy as np
 
 CRYPTO_FNS = dict({
     'libsodium':
-    [   'ed25519'
+    [   'argon2id'
+    ,   'ed25519'
     ,   'aesni256gcm-decrypt'
     ,   'aesni256gcm-encrypt'
-    ,   'argon2id'
     ,   'chacha20-poly1305-decrypt'
-    ,   'chacha20-poly1305-encrypt'
+    ,   'chacha20-poly1305-encrypt' 
     ]
 })
 
@@ -26,6 +26,7 @@ Y_BOUNDS = dict({
 
 TITLE = 'title'
 RAW_CYCLES = 'raw_cycles'
+DYN_HITS = 'dynamic_hit_counts'
 MEAN = 'mean_cycles'
 STD = 'std'
 OVERHEAD = 'overhead'
@@ -56,31 +57,49 @@ def get_data(args):
         for abl in [args.baseline_dir] + args.ablations:
             data[lib][abl] = dict()
             for fn in CRYPTO_FNS[lib]:
-                fn_data = parse_lines(
-                    os.path.join(args.eval_dir, abl, f'{lib}-{fn}.log')
-                )
-                if len(fn_data) <= 1:
+                # Read cycles data
+                cycles_filepath = os.path.join(args.eval_dir, abl, f'{lib}-{fn}-cyclecounts.csv')
+                if not os.path.exists(cycles_filepath):
+                    print(f"Couldn't find cycle counts file {cycles_filepath}. Skipping")
+                    continue
+                
+                cycles_data = parse_lines(cycles_filepath)
+                if len(cycles_data) <= 1:
                     # No data, skip
                     continue
 
                 # Filter outliers
-                quartiles = np.quantile(fn_data[1:], [0.1, 0.9])
+                quartiles = np.quantile(cycles_data[1:], [0.1, 0.9])
                 iqr = quartiles[1] - quartiles[0]
                 upper_bound = quartiles[1] + iqr * 8
-                cycles_data = np.array(fn_data[1:])
-                cycles_data = cycles_data[cycles_data < upper_bound]
-                
+                cycles_arr = np.array(cycles_data[1:])
+
                 # cycles data
                 data[lib][abl][fn] = dict()
-                data[lib][abl][fn][TITLE] = fn_data[0]
-                data[lib][abl][fn][RAW_CYCLES] = cycles_data
+                data[lib][abl][fn][TITLE] = cycles_data[0]
+                data[lib][abl][fn][RAW_CYCLES] = cycles_arr[cycles_arr < upper_bound]
                 data[lib][abl][fn][MEAN] = np.mean(data[lib][abl][fn][RAW_CYCLES])
                 data[lib][abl][fn][STD] = np.std(data[lib][abl][fn][RAW_CYCLES])
 
+                # dynamic hit counts data
+                dyn_hits_filepath = os.path.join(args.eval_dir, abl, f'{lib}-{fn}-dynhitcounts.csv')
+                if not os.path.exists(dyn_hits_filepath):
+                    print(f"Couldn't find dynamic hit counts at {dyn_hits_filepath}")
+                    data[lib][abl][fn][DYN_HITS] = None
+                else:
+                    data[lib][abl][fn][DYN_HITS] = dict(map(
+                        lambda s: s.split(','), parse_lines(dyn_hits_filepath)
+                    ))
+
                 # binary size
-                fn_file_sz = open(os.path.join(args.eval_dir, abl, f'{lib}-{fn}-bytesize.txt'))
-                data[lib][abl][fn][BINARY_SIZE] = fn_file_sz.readline().strip()
-                fn_file_sz.close()
+                sz_filepath = os.path.join(args.eval_dir, abl, f'{lib}-{fn}-bytesize.txt')
+                if not os.path.exists(sz_filepath):
+                    print(f"Couldn't find binary size data at {sz_filepath}")
+                    data[lib][abl][fn][BINARY_SIZE] = None
+                else:
+                    fn_file_sz = open(sz_filepath)
+                    data[lib][abl][fn][BINARY_SIZE] = fn_file_sz.readline().strip()
+                    fn_file_sz.close()
                 
     return data
 
