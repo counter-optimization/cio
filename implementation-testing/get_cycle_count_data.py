@@ -33,6 +33,14 @@ argparser.add_argument('--use-n-measurements',
                        action='store',
                        default=-1,
                        type=int)
+argparser.add_argument('--overhead-out-csv-file',
+                       action='store',
+                       default=None,
+                       type=str)
+argparser.add_argument('--avg-cycles-csv-file',
+                       action='store',
+                       default=None,
+                       type=str)
 
 def get_opcode_name(logfilename):
     if re.fullmatch(FILE_NAME_RE, logfilename) is None:
@@ -164,6 +172,9 @@ if __name__ == '__main__':
     measurement_overhead = get_measurement_overhead(cycle_counts)
     
     print(f"N = {least_csv_lines}")
+    orig_avg_cycles = []
+    trans_avg_cycles = []
+    overheads = []
     for opcode in cycle_counts:
         origvtransformed = cycle_counts[opcode]
         
@@ -180,8 +191,20 @@ if __name__ == '__main__':
         orig_avg, orig_pstd = statistics.fmean(orig), statistics.pstdev(orig)
         transformed_avg, transformed_pstd = statistics.fmean(tran), statistics.pstdev(tran)
         geomean_overhead = statistics.geometric_mean(overhead_ratios)
-        
+
+        #         argparser.add_argument('--overhead-out-csv-file',
+        #                        action='store',
+        #                        default=None,
+        #                        type=str)
+        # argparser.add_argument('--avg-cycles-csv-file',
+        overheads.append((opcode, geomean_overhead))
+        orig_avg_cycles.append((opcode, orig_avg, orig_pstd))
+        trans_avg_cycles.append((opcode, transformed_avg, transformed_pstd))
         print(f"{opcode}:")
         print(f"\toriginal: {orig_avg} ± {orig_pstd}")
         print(f"\ttransformed: {transformed_avg} ± {transformed_pstd}")
         print(f"\tgeomean_overhead: {geomean_overhead}")
+    if args.overhead_out_csv_file is not None:
+        with open(args.overhead_out_csv_file, 'w') as fl:
+            for ohd in overheads:
+                fl.write(f"{ohd[0]},{ohd[1]}\n")
