@@ -69,9 +69,9 @@ def get_data(args):
                     continue
 
                 # Filter outliers
-                quartiles = np.quantile(cycles_data[1:], [0.1, 0.9])
+                quartiles = np.quantile(cycles_data[1:], [0.25, 0.75])
                 iqr = quartiles[1] - quartiles[0]
-                upper_bound = quartiles[1] + iqr * 8
+                upper_bound = quartiles[1] + iqr * 1.5
                 cycles_arr = np.array(cycles_data[1:])
 
                 # cycles data
@@ -171,20 +171,27 @@ def gen_overhead_plot(target_dir, baseline_dir, data):
         x = np.arange(len(fns))
         width = 0.25
         multiplier = 0
+
+        plt.style.use("tableau-colorblind10")
         fig, ax = plt.subplots()
+        fig.set_figwidth(16)
         plt.axhline(y=1.0)
 
+        max_oh = 0
         for abl, ohs in fn_ohs.items():
+            max_oh = max(max_oh, max(ohs))
             offset = width * multiplier
             rects = ax.bar(x + offset, ohs, width, yerr=fn_stds[abl], capsize=4, label=abl)
-            # ax.bar_label(rects, padding=3)
+            ax.bar_label(rects, [f"{format(oh, '.2f')}x" for oh in ohs], padding=3)
             multiplier += 1
 
+        ax.set_xmargin(0.02)
+        ax.set_ylim(top=max_oh+2)
         ax.set_ylabel('Normalized execution time')
         ax.set_xlabel('Cryptographic function')
         ax.set_title('Overhead of libsodium microbenchmarks')
-        plt.xticks(x, labels=fns, rotation=45, ha='right')
-        ax.legend(bbox_to_anchor=(1.01, 1.0), loc='upper left')
+        plt.xticks(x, labels=fns, rotation=10)
+        ax.legend(bbox_to_anchor=(0.91, 0.99), loc='upper left')
         ax.set_axisbelow(True)
         ax.yaxis.grid(True)
 
