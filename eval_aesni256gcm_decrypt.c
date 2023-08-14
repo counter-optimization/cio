@@ -6,10 +6,13 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 4
+#define EXPECTED_ARGC 6
 #define NUM_BENCH_ITER_ARG_IDX 1
-#define MSG_SIZE_ARG_IDX 2
-#define AD_SIZE_ARG_IDX 3
+#define NUM_WARMUP_ITER_ARG_IDX 2
+#define MSG_ARG_IDX 3
+#define AD_SIZE_ARG_IDX 4
+#define CYCLE_COUNTS_FILE 5
+#define DYNAMIC_HITCOUNTS_FILE 6
 
 extern int strncmp(const char *str1, const char *str2, size_t n);
 extern size_t crypto_aead_aes256gcm_keybytes(void);
@@ -33,21 +36,25 @@ extern int crypto_aead_aes256gcm_decrypt(unsigned char *m,
 int
 main(int argc, char** argv)
 {
-  if (argc != EXPECTED_ARGC) {
-    printf("Usage: %s <num_benchmark_iterations> <size_of_message>\n", argv[0]);
+  if (argc < EXPECTED_ARGC) {
+    printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
+	   " <messagee> <size_of_associated_data>"
+     " <cycle_counts_file> [<dynamic_hitcounts_file>]\n", argv[0]);
     exit(-1);
   }
-
-  // seed non-crypto-secure PRNG, for generating message contents
-  srand(EVAL_UTIL_H_SEED);
 
   // parse args
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
+  
+  int num_warmup = strtol(/*src=*/ argv[NUM_WARMUP_ITER_ARG_IDX],
+			/*endptr=*/ (char**) NULL,
+			/*base=*/ 10);
 
-  unsigned long long msg_sz = strtol(argv[MSG_SIZE_ARG_IDX], (char**) NULL, 10);
-  unsigned long long additional_data_sz = strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
+  unsigned char* msg = (unsigned char*)argv[MSG_ARG_IDX];
+  unsigned long long msg_sz = strlen(argv[MSG_ARG_IDX]);
+  unsigned long long additional_data_sz = 0; // strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
 
   // init libsodium, must be called before other libsodium functions are called
   const int sodium_init_success = 0;
@@ -58,15 +65,11 @@ main(int argc, char** argv)
 	 "Error initializing lib sodium");
 
   // Make sure AES is available
-  assert(crypto_aead_aes256gcm_is_available() && "AES not available on this CPU");
-
-  // allocate space for message
-  unsigned char* msg = malloc(msg_sz);
-  assert(msg && "Couldn't allocate msg bytes in eval_aesni256gcm_decrypt.c");
+  // assert(crypto_aead_aes256gcm_is_available() && "AES not available on this CPU");
 
   // allocate space for additional data
-  unsigned char* additional_data = malloc(additional_data_sz);
-  assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_decrypt.c");
+  unsigned char* additional_data = NULL; // malloc(additional_data_sz);
+  // assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_decrypt.c");
 
   // allocate space for decrypted message
   unsigned char* decrypted_msg = malloc(msg_sz);
@@ -94,20 +97,20 @@ main(int argc, char** argv)
   volatile uint64_t end_time = 0;
 
   // main loop
-  for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
+  for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate key
     // generate nonce
     crypto_aead_aes256gcm_keygen(key);
     randombytes_buf(nonce, sizeof nonce);
 
-    // generate message
-    ciocc_eval_rand_fill_buf(msg, msg_sz);
-
     // encrypt message
     int encrypt_result = crypto_aead_aes256gcm_encrypt(ciphertext, &ciphertext_sz,
           msg, msg_sz, additional_data, additional_data_sz, NULL, nonce, key);
 
-    assert(-1 != encrypt_result);
+    if (-1 == encrypt_result) {
+      printf("FAILURE: eval_aesni256gcm_decrypt failed at crypto_aead_aes256gcm_encrypt");
+      exit(0);
+    }
 
     // start counting cycles
     start_time = START_CYCLE_TIMER;
@@ -120,19 +123,41 @@ main(int argc, char** argv)
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
 
-    assert(-1 != decrypt_result);
+    if (-1 == decrypt_result) {
+      printf("FAILURE: eval_aesni256gcm_decrypt failed at crypto_aead_aes256gcm_decrypt");
+      exit(0);
+    }
 
-    times[cur_iter] = end_time - start_time;
+    if (cur_iter >= num_warmup) {
+      times[cur_iter - num_warmup] = end_time - start_time;
+    }
 
     // verify decrypted message is same as original for sanity check
     int cmp_result = memcmp(msg, decrypted_msg, msg_sz);
-    assert(0 == cmp_result &&
-          "in eval_aesni256gcm_decrypt.c, error validating decrypted msg = msg");
+    if (0 != cmp_result) {
+      printf("FAILURE: eval_aesni256gcm_decrypt failed sanity check, decrypted msg != msg");
+      exit(0);
+    }
   }
 
+  FILE* ccounts_out = fopen(argv[CYCLE_COUNTS_FILE], "w");
+  assert(ccounts_out != NULL && "Couldn't open cycle counts file for writing");
+  
   // output the timer results
-  printf("eval_aesni256gcm_decrypt cycle counts for %d iterations\n", num_iter);
+  fprintf(ccounts_out,
+	  "aesni256gcm_decrypt cycle counts (%d iterations, %d warmup)\n",
+	  num_iter, num_warmup);
   for (int ii = 0; ii < num_iter; ++ii) {
-    printf("%" PRIu64 "\n", times[ii]);
+	  fprintf(ccounts_out, "%" PRIu64 "\n", times[ii]);
   }
+  assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
+
+  #ifndef NO_DYN_HIT_COUNTS
+  // record dynamic hitcounts, if applicable
+  if (argc > DYNAMIC_HITCOUNTS_FILE) {
+    print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  }
+  #endif
+
+  return 0;
 }

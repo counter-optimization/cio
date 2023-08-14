@@ -1,17 +1,23 @@
 #!/bin/bash
 
+set -u
+set -x
+
+# this will be logged to the csv file at the very end of the file
+CIO_START_SECS=$(date +%s)
+echo "CIO_START_SECS=$CIO_START_SECS"
+
 # SET BY USER
-OUR_LLVM_BINARIES=`realpath ~/llvm-project/build/bin`
-CLANG="$OUR_LLVM_BINARIES/clang" # need the underlying clang driver that ciocc uses
-LLC="$OUR_LLVM_BINARIES/llc"
-LLVM_MC="$OUR_LLVM_BINARIES/llvm-mc"
-CIOCC=`realpath ./ciocc`
-CC="$CIOCC"
+CC=`realpath ~/llvm-project/build/bin/clang`
 CHECKER_PLUGIN_PATH=`realpath ./checker/bap/interval/`
+CHECKER_PLUGIN_NAME="uarch_checker.plugin"
 
 # cio defaults
 TOOLNAME=cio
-BUILD_DIR="./${TOOLNAME}-build"
+TZ='America/Los_Angeles'
+TIMESTAMP=$(date +%F-%T-%Z)
+BUILD_DIR="./${TIMESTAMP}-${TOOLNAME}-build"
+LATEST_BUILD_DIR="latest-cio-build"
 NUM_MAKE_JOB_SLOTS=8
 
 EXTRA_CFLAGS=""
@@ -22,7 +28,10 @@ IS_LIBSODIUM=0
 MITIGATE_SS=0
 MITIGATE_CS=0
 DO_SYMEX=1
-DO_CLEAN=0
+SKIP_DOUBLE_CHECK=0
+DYNAMIC_HIT_COUNTS=0
+
+SYSCLANG="/usr/bin/clang"
 
 function usage
 {
@@ -37,16 +46,17 @@ function usage
 			   [ --is-libsodium <run libsodium init> ]
 			   [ --ss (do silent store checks and mitigations) ]
 			   [ --cs (do comp simp checks and mitigaitons) ]
-			   [ --clean (clean up intermediate build artifacts from the dir specified by -t or --crypto-dir flags) ]
+			   [ --skip-double-check (skip verification run of bap/checkers) on the transformed binary ]
+			   [ -d | --dynamic-hit-counts (record dynamic hit counts) ]
 			   -f | --config-file <path to uarch checker config file for checking>
 			   -t | --crypto-dir <path to the crypto lib project that has the root makefile>
 			  
 	       	 --config-file and crypto_project_dir_root are required arguments. If they are not passed,
                  the defaults of ${CC} and $(pwd) are used respectively."
-    exit 1
+    exit 2
 }
 
-PARSED_ARGS=$(getopt -o "hc:p:b:o:f:e:p:t:j:" -l "help,clean,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex" -n $TOOLNAME -- "$@")
+PARSED_ARGS=$(getopt -o "dhc:p:b:o:f:e:p:t:j:" -l "dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -66,11 +76,6 @@ while true; do
 	'-j')
 	    NUM_MAKE_JOB_SLOTS=$2
 	    shift 2
-	    continue
-	    ;;
-	'--clean')
-	    DO_CLEAN=1
-	    shift
 	    continue
 	    ;;
 	'--is-libsodium')
@@ -134,6 +139,16 @@ while true; do
 	    shift 2
 	    continue
 	    ;;
+	'--skip-double-check')
+	    SKIP_DOUBLE_CHECK=1
+	    shift
+	    continue
+	    ;;
+	'-d' | '--dynamic-hit-counts')
+	    DYNAMIC_HIT_COUNTS=1
+	    shift
+	    continue
+	    ;;
 	'--')
 	    shift
 	    break
@@ -148,29 +163,18 @@ done
 
 BUILD_DIR=$(realpath "$BUILD_DIR")
 mkdir "$BUILD_DIR"
+test -L "$LATEST_BUILD_DIR" && rm "$LATEST_BUILD_DIR"
+ln -s "$BUILD_DIR" "$LATEST_BUILD_DIR"
+
 NORMAL_MAKE_LOG="${BUILD_DIR}/normal.make.log"
 BIG_OBJ="${BUILD_DIR}/jammed.together.o"
 ALL_SECRETS_CSV="${BUILD_DIR}/secrets.csv"
 BAP_LOGS="${BUILD_DIR}/bap.log"
 CHECKER_ALERTS_CSV="${BUILD_DIR}/checker.alerts.csv"
+EVAL_RUNTIME_CSV="${BUILD_DIR}/cio-run-times.csv"
 
-if [[ "$DO_CLEAN" -eq 1 ]]; then
-    if [[ -n "$TARGET_DIR" ]]; then
-	set -x
-	find "$TARGET_DIR" -iname '*.ciocc' -delete
-	find "$TARGET_DIR" -iname '*.mir' -delete
-	find "$TARGET_DIR" -iname '*.ll' -delete
-	find "$TARGET_DIR" -iname '*.o' -delete
-	find "$TARGET_DIR" -iname '*.secrets.csv' -delete
-	if [[ -n "$BUILD_DIR" && -d "$BUILD_DIR" ]]; then
-	    rm -r "$BUILD_DIR"
-	fi
-	exit 0
-    else
-	echo "--crypto-dir or -t option must be specified when using --clean"
-	exit 1
-    fi
-fi
+# write EVAL_RUNTIME_CSV header to file
+echo "step,start_sec,stop_sec" > "$EVAL_RUNTIME_CSV"
 
 # check if bap is installed for the checkers
 HAS_BAP=$(which bap)
@@ -181,9 +185,8 @@ if [[ $? -ne 0 ]]; then
     echo -e "\t2. opam switch create bap-alpha --repos default,bap=git+https://github.com/BinaryAnalysisPlatform/opam-repository#testing 4.11.2+flambda"
     echo -e "\t3. opam install bap"
     echo -e "\t4. opam install bap-primus-symbolic-executor"
-    echo -e "\t5. opam install z3"
-    echo -e '\t6. eval $(opam env)'
-    exit 2
+    echo -e '\t5. eval $(opam env)'
+    exit 3
 fi
 
 if [[ "$DO_SYMEX" -eq 1 ]]; then
@@ -195,54 +198,80 @@ fi
 if [[ "$MITIGATE_CS" -eq 0 ]]; then
     CHECKER_CS_FLAGS=""
     CC_CS_FLAGS=""
-    LLC_CS_FLAGS=""
 else
     CHECKER_CS_FLAGS="--uarch-checker-cs"
     CC_CS_FLAGS="-mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV}"
-    LLC_CS_FLAGS="--x86-cs --x86-cs-csv-path=${CHECKER_ALERTS_CSV}"
 fi
 
 if [[ "$MITIGATE_SS" -eq 0 ]]; then
     CHECKER_SS_FLAGS=""
     CC_SS_FLAGS=""
-    LLC_SS_FLAGS=""
 else
     CHECKER_SS_FLAGS="--uarch-checker-ss"
     CC_SS_FLAGS="-mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV}"
-    LLC_SS_FLAGS="--x86-ss --x86-ss-csv-path=${CHECKER_ALERTS_CSV}"
 fi
 
+# check that libsodium and checker submodules are init'd and that checker plugin is built
+if [[ ! (-e "$CHECKER_PLUGIN_PATH/$CHECKER_PLUGIN_NAME") ]]; then
+    echo "Checkers arent built, please run 'make checker_init', then rerun cio"
+    exit 2
+fi
 
-# need to set cio to a known-good state, so clean, re-configure
+if [[ "$IS_LIBSODIUM" -eq 1 && ! (-e "$TARGET_DIR/configure") ]]; then
+    echo "Libsodium submodule isn't initialized, please run 'make libsodium_init', then rerun cio"
+    exit 2
+fi
+
+echo "Starting compilation step"
+COMPILATION_START_SECS=$(date +%s)
+echo "COMPILATION_START_SECS=$COMPILATION_START_SECS"
+
 make --directory=$TARGET_DIR clean
 
 pushd .
+
 # need the underlying clang driver that ciocc uses in configure.
 # ciocc currently does not work here
-cd $TARGET_DIR; ./configure CC=$CLANG
-CONFIG_RES=$?
-popd
+if [[ -e "$TARGET_DIR/configure" ]]; then
+    cd $TARGET_DIR; ./configure CC="$SYSCLANG" --disable-asm
+    CONFIG_RES=$?
+    popd
 
-if [[ $CONFIG_RES -ne 0 ]]; then
-    echo "Error running ./configure in $TARGET_DIR. $TOOLNAME exiting."
-    exit $CONFIG_RES
+    if [[ $CONFIG_RES -ne 0 ]]; then
+	echo "Error running ./configure in $TARGET_DIR. $TOOLNAME exiting."
+	exit $CONFIG_RES
+    fi
 fi
 
+# # make the dir to hold all of the build artifacts
+# echo -n "Creating ${TOOLNAME} build dir ${BUILD_DIR}..."
+# if [[ -e $BUILD_DIR ]]; then
+#     echo -n it already exists, removing old build dir first...
+#     rm -r $BUILD_DIR
+# fi
+# mkdir $BUILD_DIR
+# echo done
 
+# Get their CFLAGS so we can append ours
+THEIR_CFLAGS=$(grep -E '^CFLAGS[ =]' ./libsodium/src/libsodium/Makefile)
+THEIR_CFLAGS_FILE="$BUILD_DIR/their-cflags.txt"
+echo "$THEIR_CFLAGS" > "$THEIR_CFLAGS_FILE"
+# source "$THEIR_CFLAGS_FILE"
+CFLAGS="-g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic"
+echo "THEIR_CFLAGS are: $CFLAGS"
 
-# make the dir to hold all of the build artifacts
-echo "Creating ${TOOLNAME} build dir ${BUILD_DIR}..."
-if [[ -e $BUILD_DIR ]]; then
-    echo it already exists, removing old build dir first...
-    rm -r $BUILD_DIR
-fi
-mkdir $BUILD_DIR
-echo done
+COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $CFLAGS $EXTRA_CFLAGS"
+# grep -E 'override CFLAGS' ${TARGET_DIR}/Makefile
+# NO_OVERRIDE=$?
+# if [[ NO_OVERRIDE -eq 0 ]]; then
+#     COMPILATION_STEP_CFLAGS=
+# else
+#     THEIR_CFLAGS=$(awk '$1 ~ /^CFLAGS$/ { ORS=" "; for (i = 3; i <= NF; i++) print $i }' ${TARGET_DIR}/Makefile)
+#     COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $THEIR_CFLAGS $EXTRA_CFLAGS"
+# fi
 
-
-
-echo "Running target's makefile: make -j 32 --directory=$TARGET_DIR CC=$CC"
-make -j 32 --directory=$TARGET_DIR CC=$CC
+echo -n "Running target\'s makefile... with CFLAGS=\"$COMPILATION_STEP_CFLAGS\""
+make -j "$NUM_MAKE_JOB_SLOTS" --directory=$TARGET_DIR CC=$CC CFLAGS="$COMPILATION_STEP_CFLAGS"
 COMPILE_PASS_RES=$?
 # echo compile_pass_res is $COMPILE_PASS_RES
 echo done
@@ -252,33 +281,9 @@ if [[ $COMPILE_PASS_RES -ne 0 ]]; then
     exit $COMPILE_PASS_RES
 fi
 
-
-
-# if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
-#     echo 'init sodium_init' > $CONFIG_FILE
-# fi
-
-
-
-# # put all per-function secret csv contents into one big  csv file
-# # echo "Gathering all per-function secret csv files into ${ALL_SECRETS_CSV}..."
-# find $TARGET_DIR -name '*secrets.csv' -a ! -empty | xargs -I '{}' cat '{}' >> $CONFIG_FILE
-# GATHER_SECRETS_RES=$?
-# echo done
-
-# if [[ $GATHER_SECRETS_RES -ne 0 ]]; then
-#     echo "Error gathering all per-function secret csv files into one. $TOOLNAME exiting."
-#     exit $GATHER_SECRETS_RES
-# fi
-
-echo "Cleaning up per-function secret csv files..."
-find $TARGET_DIR -name '*secrets.csv' -a ! -path "*${BUILD_DIR}*" -delete
-echo done
-
-
-
 # put all the object files into one big object file
 if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
+    echo "Gathering libsodium..."
     source $TARGET_DIR/src/libsodium/libsodium.la
     LIBNA_SHARED_LIB=$(find $TARGET_DIR -name "$dlname")
     BUILD_BIG_OBJ_RES=$?
@@ -297,21 +302,23 @@ if [[ $BUILD_BIG_OBJ_RES -ne 0 ]]; then
     exit $BUILD_BIG_OBJ_RES
 fi
 
+echo "Finished compilation step"
+COMPILATION_FINISH_SECS=$(date +%s)
+echo "COMPILATION_FINISH_SECS=$COMPILATION_FINISH_SECS"
 
+# write compilation step time to csv file
+echo "COMPILATION,$COMPILATION_START_SECS,$COMPILATION_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
+
+
+echo "Starting checking step"
+CHECKING_START_SECS=$(date +%s)
+echo "CHECKING_START_SECS=$CHECKING_START_SECS"
 
 echo "SHA256 of pre-mitigation $BIG_OBJ is:"
 echo $(sha256sum $BIG_OBJ)
 
-
-
-echo Dumping BIR and DKNOWLEDGE into $BUILD_DIR/jammed.together.dbir.txt
-bap -dbir --no-optimization --bil-optimization=0 $BIG_OBJ &> $BUILD_DIR/jammed.together.dbir.txt
-bap -dknowledge --no-optimization --bil-optimization=0 $BIG_OBJ >> $BUILD_DIR/jammed.together.dbir.txt 2>&1
-
-
-
 echo "Starting checker on ${BIG_OBJ} using secrets file ${ALL_SECRETS_CSV}"
-echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
+echo "Start time is: $(TZ='America/Los_angeles' date +%F-%T-%Z)"
 echo "logging to ${BAP_LOGS}"
 bap \
     --plugin-path=$CHECKER_PLUGIN_PATH \
@@ -324,102 +331,144 @@ bap \
     --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
     --uarch-checker-config-file=$CONFIG_FILE \
     $BIG_OBJ > $BAP_LOGS 2>&1
-echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
+echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%F-%T-%Z)"
 
+echo "Checking if bap actually ran... you should also check that the elapsed time above is >= 10 minutes"
+LINES_IN_BAP_ALERTS=$(wc -l "$CHECKER_ALERTS_CSV" | awk '{ print $1 }')
+if [[ $LINES_IN_BAP_ALERTS -le 1 ]]; then
+    # check for <= 1 because if it is empty or only contains the header row, there is probably a problem
+    echo "ERROR: Number of rows in bap alerts file ($CHECKER_ALERTS_CSV) is <= 1 after checking step."
+    echo "ERROR: BAP probably did not run or did not run properly. Please check ($BAP_LOGS) for more info"
+    echo "ERROR: exiting."
+    exit 3
+fi
 
-set -x
+echo "Finished checking step"
+CHECKING_FINISH_SECS=$(date +%s)
+echo "CHECKING_FINISH_SECS=$CHECKING_FINISH_SECS"
 
-ALL_MIR_FILES=$(find $TARGET_DIR -iname '*.mir')
-for MIR_FILE in $ALL_MIR_FILES; do
-    CIOCC_COMPILATION_FILE=${MIR_FILE/%.mir/.ciocc}
-    LIBTOOL_FILE=${MIR_FILE/%.mir/.lo}
-    if [[ ! (-e "$CIOCC_COMPILATION_FILE") ]]; then
-	echo "ciocc metadata file for MIR file $MIR_FILE doesn't exist"
-	exit 3
-    fi
-    # this source provides definitions for ASM_FILE, MIR_FILE, OBJ_FILE,
-    # LIBTOOL_OBJ_FILE
-    source "$CIOCC_COMPILATION_FILE"
-    source "$LIBTOOL_FILE"
-    # echo "$LLC --relocation-model=pic $LLC_SS_FLAGS $LLC_CS_FLAGS $MIR_FILE -o $ASM_FILE"
-    # $LLC -x=mir --relocation-model=pic $LLC_SS_FLAGS $LLC_CS_FLAGS $MIR_FILE -o $ASM_FILE
-    LLC_PASSES=""
-    if [[ "$MITIGATE_SS" -eq 1 ]]; then
-	LLC_PASSES="ss"
-    fi
+# write checking step time to csv file
+echo "CHECKING,$CHECKING_START_SECS,$CHECKING_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
+
+echo "Starting mitigation step"
+MITIGATION_START_SECS=$(date +%s)
+echo "MITIGATION_START_SECS=$MITIGATION_START_SECS"
+
+echo -n Cleaning up build artifacts from compilation,checking pass...
+make --directory=$TARGET_DIR clean
+echo done
+
+if [[ "$MITIGATE_CS" -eq 1 && "$MITIGATE_SS" -eq 1 ]]; then
+    MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx -mllvm -global-scratch -mllvm -gs-size=8 $CFLAGS"
+else
     if [[ "$MITIGATE_CS" -eq 1 ]]; then
-	LLC_PASSES="$LLC_PASSES,csimp-mitigation"
+	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx -mllvm -global-scratch -mllvm -gs-size=8 $CFLAGS"
     fi
-	
-    $LLC --disable-verify --debug-pass=Structure -x=mir --relocation-model=pic --run-pass="$LLC_PASSES" --x86-cs-csv-path="$CHECKER_ALERTS_CSV" --x86-ss-csv-path="$CHECKER_ALERTS_CSV" "$MIR_FILE" -o "$MIR_FILE"
+    
+    if [[ "$MITIGATE_SS" -eq 1 ]]; then
+	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx $CFLAGS"
+    fi
+fi
 
-    $LLC --disable-verify --debug-pass=Structure -x=mir --start-after=csimp-mitigation --relocation-model=pic --filetype=obj "$MIR_FILE" -o "$OBJ_FILE"
-    # echo "$LLVM_MC --position-independent $ASM_FILE -filetype=obj -o $OBJ_FILE"
-    # $LLVM_MC --position-independent "$ASM_FILE" --filetype=obj -o "$OBJ_FILE"
-    # echo "cp $OBJECT_FILE $OBJECT_FILE/../$pic_object"
-    BASE_DIR=$(dirname "$OBJ_FILE")
-    cp "$OBJ_FILE" "$BASE_DIR/$pic_object"
-    cp "$OBJ_FILE" "$BASE_DIR/$non_pic_object"
-    touch "$LIBTOOL_OBJ_FILE"
-done
+if [[ $DYNAMIC_HIT_COUNTS -eq 1 ]]; then
+    MITIGATION_PASS_CFLAGS="-mllvm --x86-cs-dyn-stat -mllvm --x86-dyn-stat-decl $MITIGATION_PASS_CFLAGS"
+fi
 
+# MITIGATION STEP
+echo "Running mitigation pass... with CFLAGS=\"$MITIGATION_PASS_CFLAGS\""
+make --directory=$TARGET_DIR clean
+make --directory="$TARGET_DIR" CC="$CC" -j "$NUM_MAKE_JOB_SLOTS" CFLAGS="$MITIGATION_PASS_CFLAGS"
+MITIGATION_PASS_RES=$?
+echo done
 
+if [[ $MITIGATION_PASS_RES -ne 0 ]]; then
+    echo "Error applying mitigation transforms in $TARGET_DIR. $TOOLNAME exiting."
+    exit $MITIGATION_PASS_RES
+fi
 
-# after regenerating the object files, the shared libraries should be out of
-# date, so running make should regenerate these automagically
-# don't need to use ciocc here
-make --directory="$TARGET_DIR" CC="$CLANG" -j "$NUM_MAKE_JOB_SLOTS"
+echo "Finished mitigation step"
+MITIGATION_FINISH_SECS=$(date +%s)
+echo "MITIGATION_FINISH_SECS=$MITIGATION_FINISH_SECS"
 
-
+# write mitigation step time to csv file
+echo "MITIGATION,$MITIGATION_START_SECS,$MITIGATION_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
 
 # put all the object files into one big object file again
+echo -n "Gathering all intermediate object files into ${BIG_OBJ}..."
 if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
-    source "$TARGET_DIR/src/libsodium/libsodium.la"
-    LIBNA_SHARED_LIB=$(find "$TARGET_DIR" -name "$dlname")
+    source $TARGET_DIR/src/libsodium/libsodium.la
+    LIBNA_SHARED_LIB=$(find $TARGET_DIR -name "$dlname")
     BUILD_BIG_OBJ_RES=$?
     if [[ "$BUILD_BIG_OBJ_RES" -eq 0 ]]; then
-	cp "$LIBNA_SHARED_LIB" "$BIG_OBJ.verification.o"
+	cp $LIBNA_SHARED_LIB ${BIG_OBJ}.verification.o
     fi
 else
     echo "Gathering all intermediate object files into ${BIG_OBJ}..."
-    find "$TARGET_DIR" -name '*.o' -a ! -path '*.libs*' | xargs ld -O0 -o "$BIG_OBJ.verification.o" -lc
+    find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -O0 -o ${BIG_OBJ}.verification.o -lc
     BUILD_BIG_OBJ_RES=$?
     echo done
 fi
 
-if [[ "$BUILD_BIG_OBJ_RES" -ne 0 ]]; then
+if [[ $BUILD_BIG_OBJ_RES -ne 0 ]]; then
     echo "Error jamming all separate object files into one for use by checker. $TOOLNAME exiting."
     exit $BUILD_BIG_OBJ_RES
 fi
 
+echo "Starting double-checking step"
+DOUBLECHECKING_START_SECS=$(date +%s)
+echo "DOUBLECHECKING_START_SECS=$DOUBLECHECKING_START_SECS"
 
+if [[ $SKIP_DOUBLE_CHECK -eq 0 ]]; then 
+    echo -n Running verification pass...
+    echo "Start time is: $(TZ='America/Los_angeles' date +%F-%T-%Z)"
+    echo "logging to ${BAP_LOGS}"
+    bap \
+	--plugin-path=$CHECKER_PLUGIN_PATH \
+	--pass=uarch-checker \
+	--uarch-checker-double-check \
+	--no-optimization --bil-optimization=0 \
+	--uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
+	$CHECKER_CS_FLAGS \
+	$CHECKER_SS_FLAGS \
+	$CHECKER_SYMEX_FLAGS \
+	--uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
+	--uarch-checker-config-file=$CONFIG_FILE \
+	${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
+    echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%F-%T-%Z)"
+    echo done
+else
+    echo "Skip double check arg provided, skipping double check"
+fi
 
-echo "SHA256 of post-mitigation $BIG_OBJ.verification.o is:"
-echo $(sha256sum "$BIG_OBJ.verification.o")
+echo "Finished double-checking step"
+DOUBLECHECKING_FINISH_SECS=$(date +%s)
+echo "DOUBLECHECKING_FINISH_SECS=$DOUBLECHECKING_FINISH_SECS"
 
+# write mitigation step time to csv file
+echo "DOUBLECHECKING,$DOUBLECHECKING_START_SECS,$DOUBLECHECKING_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
 
+CIO_FINISH_SECS=$(date +%s)
+echo "CIO_FINISH_SECS=$CIO_FINISH_SECS"
 
-echo Running verification pass...
-echo "Start time is: $(TZ='America/Los_angeles' date +%T-%Z)"
-echo "logging to ${BAP_LOGS}"
-bap \
-    --plugin-path=$CHECKER_PLUGIN_PATH \
-    --pass=uarch-checker \
-    --no-optimization --bil-optimization=0 \
-    --uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
-    $CHECKER_CS_FLAGS \
-    $CHECKER_SS_FLAGS \
-    $CHECKER_SYMEX_FLAGS \
-    --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
-    --uarch-checker-config-file=$CONFIG_FILE \
-    ${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
-echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%T-%Z)"
-echo done
+# write cio overall time to csv file
+echo "CIOTOTAL,$CIO_START_SECS,$CIO_FINISH_SECS" >> "$EVAL_RUNTIME_CSV"
 
-
-
-if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
-    echo "Running libsodium unit tests..."
-    make -j 32 --directory="$TARGET_DIR" check
+if [[ $IS_LIBSODIUM -eq 1 ]]; then
+    echo -n "Running libsodium unit tests..."
+    make --directory=$TARGET_DIR check CC=$CC
     echo done
 fi
+
+# if [[ $SKIP_DOUBLE_CHECK -eq 0 ]]; then 
+#     LINES_IN_BAP_VERIF_ALERTS=$(wc -l "${CHECKER_ALERTS_CSV}.verification.csv" | awk '{ print $1 }')
+#     if [[ $LINES_IN_BAP_VERIF_ALERTS -gt 1 ]]; then
+# 	echo "ERROR: BAP and checkers couldn't verify that the final code is free of leaks"
+# 	echo "ERROR: See ${CHECKER_ALERTS_CSV}.verification.csv and ${BAP_LOGS}.verification.log for more info"
+# 	echo "ERROR: exiting"
+# 	exit 4
+#     else
+# 	exit 0
+#     fi
+# fi
+
+

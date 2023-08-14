@@ -1,0 +1,12 @@
+diff --git a/src/libsodium/crypto_stream/salsa20/stream_salsa20.c b/src/libsodium/crypto_stream/salsa20/stream_salsa20.c
+index 45298501..ebae270f 100644
+--- a/src/libsodium/crypto_stream/salsa20/stream_salsa20.c
++++ b/src/libsodium/crypto_stream/salsa20/stream_salsa20.c
+@@ -22,6 +22,7 @@
+ static const crypto_stream_salsa20_implementation *implementation =
+     &crypto_stream_salsa20_xmm6_implementation;
+ #else
++#include "ref/salsa20_ref.h"
+ static const crypto_stream_salsa20_implementation *implementation =
+     &crypto_stream_salsa20_ref_implementation;
+ #endif

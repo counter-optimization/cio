@@ -2,12 +2,16 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <assert.h> 
+#include <string.h>
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 3
+#define EXPECTED_ARGC 5
 #define NUM_BENCH_ITER_ARG_IDX 1
-#define MSG_SIZE_ARG_IDX 2
+#define NUM_WARMUP_ITER_ARG_IDX 2
+#define MSG_ARG_IDX 3
+#define CYCLE_COUNTS_FILE 4
+#define DYNAMIC_HITCOUNTS_FILE 5
 
 extern int sodium_init(void);
 extern size_t crypto_sign_secretkeybytes(void);
@@ -24,13 +28,10 @@ extern int crypto_sign_open(unsigned char *m, unsigned long long *mlen_p,
 int
 main(int argc, char** argv)
 {
-  if (argc != EXPECTED_ARGC) {
-    printf("Usage: %s <num_benchmark_iterations> <size_of_message>\n", argv[0]);
-    exit(-1);
+  if (argc < EXPECTED_ARGC) {
+    printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
+	         " <message> <cycle_counts_file> [<dynamic_hitcounts_file>]\n", argv[0]);
   }
-
-  // seed non-crypto-secure PRNG, for generating message contents
-  srand(EVAL_UTIL_H_SEED);
 
   // init libsodium, must be called before other libsodium functions are called
   const int sodium_init_success = 0;
@@ -44,12 +45,13 @@ main(int argc, char** argv)
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
+  
+  int num_warmup = strtol(/*src=*/ argv[NUM_WARMUP_ITER_ARG_IDX],
+			/*endptr=*/ (char**) NULL,
+			/*base=*/ 10);
 
-  unsigned long long msg_sz = strtol(argv[MSG_SIZE_ARG_IDX], (char**) NULL, 10);
-
-  // allocate space for message
-  unsigned char* msg = malloc(msg_sz);
-  assert(msg && "Couldn't allocate msg bytes in eval_ed25519.c");
+  unsigned char* msg = (unsigned char*)argv[MSG_ARG_IDX];
+  unsigned long long msg_sz = strlen(argv[MSG_ARG_IDX]);
 
   // allocate space for opened message
   unsigned char* opened_msg = malloc(msg_sz);
@@ -75,13 +77,10 @@ main(int argc, char** argv)
   volatile uint64_t end_time = 0;
 
   // main loop
-  for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
+  for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate private key
     // generate public key
     int _eval_unused = crypto_sign_keypair(/*public=*/ pubk, /*secret=*/ privk);
-
-    // generate message
-    ciocc_eval_rand_fill_buf(msg, msg_sz);
 
     // start counting cycles
     start_time = START_CYCLE_TIMER;
@@ -96,21 +95,42 @@ main(int argc, char** argv)
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
 
-    assert(-1 != sign_result); // -1 on err, 0 on ok
+    if (-1 == sign_result) { // -1 on err, 0 on ok
+      printf("FAILURE: eval_ed25519 failed at crypto_sign");
+      exit(0);
+    }
 
-    times[cur_iter] = end_time - start_time;
+    if (cur_iter >= num_warmup) {
+      times[cur_iter - num_warmup] = end_time - start_time;
+    }
 
     // verify the message for sanity check
     int open_result = crypto_sign_open(opened_msg, &msg_sz,
 				       signed_msg, signed_msg_sz, pubk);
-    assert(0 == open_result && "in eval_ed25519.c, error verifying sign of msg");
+    if (0 != open_result) {
+      printf("FAILURE: eval_ed25519 failed sanity check, sign of msg did not verify");
+      exit(0);
+    }
   }
 
   // output the timer results
-  printf("eval_ed25519 cycle counts for %d iterations\n", num_iter);
+  FILE* ccounts_out = fopen(argv[CYCLE_COUNTS_FILE], "w");
+  assert(ccounts_out != NULL && "Couldn't open cycle counts file for writing");
+  
+  fprintf(ccounts_out,
+	  "ed25519 cycle counts (%d iterations, %d warmup)\n",
+	  num_iter, num_warmup);
   for (int ii = 0; ii < num_iter; ++ii) {
-    printf("%" PRIu64 "\n", times[ii]);
+	  fprintf(ccounts_out, "%" PRIu64 "\n", times[ii]);
   }
+  assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
+
+  #ifndef NO_DYN_HIT_COUNTS
+  // record dynamic hitcounts, if applicable
+  if (argc > DYNAMIC_HITCOUNTS_FILE) {
+    print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  }
+  #endif
 
   return 0;
 }

@@ -6,10 +6,13 @@
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 4
+#define EXPECTED_ARGC 6
 #define NUM_BENCH_ITER_ARG_IDX 1
-#define MSG_SIZE_ARG_IDX 2
-#define AD_SIZE_ARG_IDX 3
+#define NUM_WARMUP_ITER_ARG_IDX 2
+#define MSG_ARG_IDX 3
+#define AD_SIZE_ARG_IDX 4
+#define CYCLE_COUNTS_FILE 5
+#define DYNAMIC_HITCOUNTS_FILE 6
 
 extern int sodium_init();
 extern size_t crypto_aead_chacha20poly1305_ietf_npubbytes(void);
@@ -20,7 +23,7 @@ extern int crypto_aead_chacha20poly1305_ietf_encrypt(
     unsigned long long mlen, const unsigned char *ad, unsigned long long adlen,
     const unsigned char *nsec, const unsigned char *npub,
     const unsigned char *k);
-extern int crypto_aead_aes256gcm_decrypt(unsigned char *m,
+extern int crypto_aead_chacha20poly1305_ietf_decrypt(unsigned char *m,
           unsigned long long *mlen_p, unsigned char *nsec,
           const unsigned char *c, unsigned long long clen,
           const unsigned char *ad, unsigned long long adlen,
@@ -30,21 +33,22 @@ extern void crypto_aead_chacha20poly1305_ietf_keygen(unsigned char *);
 int
 main(int argc, char** argv)
 {
-  if (argc != EXPECTED_ARGC) {
-    printf("Usage: %s <num_benchmark_iterations>"
-	   " <size_of_message> "
-	   " <size_of_associated_data>\n", argv[0]);
+  if (argc < EXPECTED_ARGC) {
+    printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
+	         " <message> <size_of_associated_data>"
+           " <cycle_counts_file> [<dynamic_hitcounts_file>]\n", argv[0]);
     exit(-1);
   }
-
-  // seed non-crypto-secure PRNG, for generating message contents
-  srand(EVAL_UTIL_H_SEED);
 
   // parse args
   int num_iter = strtol(/*src=*/ argv[NUM_BENCH_ITER_ARG_IDX],
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
 
+  int num_warmup = strtol(/*src=*/ argv[NUM_WARMUP_ITER_ARG_IDX],
+			/*endptr=*/ (char**) NULL,
+			/*base=*/ 10);
+  
   // init libsodium, must be called before other libsodium functions are called
   const int sodium_init_success = 0;
   const int sodium_already_initd = 1;
@@ -53,20 +57,17 @@ main(int argc, char** argv)
 	  sodium_already_initd == sodium_init_result) &&
 	 "Error initializing lib sodium");
 
-  unsigned long long msg_sz = strtol(argv[MSG_SIZE_ARG_IDX], (char**) NULL, 10);
-  unsigned long long additional_data_sz = strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
-
-  // allocate space for message
-  unsigned char* msg = malloc(msg_sz);
-  assert(msg && "Couldn't allocate msg bytes in eval_chacha20-poly1305-encrypt.c");
+  unsigned char* msg = (unsigned char*)argv[MSG_ARG_IDX];
+  unsigned long long msg_sz = strlen(argv[MSG_ARG_IDX]);
+  unsigned long long additional_data_sz = 0; //strtol(argv[AD_SIZE_ARG_IDX], (char**) NULL, 10);
 
   // allocate space for opened message
   unsigned char* opened_msg = malloc(msg_sz);
   assert(opened_msg && "Couldn't allocate opened_msg bytes in eval_chacha20-poly1305-encrypt.c");
 
   // allocate space for additional data
-  unsigned char* additional_data = malloc(additional_data_sz);
-  assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_encrypt.c");
+  unsigned char* additional_data = NULL; // malloc(additional_data_sz);
+  // assert(additional_data && "Couldn't allocate msg bytes in eval_aesni256gcm_encrypt.c");
 
   // allocate space for signed message buffer
   unsigned long long ciphertext_sz = msg_sz + crypto_aead_chacha20poly1305_ietf_abytes();
@@ -95,12 +96,9 @@ main(int argc, char** argv)
   volatile uint64_t end_time = 0;
 
   // main loop
-  for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
+  for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate private key
     crypto_aead_chacha20poly1305_ietf_keygen(privk);
-
-    // generate message
-    ciocc_eval_rand_fill_buf(msg, msg_sz);
 
     // generate nonce
     ciocc_eval_rand_fill_buf(nonce, sizeof nonce);
@@ -119,22 +117,49 @@ main(int argc, char** argv)
     // stop counting cycles
     end_time = STOP_CYCLE_TIMER;
 
-    assert(-1 != encrypt_result); // -1 on err, 0 on ok
+    if (-1 == encrypt_result) {
+      printf("FAILURE: eval_chacha20_poly1305_encrypt failed at crypto_aead_chacha20poly1305_ietf_encrypt");
+      exit(0);
+    }
 
-    times[cur_iter] = end_time - start_time;
+    if (cur_iter >= num_warmup) {
+      times[cur_iter - num_warmup] = end_time - start_time;
+    }
 
-    int decrypt_result = crypto_aead_aes256gcm_decrypt(decrypted_msg, &msg_sz,
+    int decrypt_result = crypto_aead_chacha20poly1305_ietf_decrypt(decrypted_msg, &msg_sz,
           NULL, ciphertext, ciphertext_sz, additional_data, additional_data_sz,
           nonce, privk);
 
+    if (-1 == decrypt_result) {
+      printf("FAILURE: eval_chacha20_poly1305_encrypt failed at crypto_aead_chacha20poly1305_ietf_decrypt");
+      exit(0);
+    }
+
     int cmp_result = memcmp(msg, decrypted_msg, msg_sz);
-    assert(0 == cmp_result &&
-          "in eval-chacha20-poly1305-encrypt.c, error validating decrypted msg = msg");
+    if (0 != cmp_result) {
+      printf("FAILURE: eval_chacha20_poly1305_encrypt failed sanity check, decrypted msg != msg");
+      exit(0);
+    }
   }
 
   // output the timer results
-  printf("eval_chacha20-poly1305-encrypt cycle counts for %d iterations\n", num_iter);
+  FILE* ccounts_out = fopen(argv[CYCLE_COUNTS_FILE], "w");
+  assert(ccounts_out != NULL && "Couldn't open cycle counts file for writing");
+  
+  fprintf(ccounts_out,
+	  "chacha20-poly1305-encrypt cycle counts (%d iterations, %d warmup)\n",
+	  num_iter, num_warmup);
   for (int ii = 0; ii < num_iter; ++ii) {
-    printf("%" PRIu64 "\n", times[ii]);
+	  fprintf(ccounts_out, "%" PRIu64 "\n", times[ii]);
   }
+  assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
+
+  #ifndef NO_DYN_HIT_COUNTS
+  // record dynamic hitcounts, if applicable
+  if (argc > DYNAMIC_HITCOUNTS_FILE) {
+    print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  }
+  #endif
+
+  return 0;
 }

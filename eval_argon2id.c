@@ -2,13 +2,17 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <assert.h> 
+#include <string.h>
 
 #include "eval_util.h"
 
-#define EXPECTED_ARGC 4
+#define EXPECTED_ARGC 6
 #define NUM_BENCH_ITER_ARG_IDX 1
-#define PASSWD_SIZE_ARG_IDX 2
-#define OUT_SIZE_ARG_IDX 2
+#define NUM_WARMUP_ITER_ARG_IDX 2
+#define PASSWD_ARG_IDX 3
+#define OUT_SIZE_ARG_IDX 4
+#define CYCLE_COUNTS_FILE 5
+#define DYNAMIC_HITCOUNTS_FILE 6
 
 extern int sodium_init(void);
 extern void randombytes_buf(void * const buf, const size_t size);
@@ -28,13 +32,14 @@ extern int crypto_pwhash(unsigned char * const out, unsigned long long outlen,
 int
 main(int argc, char** argv)
 {
-  if (argc != EXPECTED_ARGC) {
-    printf("Usage: %s <num_benchmark_iterations> <size_of_message>\n", argv[0]);
+  if (argc < EXPECTED_ARGC) {
+    printf("Usage: %s <num_benchmark_iterations> <num_warmup_iterations>"
+           " <password>"
+           " <size_of_output>"
+           " <file_to_write_cycle_counts_to>"
+           " [<file_to_write_hit_counts_to>]\n", argv[0]);
     exit(-1);
   }
-
-  // seed non-crypto-secure PRNG, for generating message contents
-  srand(EVAL_UTIL_H_SEED);
 
   // init libsodium, must be called before other libsodium functions are called
   const int sodium_init_success = 0;
@@ -49,8 +54,13 @@ main(int argc, char** argv)
 			/*endptr=*/ (char**) NULL,
 			/*base=*/ 10);
 
+  int num_warmup = strtol(/*src=*/ argv[NUM_WARMUP_ITER_ARG_IDX],
+			/*endptr=*/ (char**) NULL,
+			/*base=*/ 10);
+
   // passwd_sz must be between PASSWD_MIN and PASSWD_MAX (inclusive)
-  unsigned long long passwd_sz = strtol(argv[PASSWD_SIZE_ARG_IDX], (char**) NULL, 10);
+  unsigned char* passwd = (unsigned char*)argv[PASSWD_ARG_IDX];
+  unsigned long long passwd_sz = strlen(argv[PASSWD_ARG_IDX]);
   assert(passwd_sz >= crypto_pwhash_passwd_min() &&
     "Password size is less than min in eval_argon2id.c");
   assert(passwd_sz <= crypto_pwhash_passwd_max() &&
@@ -62,10 +72,6 @@ main(int argc, char** argv)
     "Output size is less than min in eval_argon2id.c");
   assert(out_sz <= crypto_pwhash_bytes_max() &&
     "Output size is greater than max in eval_argon2id.c");
-
-  // allocate space for password
-  unsigned char* passwd = malloc(passwd_sz);
-  assert(passwd && "Couldn't allocate passwd bytes in eval_argon2id.c");
 
   // allocate space for output
   unsigned char* out = malloc(out_sz);
@@ -93,12 +99,9 @@ main(int argc, char** argv)
   volatile uint64_t end_time = 0;
 
   // main loop
-  for (int cur_iter = 0; cur_iter < num_iter; ++cur_iter) {
+  for (int cur_iter = 0; cur_iter < num_iter + num_warmup; ++cur_iter) {
     // generate salt
     randombytes_buf(salt, sizeof salt);
-
-    // generate password
-    ciocc_eval_rand_fill_buf(passwd, passwd_sz);
 
     // start counting cycles
     start_time = START_CYCLE_TIMER;
@@ -112,16 +115,31 @@ main(int argc, char** argv)
 
     assert(-1 != pwhash_result); // -1 on err, 0 on ok
 
-    times[cur_iter] = end_time - start_time;
+    if (cur_iter >= num_warmup) {
+      times[cur_iter - num_warmup] = end_time - start_time;
+    }
 
     // TODO sanity check
   }
 
   // output the timer results
-  printf("eval_argon2id cycle counts for %d iterations\n", num_iter);
+  FILE* ccounts_out = fopen(argv[CYCLE_COUNTS_FILE], "w");
+  assert(ccounts_out != NULL && "Couldn't open cycle counts file for writing");
+  
+  fprintf(ccounts_out,
+	  "argon2id cycle counts (%d iterations, %d warmup)\n",
+	  num_iter, num_warmup);
   for (int ii = 0; ii < num_iter; ++ii) {
-    printf("%" PRIu64 "\n", times[ii]);
+	  fprintf(ccounts_out, "%" PRIu64 "\n", times[ii]);
   }
+  assert(fclose(ccounts_out) != EOF && "Couldn't close cycle counts file");
+
+  #ifndef NO_DYN_HIT_COUNTS
+  // record dynamic hitcounts, if applicable
+  if (argc > DYNAMIC_HITCOUNTS_FILE) {
+    print_dynamic_hitcounts(argv[DYNAMIC_HITCOUNTS_FILE]);
+  }
+  #endif
 
   return 0;
 }

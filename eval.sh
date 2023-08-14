@@ -1,34 +1,55 @@
 #!/bin/bash
 
+set -u
+set -x
+
 EVAL_START_TIME=$(TZ='America/Los_Angeles' date +%F-%H:%M:%S-%Z)
 TOP_EVAL_DIR=$EVAL_START_TIME-eval
+LATEST_EVAL_DIR="latest-eval-dir"
 
 # defaults, set by user
+BASELINE_CC=`realpath /usr/bin/clang`
 CC=`realpath ~/llvm-project/build/bin/clang`
 CHECKER_DIR=`realpath ./checker`
 LIBSODIUM_DIR=`realpath ./libsodium`
+LIBSODIUM_AR=$LIBSODIUM_DIR/src/libsodium/.libs/libsodium.a
+LIBSODIUM_BASELINE_DIR="libsodium.built."
+LIBSODIUM_ASM_DIR="libsodium.built.asm"
+LIBSODIUM_REG_RES_DIR="libsodium.built.rr"
 NUM_MAKE_JOB_SLOTS=8
 
 EXTRA_MAKEFILE_FLAGS=""
 
 BASELINE_DIR="baseline"
+ASM_DIR="asm"
+REG_RES_DIR="rr" # register reservation only, no mitigations
 CS_DIR="cs"
 SS_DIR="ss"
-SS_CS_DIR="ss-cs"
-CS_SS_DIR="cs-ss"
+SS_CS_DIR="ss+cs"
+
+VALIDATE=0
+VALIDATION_DIR=""
+
+EVAL_MSG_LEN=100
+EVAL_MSG=$(timeout 0.01s cat /dev/urandom | tr -dc '[:alnum:]' | fold -w $EVAL_MSG_LEN | head -n 1)
+
+DYNAMIC_HIT_COUNTS=0
 
 function usage
 {
     echo "Usage: ./eval.sh [ -h | --help (displays this message) ]
+			   [ -b | --baseline-cc <path to baseline c compiler> ]
 			   [ -c | --cc <path to c compiler> ]
 			   [ -p | --checker-dir <path to root checker dir> ]
 			   [ -t | --crypto-dir <path to the crypto lib project that has the root makefile> ]
+			   [ -v | --validate <path to a prior eval directory against which to validate results> ]
 			   [ -m | --makefile-flags \"<~double quoted string~ of extra flags for the Makefile>\" ]
+			   [ -d | --dynamic-hit-counts (record dynamic hit counts) ]
 			   [ -j <num make job slots> ]"
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "hc:p:t:m:j:" -l "help,cc:,checker-dir:,crypto-dir:,makefile-flags:" -n eval.sh -- "$@")
+PARSED_ARGS=$(getopt -o "dhb:c:p:t:v:m:j:" -l "help,baseline-cc:,cc:,checker-dir:,dynamic-hit-counts,crypto-dir:,validate:,makefile-flags:" -n eval.sh -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -45,6 +66,12 @@ while true; do
 	    ;;
 	'-j')
 	    NUM_MAKE_JOB_SLOTS=$2
+	    shift 2
+	    continue
+	    ;;
+	'-b' | '--baseline-cc')
+	    echo BASELINE_CC opt
+	    BASELINE_CC=$2
 	    shift 2
 	    continue
 	    ;;
@@ -69,6 +96,17 @@ while true; do
 	    shift 2
 	    continue
 	    ;;
+	'-v' | '--validate')
+		VALIDATE=1
+	    VALIDATION_DIR=$2
+	    shift 2
+	    continue
+	    ;;
+	'-d' | '--dynamic-hit-counts')
+	    DYNAMIC_HIT_COUNTS=1
+	    shift
+	    continue
+	    ;;
 	'--')
 	    shift
 	    break
@@ -82,11 +120,43 @@ while true; do
 done
 
 mkdir $TOP_EVAL_DIR
+echo "$EVAL_MSG" > $TOP_EVAL_DIR/msg.txt
+test -L "$LATEST_EVAL_DIR" && rm "$LATEST_EVAL_DIR"
+ln -s "$TOP_EVAL_DIR" "$LATEST_EVAL_DIR"
+
+make libsodium_init
+make checker_init
 
 # baseline
-make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+echo "Running baseline microbenchmarks..."
+make clean
+
+if [[ $DYNAMIC_HIT_COUNTS -eq 1 ]]; then
+    EXTRA_CIO_FLAGS="--dynamic-hit-counts"
+else
+    EXTRA_CIO_FLAGS=""
+fi
+
+if [ ! -d "$LIBSODIUM_BASELINE_DIR" ]; then
+	cd $LIBSODIUM_DIR
+	./configure --disable-asm CC=$BASELINE_CC
+	make -j "$NUM_MAKE_JOB_SLOTS" CC=$BASELINE_CC
+
+	if [[ $? -ne 0 ]]; then
+		echo "Error building baseline libsodium. Exiting"
+		exit -1
+	fi
+	
+	make check CC=$BASELINE_CC -j "$NUM_MAKE_JOB_SLOTS"
+	cd ..
+	mkdir $LIBSODIUM_BASELINE_DIR
+	cp $LIBSODIUM_AR $LIBSODIUM_BASELINE_DIR/libsodium.a
+fi
+
+taskset -c 0 make MITIGATIONS="" EVAL_DIR="$TOP_EVAL_DIR/$BASELINE_DIR" \
+    CC=$BASELINE_CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG EXTRA_EVAL_CFLAGS="-DBASELINE_COMPILE" EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
     run_eval
 
 if [[ $? -ne 0 ]]; then
@@ -94,21 +164,64 @@ if [[ $? -ne 0 ]]; then
        exit -1
 fi
 
-# cs only
-make MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+# with inline asm
+echo "Running microbenchmarks with inline asm enabled..."
+make clean
+
+if [ ! -d "$LIBSODIUM_ASM_DIR" ]; then
+	cd $LIBSODIUM_DIR
+	./configure CC=$BASELINE_CC
+	make -j "$NUM_MAKE_JOB_SLOTS" CC=$BASELINE_CC
+	make check CC=$BASELINE_CC -j "$NUM_MAKE_JOB_SLOTS"
+	cd ..
+	mkdir $LIBSODIUM_ASM_DIR
+	cp $LIBSODIUM_AR $LIBSODIUM_ASM_DIR/libsodium.a
+fi
+
+taskset -c 0 make MITIGATIONS="$ASM_DIR" EVAL_DIR="$TOP_EVAL_DIR/$ASM_DIR" \
+    CC=$BASELINE_CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+	EVAL_MSG=$EVAL_MSG  \
+    run_eval
+
+# with register reservation only
+echo "Running microbenchmarks with register reservation.."
+make clean
+
+if [ ! -d "$LIBSODIUM_REG_RES_DIR" ]; then
+	cd $LIBSODIUM_DIR
+	./configure --disable-asm CC=$CC
+	make -j "$NUM_MAKE_JOB_SLOTS" CC=$CC
+	
+	if [[ $? -ne 0 ]]; then
+		echo "Error building libsodium with register reservation. Exiting"
+		exit -1
+	fi
+
+	make check CC=$CC -j "$NUM_MAKE_JOB_SLOTS"
+	cd ..
+	mkdir $LIBSODIUM_REG_RES_DIR
+	cp $LIBSODIUM_AR $LIBSODIUM_REG_RES_DIR/libsodium.a
+fi
+
+taskset -c 0 make -j 32 MITIGATIONS="$REG_RES_DIR" EVAL_DIR="$TOP_EVAL_DIR/$REG_RES_DIR" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+	EVAL_MSG=$EVAL_MSG CFLAGS="-O0 -Werror -std=c18 -DNO_DYN_HIT_COUNTS" \
     run_eval
 
 if [[ $? -ne 0 ]]; then
-       echo "Error running cs mitigations"
+       echo "Error running with register reservation only"
        exit -1
 fi
 
 # ss only
-make MITIGATIONS="--ss" EVAL_DIR="$TOP_EVAL_DIR/$SS_DIR" \
+echo "Running microbenchmarks with silent store mitigations.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--ss" EVAL_DIR="$TOP_EVAL_DIR/$SS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+	EVAL_MSG=$EVAL_MSG EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
     run_eval
 
 if [[ $? -ne 0 ]]; then
@@ -116,28 +229,63 @@ if [[ $? -ne 0 ]]; then
        exit -1
 fi
 
-# cs then ss
-make MITIGATIONS="--cs --ss" EVAL_DIR="$TOP_EVAL_DIR/$CS_SS_DIR" \
+# cs only
+echo "Running microbenchmarks with comp simp mitigations.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
     run_eval
 
 if [[ $? -ne 0 ]]; then
-       echo "Error running cs-ss mitigations"
+       echo "Error running cs mitigations"
        exit -1
 fi
 
-# ss then cs
-# make MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
-#     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-#     NUM_MAKE_JOB_SLOTS=8 EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-#     run_eval
+# ss and cs
+echo "Running microbenchmarks with silent store and comp simp mitigations.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--ss --cs" EVAL_DIR="$TOP_EVAL_DIR/$SS_CS_DIR" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG EXTRA_CIO_FLAGS="$EXTRA_CIO_FLAGS" \
+    run_eval
 
-# if [[ $? -ne 0 ]]; then
-#        echo "Error running ss-cs mitigations"
-#        exit -1
-# fi
+if [[ $? -ne 0 ]]; then
+       echo "Error running ss+cs mitigations"
+       exit -1
+fi
 
 # generate plots
-python3 process_eval_data.py $EVAL_DIR $BASELINE_DIR \
-    $CS_DIR $SS_DIR $CS_SS_DIR
+if [[ "$VALIDATE" -eq 1 ]]; then
+	echo ""
+	echo "Validating baseline..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR "../$VALIDATION_DIR/$BASELINE_DIR"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/baseline_validation_data.txt
+
+	echo ""
+	echo "Validating register reservation only..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $REG_RES_DIR "../$VALIDATION_DIR/$REG_RES_DIR"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/rr_validation_data.txt
+
+	echo ""
+	echo "Validating SS..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $SS_DIR "../$VALIDATION_DIR/ss"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/ss_validation_data.txt
+
+	echo ""
+	echo "Validating CS..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $CS_DIR "../$VALIDATION_DIR/cs"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/cs_validation_data.txt
+
+	echo ""
+	echo "Validating SS+CS..."
+	python3 process_eval_data.py $TOP_EVAL_DIR $SS_CS_DIR "../$VALIDATION_DIR/ss+cs"
+	mv $TOP_EVAL_DIR/calculated_data.txt $TOP_EVAL_DIR/ss+cs_validation_data.txt
+fi
+
+echo ""
+echo "Overheads vs baseline:"
+python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
+    $SS_DIR $CS_DIR $SS_CS_DIR $REG_RES_DIR
