@@ -169,7 +169,7 @@ def gen_overhead_plot(target_dir, baseline_dir, data):
                 fn_stds[abl] += [data[lib][abl][fn][OVERHEAD_STD]]
             
         x = np.arange(len(fns))
-        width = 0.25
+        width = 1 / (len(fn_ohs.items()) + 1)
         multiplier = 0
 
         plt.style.use("tableau-colorblind10")
@@ -182,11 +182,11 @@ def gen_overhead_plot(target_dir, baseline_dir, data):
             max_oh = max(max_oh, max(ohs))
             offset = width * multiplier
             rects = ax.bar(x + offset, ohs, width, yerr=fn_stds[abl], capsize=4, label=abl)
-            ax.bar_label(rects, [f"{format(oh, '.2f')}x" for oh in ohs], padding=3)
+            ax.bar_label(rects, [f"{format(oh, '.2f')}x" for oh in ohs], padding=3, rotation="vertical")
             multiplier += 1
 
         ax.set_xmargin(0.02)
-        ax.set_ylim(top=max_oh+2)
+        ax.set_ylim(top=max_oh+5)
         ax.set_ylabel('Normalized execution time')
         ax.set_xlabel('Cryptographic function')
         ax.set_title('Overhead of libsodium microbenchmarks')

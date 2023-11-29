@@ -27,6 +27,13 @@ CS_DIR="cs"
 SS_DIR="ss"
 SS_CS_DIR="ss+cs"
 
+CS_DIR_VADD="cs-vadd"
+CS_DIR_MUL64="cs-mul64"
+CS_DIR_SHIFT="cs-shift"
+CS_DIR_LEA="cs-lea"
+CS_DIR_64="cs-64"
+CS_DIR_32="cs-32"
+
 VALIDATE=0
 VALIDATION_DIR=""
 
@@ -243,6 +250,96 @@ if [[ $? -ne 0 ]]; then
        exit -1
 fi
 
+echo "Running microbenchmarks with limited comp simp mitigations: 64-bit multiply.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_mul64" \
+    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_MUL64" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG \
+	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-multiply-64\" $EXTRA_CIO_FLAGS" \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running cs 64-bit multiply mitigations"
+       exit -1
+fi
+
+echo "Running microbenchmarks with limited comp simp mitigations: shift.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_shift" \
+    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_SHIFT" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG \
+	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-shift\" $EXTRA_CIO_FLAGS" \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running cs shift mitigations"
+       exit -1
+fi
+
+echo "Running microbenchmarks with limited comp simp mitigations: vadd.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_vadd" \
+    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_VADD" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG \
+	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-vadd\" $EXTRA_CIO_FLAGS" \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running cs vadd mitigations"
+       exit -1
+fi
+
+echo "Running microbenchmarks with limited comp simp mitigations: lea.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_lea" \
+    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_LEA" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG \
+	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-lea\" $EXTRA_CIO_FLAGS" \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running cs lea mitigations"
+       exit -1
+fi
+
+echo "Running microbenchmarks with limited comp simp mitigations: misc 64-bit.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_64" \
+    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_64" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG \
+	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-64\" $EXTRA_CIO_FLAGS" \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running cs 64-bit mitigations"
+       exit -1
+fi
+
+echo "Running microbenchmarks with limited comp simp mitigations: misc <=32-bit.."
+make clean
+taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_32" \
+    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_32" \
+    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+    EVAL_MSG=$EVAL_MSG \
+	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-32\" $EXTRA_CIO_FLAGS" \
+    run_eval
+
+if [[ $? -ne 0 ]]; then
+       echo "Error running cs <=32-bit mitigations"
+       exit -1
+fi
+
 # ss and cs
 echo "Running microbenchmarks with silent store and comp simp mitigations.."
 make clean
@@ -288,4 +385,6 @@ fi
 echo ""
 echo "Overheads vs baseline:"
 python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
-    $SS_DIR $CS_DIR $SS_CS_DIR $REG_RES_DIR
+    $SS_DIR $CS_DIR \
+	$CS_DIR_MUL64 $CS_DIR_SHIFT $CS_DIR_VADD $CS_DIR_LEA $CS_DIR_64 $CS_DIR_32 \
+    $SS_CS_DIR $REG_RES_DIR

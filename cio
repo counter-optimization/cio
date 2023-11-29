@@ -37,10 +37,10 @@ function usage
 {
     echo "Usage: $TOOLNAME [ -h | --help (displays this message) ]
 			   [ -c | --cc <path to c compiler> ]
-    	 	 	   [ -p | --checker-plugin-path <path to dir with uarch_checker.plugin> ]
+    	 	   [ -p | --checker-plugin-path <path to dir with uarch_checker.plugin> ]
 			   [ -o | --big-obj <path where $TOOLNAME puts jammed together obj file> ]
 			   [ -b | --build-dir <path where $TOOLNAME stores intermeiate build artifacts> ]
-			   [ -p | --cflags \"<~double quoted string~ of extra cflags for CC>\" ]
+			   [ -a | --cflags \"<~double quoted string~ of extra cflags for CC>\" ]
 			   [ -e | --checker-flags \"<~double quoted string~ of extra flags for uarch_checker>\" ]
 			   [ -j <num make job slots> ]
 			   [ --is-libsodium <run libsodium init> ]
@@ -129,7 +129,7 @@ while true; do
 	    shift 2
 	    continue
 	    ;;
-	'-p' | '--cflags')
+	'-a' | '--cflags')
 	    EXTRA_CFLAGS=$2
 	    shift 2
 	    continue
@@ -260,7 +260,7 @@ echo "$THEIR_CFLAGS" > "$THEIR_CFLAGS_FILE"
 CFLAGS="-g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic"
 echo "THEIR_CFLAGS are: $CFLAGS"
 
-COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $CFLAGS $EXTRA_CFLAGS"
+COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $CFLAGS"
 # grep -E 'override CFLAGS' ${TARGET_DIR}/Makefile
 # NO_OVERRIDE=$?
 # if [[ NO_OVERRIDE -eq 0 ]]; then
@@ -373,6 +373,8 @@ fi
 if [[ $DYNAMIC_HIT_COUNTS -eq 1 ]]; then
     MITIGATION_PASS_CFLAGS="-mllvm --x86-cs-dyn-stat -mllvm --x86-dyn-stat-decl $MITIGATION_PASS_CFLAGS"
 fi
+
+MITIGATION_PASS_CFLAGS="$MITIGATION_PASS_CFLAGS $EXTRA_CFLAGS"
 
 # MITIGATION STEP
 echo "Running mitigation pass... with CFLAGS=\"$MITIGATION_PASS_CFLAGS\""
