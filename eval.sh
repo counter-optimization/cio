@@ -27,12 +27,8 @@ CS_DIR="cs"
 SS_DIR="ss"
 SS_CS_DIR="ss+cs"
 
-CS_DIR_VADD="cs-vadd"
-CS_DIR_MUL64="cs-mul64"
-CS_DIR_SHIFT="cs-shift"
-CS_DIR_LEA="cs-lea"
-CS_DIR_64="cs-64"
-CS_DIR_32="cs-32"
+CS_ABLATIONS=("multiply-64" "lea" "vector-ops" "other-64" "other")
+CS_ABLATIONS_REFERENCE=("cs_mul64" "cs_lea" "cs_vector" "cs_other_64" "cs_other")
 
 VALIDATE=0
 VALIDATION_DIR=""
@@ -237,7 +233,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # cs only
-echo "Running microbenchmarks with comp simp mitigations.."
+echo "Running microbenchmarks with all comp simp mitigations.."
 make clean
 taskset -c 0 make -j 32 MITIGATIONS="--cs" EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR" \
     CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
@@ -250,95 +246,24 @@ if [[ $? -ne 0 ]]; then
        exit -1
 fi
 
-echo "Running microbenchmarks with limited comp simp mitigations: 64-bit multiply.."
-make clean
-taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_mul64" \
-    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_MUL64" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    EVAL_MSG=$EVAL_MSG \
-	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-multiply-64\" $EXTRA_CIO_FLAGS" \
-    run_eval
+echo "Running microbenchmarks with comp simp mitigations by category..."
 
-if [[ $? -ne 0 ]]; then
-       echo "Error running cs 64-bit multiply mitigations"
-       exit -1
-fi
-
-echo "Running microbenchmarks with limited comp simp mitigations: shift.."
-make clean
-taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_shift" \
-    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_SHIFT" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    EVAL_MSG=$EVAL_MSG \
-	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-shift\" $EXTRA_CIO_FLAGS" \
-    run_eval
-
-if [[ $? -ne 0 ]]; then
-       echo "Error running cs shift mitigations"
-       exit -1
-fi
-
-echo "Running microbenchmarks with limited comp simp mitigations: vadd.."
-make clean
-taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_vadd" \
-    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_VADD" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    EVAL_MSG=$EVAL_MSG \
-	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-vadd\" $EXTRA_CIO_FLAGS" \
-    run_eval
-
-if [[ $? -ne 0 ]]; then
-       echo "Error running cs vadd mitigations"
-       exit -1
-fi
-
-echo "Running microbenchmarks with limited comp simp mitigations: lea.."
-make clean
-taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_lea" \
-    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_LEA" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    EVAL_MSG=$EVAL_MSG \
-	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-lea\" $EXTRA_CIO_FLAGS" \
-    run_eval
-
-if [[ $? -ne 0 ]]; then
-       echo "Error running cs lea mitigations"
-       exit -1
-fi
-
-echo "Running microbenchmarks with limited comp simp mitigations: misc 64-bit.."
-make clean
-taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_64" \
-    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_64" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    EVAL_MSG=$EVAL_MSG \
-	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-64\" $EXTRA_CIO_FLAGS" \
-    run_eval
-
-if [[ $? -ne 0 ]]; then
-       echo "Error running cs 64-bit mitigations"
-       exit -1
-fi
-
-echo "Running microbenchmarks with limited comp simp mitigations: misc <=32-bit.."
-make clean
-taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="cs_32" \
-    EVAL_DIR="$TOP_EVAL_DIR/$CS_DIR_32" \
-    CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
-    NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
-    EVAL_MSG=$EVAL_MSG \
-	EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-32\" $EXTRA_CIO_FLAGS" \
-    run_eval
-
-if [[ $? -ne 0 ]]; then
-       echo "Error running cs <=32-bit mitigations"
-       exit -1
-fi
+for i in ${!CS_ABLATIONS[@]}; do
+	echo "Running comp simp ablation: ${CS_ABLATIONS[$i]}"
+	make clean
+	taskset -c 0 make -j 32 MITIGATIONS="--cs" MITIGATIONS_STR="${CS_ABLATIONS_REFERENCE[$i]}" \
+		EVAL_DIR="$TOP_EVAL_DIR/${CS_ABLATIONS_REFERENCE[$i]}" \
+		CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
+		NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
+		EVAL_MSG=$EVAL_MSG \
+		EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-${CS_ABLATIONS[$i]}\" $EXTRA_CIO_FLAGS" \
+		run_eval
+	
+	if [[ $? -ne 0 ]]; then
+		echo "Error running cs ${CS_ABLATIONS[$i]} mitigations"
+		exit -1
+	fi
+done
 
 # ss and cs
 echo "Running microbenchmarks with silent store and comp simp mitigations.."
@@ -385,6 +310,4 @@ fi
 echo ""
 echo "Overheads vs baseline:"
 python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
-    $SS_DIR $CS_DIR \
-	$CS_DIR_MUL64 $CS_DIR_SHIFT $CS_DIR_VADD $CS_DIR_LEA $CS_DIR_64 $CS_DIR_32 \
-    $SS_CS_DIR $REG_RES_DIR
+    $SS_CS_DIR $CS_DIR $SS_DIR ${CS_ABLATIONS_REFERENCE[@]} $REG_RES_DIR

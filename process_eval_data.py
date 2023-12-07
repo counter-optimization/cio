@@ -33,6 +33,17 @@ OVERHEAD = 'overhead'
 OVERHEAD_STD = 'overhead_std'
 BINARY_SIZE = 'binary_size'
 
+LEGEND = dict({
+    'ss+cs': 'SS and CS',
+    'ss': 'SS only',
+    'cs': 'CS only (all categories)',
+    'cs_mul64': 'CS for 64-bit multiplication',
+    'cs_lea': 'CS for LEA instructions',
+    'cs_vector': 'CS for vector instructions',
+    'cs_other_64': 'CS for all other 64-bit instructions',
+    'cs_other': 'CS for all other instructions (32-bit or less)',
+    'rr': 'No transformations, but registers reserved'
+})
 
 
 def parse_lines(filepath):
@@ -102,6 +113,22 @@ def get_data(args):
                     fn_file_sz.close()
                 
     return data
+
+
+def merge_decrypt_encrypt_data(data: dict):
+    merged_data = dict()
+    for lib in data.keys():
+        merged_data[lib] = dict()
+        for abl in data[lib].keys():
+            merged_data[lib][abl] = dict()
+            for fn in data[lib][abl].keys():
+                if fn.find("-encrypt") != -1:
+                    fn_name = fn[0:fn.index("-encrypt")]
+                    merged_data[lib][abl][fn_name] = data[lib][abl][fn]
+                elif fn.find("-decrypt") == -1:
+                    merged_data[lib][abl][fn] = data[lib][abl][fn]
+
+    return merged_data
 
 
 def gen_pretty_data_string(data: dict):
@@ -181,8 +208,9 @@ def gen_overhead_plot(target_dir, baseline_dir, data):
         for abl, ohs in fn_ohs.items():
             max_oh = max(max_oh, max(ohs))
             offset = width * multiplier
-            rects = ax.bar(x + offset, ohs, width, yerr=fn_stds[abl], capsize=4, label=abl)
-            ax.bar_label(rects, [f"{format(oh, '.2f')}x" for oh in ohs], padding=3, rotation="vertical")
+            legend = LEGEND[abl] if abl in LEGEND.keys() else abl
+            rects = ax.bar(x + offset, ohs, width, yerr=fn_stds[abl], capsize=4, label=legend)
+            ax.bar_label(rects, [f"{format(oh, '.2f')}x" for oh in ohs], padding=6, rotation="vertical")
             multiplier += 1
 
         ax.set_xmargin(0.02)
@@ -190,8 +218,8 @@ def gen_overhead_plot(target_dir, baseline_dir, data):
         ax.set_ylabel('Normalized execution time')
         ax.set_xlabel('Cryptographic function')
         ax.set_title('Overhead of libsodium microbenchmarks')
-        plt.xticks(x, labels=fns, rotation=10)
-        ax.legend(bbox_to_anchor=(0.91, 0.99), loc='upper left')
+        plt.xticks(x, labels=fns)
+        ax.legend(bbox_to_anchor=(0.70, 0.99), loc='upper left')
         ax.set_axisbelow(True)
         ax.yaxis.grid(True)
 
@@ -288,6 +316,7 @@ def main():
         os.makedirs(target_dir)
 
     gen_latex_table_inserts(target_dir, args.baseline_dir, data)
+    data = merge_decrypt_encrypt_data(data)
     gen_overhead_plot(target_dir, args.baseline_dir, data)
 
 
