@@ -210,23 +210,23 @@ def gen_overhead_plot(target_dir, baseline_dir, data):
             offset = width * multiplier
             legend = LEGEND[abl] if abl in LEGEND.keys() else abl
             rects = ax.bar(x + offset, ohs, width, yerr=fn_stds[abl], capsize=4, label=legend)
-            ax.bar_label(rects, [f"{format(oh, '.2f')}x" for oh in ohs], padding=6, rotation="vertical")
+            ax.bar_label(rects, [f"{format(oh, '.2f')}x" for oh in ohs], padding=6, rotation="vertical", fontsize=11)
             multiplier += 1
 
         ax.set_xmargin(0.02)
-        ax.set_ylim(top=max_oh+5)
-        ax.set_ylabel('Normalized execution time')
-        ax.set_xlabel('Cryptographic function')
-        ax.set_title('Overhead of libsodium microbenchmarks')
-        plt.xticks(x, labels=fns)
-        ax.legend(bbox_to_anchor=(0.70, 0.99), loc='upper left')
+        ax.set_ylim(top=max_oh+7)
+        ax.set_ylabel('Normalized execution time', fontsize=12.5)
+        ax.set_xlabel('Cryptographic function', fontsize=12.5)
+        ax.set_title('Overhead of libsodium microbenchmarks', fontsize=15)
+        plt.xticks(x, labels=fns, fontsize=12)
+        ax.legend(bbox_to_anchor=(0.675, 0.99), loc='upper left', fontsize=11)
         ax.set_axisbelow(True)
         ax.yaxis.grid(True)
 
         plt.savefig(
-            os.path.join(target_dir, 'microbench-overheads.png'),
+            os.path.join(target_dir, 'microbench-overheads.pdf'),
             bbox_inches='tight')
-        print(f"Saved bar chart to {os.path.join(target_dir, 'microbench-overheads.png')}")
+        print(f"Saved bar chart to {os.path.join(target_dir, 'microbench-overheads.pdf')}")
         plt.close()
 
 
