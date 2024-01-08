@@ -90,7 +90,7 @@ if [[ ! -v MAX_SEED_LEN ]]; then
     MAX_SEED_LEN=$((4 * (8 * 6 + 32 * 8)))
 fi
 
-if [[ ! -v MEASURE_CYCLE_RUN ]]; then
+if [[ -v MEASURE_CYCLE_RUN ]]; then
     MEASURE_CYCLE_ARG="-measure_cycles"
 else
     MEASURE_CYCLE_ARG=""
