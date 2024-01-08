@@ -26,11 +26,10 @@ fi
 eval set -- "$PARSED_ARGS"
 unset PARSED_ARGS
 
-echo $TRANSFORMS_FILE
+echo "Verifying from $TRANSFORMS_FILE"
+echo "---"
 
 while true; do
-    echo "Hi"
-    echo "$1"
     case "$1" in
 	'-h' | '--help')
 	    usage
@@ -64,6 +63,13 @@ while true; do
     shift
 done
 
+# Check whether racket is installed
+which racket
+if [[ $? -ne 0 ]]; then
+	echo "Error: Could not find racket to run the verifier. Please install or add racket to your PATH and try again."
+	exit 1
+fi
+
 if [ ! -d "$VERIFICATION_RESULTS_DIR" ]; then
     mkdir $VERIFICATION_RESULTS_DIR
 fi
@@ -71,6 +77,9 @@ fi
 for insn in $(cat $TRANSFORMS_FILE); do
     echo "Running verifier on $insn"
     racket $CHECKER_DIR/synth/verify.rkt -v $insn &> $VERIFICATION_RESULTS_DIR/$insn.txt
+	if [[ $? -ne 0 ]]; then
+		echo "Error: Verifier failed unexpectedly. See verification-results/$insn.txt for details"
+	fi
 done
 
 grep -r -l "N/A" verification-results | awk -F '[/.]' '{print$2}' > $MISSING_TRANSFORMS_FILE
