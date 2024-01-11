@@ -20,7 +20,7 @@ BUILD_DIR="./${TIMESTAMP}-${TOOLNAME}-build"
 LATEST_BUILD_DIR="latest-cio-build"
 NUM_MAKE_JOB_SLOTS=8
 
-EXTRA_CFLAGS=""
+CFLAGS="-g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic"
 EXTRA_CHECKER_FLAGS=""
 
 IS_LIBSODIUM=0
@@ -40,7 +40,7 @@ function usage
     	 	   [ -p | --checker-plugin-path <path to dir with uarch_checker.plugin> ]
 			   [ -o | --big-obj <path where $TOOLNAME puts jammed together obj file> ]
 			   [ -b | --build-dir <path where $TOOLNAME stores intermeiate build artifacts> ]
-			   [ -a | --cflags \"<~double quoted string~ of extra cflags for CC>\" ]
+			   [ -a | --cflags \"<~double quoted string~ of cflags for CC>\" ]
 			   [ -e | --checker-flags \"<~double quoted string~ of extra flags for uarch_checker>\" ]
 			   [ -j <num make job slots> ]
 			   [ --is-libsodium <run libsodium init> ]
@@ -56,7 +56,7 @@ function usage
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "dhc:p:b:o:f:e:p:t:j:" -l "dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
+PARSED_ARGS=$(getopt -o "dhc:p:b:o:f:e:p:t:j:a:" -l "dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -130,7 +130,7 @@ while true; do
 	    continue
 	    ;;
 	'-a' | '--cflags')
-	    EXTRA_CFLAGS=$2
+	    CFLAGS=$2
 	    shift 2
 	    continue
 	    ;;
@@ -253,13 +253,6 @@ fi
 # echo done
 
 # Get their CFLAGS so we can append ours
-THEIR_CFLAGS=$(grep -E '^CFLAGS[ =]' ./libsodium/src/libsodium/Makefile)
-THEIR_CFLAGS_FILE="$BUILD_DIR/their-cflags.txt"
-echo "$THEIR_CFLAGS" > "$THEIR_CFLAGS_FILE"
-# source "$THEIR_CFLAGS_FILE"
-CFLAGS="-g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic"
-echo "THEIR_CFLAGS are: $CFLAGS"
-
 COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $CFLAGS"
 # grep -E 'override CFLAGS' ${TARGET_DIR}/Makefile
 # NO_OVERRIDE=$?
@@ -292,6 +285,7 @@ if [[ "$IS_LIBSODIUM" -eq 1 ]]; then
     fi
 else
     echo "Gathering all intermediate object files into ${BIG_OBJ}..."
+	touch $BIG_OBJ
     find $TARGET_DIR -name '*.o' -a ! -path '*.libs*' | xargs ld -O0 -o $BIG_OBJ -lc
     BUILD_BIG_OBJ_RES=$?
     echo done
@@ -374,7 +368,7 @@ if [[ $DYNAMIC_HIT_COUNTS -eq 1 ]]; then
     MITIGATION_PASS_CFLAGS="-mllvm --x86-cs-dyn-stat -mllvm --x86-dyn-stat-decl $MITIGATION_PASS_CFLAGS"
 fi
 
-MITIGATION_PASS_CFLAGS="$MITIGATION_PASS_CFLAGS $EXTRA_CFLAGS"
+MITIGATION_PASS_CFLAGS="$MITIGATION_PASS_CFLAGS"
 
 # MITIGATION STEP
 echo "Running mitigation pass... with CFLAGS=\"$MITIGATION_PASS_CFLAGS\""
