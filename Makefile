@@ -3,7 +3,7 @@ EXTRA_EVAL_CFLAGS=""
 EXTRA_CIO_FLAGS=""
 
 export LLVM_HOME=$(HOME)/llvm-project/build
-export OUR_CC=$(HOME)/llvm-project/build/bin/clang
+export OUR_CC=$(LLVM_HOME)/bin/clang
 export CC=$(OUR_CC) # default to our fork of llvm's clang
 
 export NUM_MAKE_JOB_SLOTS=8
@@ -57,6 +57,10 @@ FILE_WHICH_CFLAGS_FOR_EVAL_BUILD=$(EVAL_DIR)/eval-cflags.txt
 FILE_WHICH_MITIGATIONS_FOR_EVAL_BUILD=$(EVAL_DIR)/eval-mitigations.txt
 FILE_WHICH_CC_FOR_LIBSODIUM_BUILD=$(EVAL_DIR)/libna-cc.txt #todo
 FILE_WHICH_CFLAGS_FOR_LIBSODIUM_BUILD=$(EVAL_DIR)/libna-cflags.txt #todo
+
+BASIC_TEST_DIR=basictest
+BASIC_TEST_CONFIG_PATH=$(BASIC_TEST_DIR)/config.csv
+BASIC_TEST_BUILD_DIR=basictest-build
 
 .PHONY: clean eval_prereqs run_eval build_eval
 
@@ -138,6 +142,10 @@ eval_argon2id: eval_prereqs $(EVAL_ARGON2ID)
 	$(CC) $(EVAL_ARGON2ID) $(LIBSODIUM_BUILT_AR) -o $@
 
 eval_prereqs: $(LIBSODIUM_BUILT_AR) $(CHECKER_BUILT)
+
+test: $(CHECKER_BUILT)
+	./cio --skip-double-check --ss --cs --crypto-dir=$(BASIC_TEST_DIR) --config-file=$(BASIC_TEST_CONFIG_PATH) \
+		-j 1 -b $(BASIC_TEST_BUILD_DIR) -c $(CC) -a "-O0"
 
 libsodium_init:
 	git submodule init -- $(LIBSODIUM_DIR)
