@@ -3,78 +3,77 @@
 FROM ubuntu:22.04
 
 ## ----------------------------------------------------------------------------
-## STEP 1: Install packages and dependencies
+## STEP 1: Initial set up
 ## ----------------------------------------------------------------------------
 
-## Basic packages
+## Install basic packages
+RUN apt-get -y update && apt-get -y upgrade && \
+    apt-get -y install sudo && \
+    apt-get -y install git && \
+    apt-get -y install python3
 
-RUN apt-get -y update && apt-get -y upgrade
-RUN apt-get -y install sudo
-RUN apt-get -y install git
-RUN apt-get -y install python3
+## Install LLVM dependencies
+RUN apt-get -y install cmake && \
+    apt-get -y install ninja-build && \
+    apt-get -y install clang
 
-## LLVM dependencies
+## Install checker dependencies
 
-RUN apt-get -y install cmake
-RUN apt-get -y install ninja-build
-RUN apt-get -y install clang
+RUN apt-get -y install opam && \
+    opam init --comp=4.14.1 -y && \
+    opam install --confirm-level=unsafe-yes bap z3
 
-## Checker dependencies
-
-RUN apt-get -y install opam
-RUN opam init --comp=4.14.1 -y
-RUN opam install --confirm-level=unsafe-yes bap
-RUN eval $(opam env)
-
-## Offline verification dependencies
-
-
-
-
-## ----------------------------------------------------------------------------
-## STEP 2: Copy local files
-## ----------------------------------------------------------------------------
-
+## Create working directory
 RUN mkdir eval
 WORKDIR /eval
 
-## Copy checker directory
+## ----------------------------------------------------------------------------
+## STEP 2: Install clang (project version and baseline)
+## ----------------------------------------------------------------------------
+
+## Build clang all in one step so we can delete excess files afterward
+RUN git clone https://github.com/Flandini/llvm-project.git && \
+    cd llvm-project && \
+    cmake -S llvm -B build -G Ninja -DLLVM_ENABLE_PROJECTS='clang' && \
+    cd build && ninja && \
+    cp bin/clang /eval/clang && \
+    cd /eval && rm -rf llvm-project
+ENV PROJECT_CC=/eval/clang
+
+# RUN git clone llvm-project llvm-baseline
+
+# ## Build project version
+# WORKDIR /llvm-project
+# RUN cmake -S llvm -B build -G Ninja -DLLVM_ENABLE_PROJECTS='clang'
+# RUN cd build && ninja
+# ENV LLVM_PROJECT=/llvm-project/build/bin/clang
+
+# ## Build baseline version
+# WORKDIR /llvm-baseline
+# RUN git checkout baseline
+# RUN cmake -S llvm -B build -G Ninja -DLLVM_ENABLE_PROJECTS='clang'
+# RUN cd build && ninja
+# ENV CC=/llvm-baseline/build/bin/clang
+# WORKDIR /eval
+
+
+## ----------------------------------------------------------------------------
+## STEP 3: Copy local files
+## ----------------------------------------------------------------------------
+
+## Set up checker directory
 COPY checker ./checker/
+RUN rm checker/bap/interval/uarch_checker.plugin && \
+    ln -s /eval/checker/bap/interval/_build/uarch_checker.plugin \
+        checker/bap/interval/uarch_checker.plugin
 
 ## Copy build files
 COPY Makefile .
 COPY cio .
 COPY checker_init .
 
-## Copy basic test directory contents
-COPY basictest/adder* ./basictest/
-COPY basictest/test.c ./basictest/
-COPY basictest/config.csv ./basictest/
-COPY basictest/Makefile ./basictest/
+## Copy basic test
+COPY basictest/*.c basictest/*.h basictest/config.csv basictest/Makefile \
+    ./basictest/
 
-
-## ----------------------------------------------------------------------------
-## STEP 3: Install LLVM (project version and baseline)
-## ----------------------------------------------------------------------------
-
-## Get LLVM from remote
-WORKDIR /
-RUN git clone https://github.com/Flandini/llvm-project.git
-RUN git clone llvm-project llvm-baseline
-
-## Build project version
-WORKDIR /llvm-project
-RUN cmake -S llvm -B build -G Ninja -DLLVM_ENABLE_PROJECTS='clang'
-RUN cd build && ninja
-ENV LLVM_PROJECT=/llvm-project/build/bin/clang
-
-## Build baseline version
-WORKDIR /llvm-baseline
-RUN git checkout baseline
-RUN cmake -S llvm -B build -G Ninja -DLLVM_ENABLE_PROJECTS='clang'
-RUN cd build && ninja
-ENV CC=/llvm-baseline/build/bin/clang
-WORKDIR /eval
-
-
-
+CMD eval $(opam env) && make CC=$PROJECT_CC test

@@ -146,6 +146,8 @@ eval_prereqs: $(LIBSODIUM_BUILT_AR) $(CHECKER_BUILT)
 test: $(CHECKER_BUILT)
 	./cio --skip-double-check --ss --cs --crypto-dir=$(BASIC_TEST_DIR) --config-file=$(BASIC_TEST_CONFIG_PATH) \
 		-j 1 -b $(BASIC_TEST_BUILD_DIR) -c $(CC) -a "-O0"
+	make --directory=basictest test
+	./basictest/test
 
 libsodium_init:
 	git submodule init -- $(LIBSODIUM_DIR)
