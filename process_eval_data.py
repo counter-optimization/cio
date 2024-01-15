@@ -1,6 +1,9 @@
 import argparse
 import os
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 import statistics as stat
 import numpy as np
 
