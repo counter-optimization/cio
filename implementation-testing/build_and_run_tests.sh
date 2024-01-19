@@ -39,9 +39,9 @@ for harness_file in $HARNESS_C_FILES; do
     echo "Building $final_file..."
 
     if [[ -n $MEASURE_CYCLE_ARG ]]; then
-	clang -DOUR_MAIN -g -O0 -Wall -c $harness_file -o $obj_file
+	clang -v -DOUR_MAIN -g -O0 -Wall -c $harness_file -o $obj_file
     else
-	clang -g -O0 -Wall -fsanitize=fuzzer-no-link -c $harness_file -o $obj_file
+	clang -v -g -O0 -Wall -fsanitize=fuzzer-no-link -c $harness_file -o $obj_file
     fi
     
 
@@ -53,9 +53,9 @@ for harness_file in $HARNESS_C_FILES; do
     fi
 
     if [[ -n $MEASURE_CYCLE_ARG ]]; then
-	clang -g -O0 -Wall $TEST_O $obj_file -o $final_file
+	clang -v -g -O0 -Wall $TEST_O $obj_file -o $final_file
     else
-	clang -g -O0 -Wall -fsanitize=fuzzer $TEST_O $obj_file -o $final_file
+	clang -v -g -O0 -Wall -fsanitize=fuzzer $TEST_O $obj_file -o $final_file
     fi
 
     LINK_STATUS=$?
@@ -90,7 +90,7 @@ if [[ ! -v MAX_SEED_LEN ]]; then
     MAX_SEED_LEN=$((4 * (8 * 6 + 32 * 8)))
 fi
 
-if [[ ! -v MEASURE_CYCLE_RUN ]]; then
+if [[ -v MEASURE_CYCLE_RUN ]]; then
     MEASURE_CYCLE_ARG="-measure_cycles"
 else
     MEASURE_CYCLE_ARG=""

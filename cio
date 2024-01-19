@@ -33,6 +33,9 @@ DYNAMIC_HIT_COUNTS=0
 
 SYSCLANG="/usr/bin/clang"
 
+OCAMLRUNPARAM=b
+export OCAMLRUNPARAM
+
 function usage
 {
     echo "Usage: $TOOLNAME [ -h | --help (displays this message) ]
@@ -42,6 +45,8 @@ function usage
 			   [ -b | --build-dir <path where $TOOLNAME stores intermeiate build artifacts> ]
 			   [ -a | --cflags \"<~double quoted string~ of cflags for CC>\" ]
 			   [ -e | --checker-flags \"<~double quoted string~ of extra flags for uarch_checker>\" ]
+			   [ -r | --bap-core \"<which core to pin bap to>\" ]
+			   [ -m \"<record mem usage using JaneStreet Ocaml memtrace for (double-)checking to build dir>\" ]
 			   [ -j <num make job slots> ]
 			   [ --is-libsodium <run libsodium init> ]
 			   [ --ss (do silent store checks and mitigations) ]
@@ -56,7 +61,11 @@ function usage
     exit 2
 }
 
+<<<<<<< HEAD
 PARSED_ARGS=$(getopt -o "dhc:p:b:o:f:e:p:t:j:a:" -l "dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
+=======
+PARSED_ARGS=$(getopt -o "mdhc:p:b:o:f:e:r:p:t:j:a:b:" -l "bap-core:,dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
+>>>>>>> main
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -98,9 +107,19 @@ while true; do
 	    shift
 	    continue
 	    ;;
+	'-m')
+	    DO_MEMTRACE=1
+	    shift
+	    continue
+	    ;;
 	'-c' | '--cc')
 	    echo CC opt
 	    CC=$2
+	    shift 2
+	    continue
+	    ;;
+	'-r' | '--bap-core')
+	    BAP_PIN_CORE=$2
 	    shift 2
 	    continue
 	    ;;
@@ -171,6 +190,7 @@ BIG_OBJ="${BUILD_DIR}/jammed.together.o"
 ALL_SECRETS_CSV="${BUILD_DIR}/secrets.csv"
 BAP_LOGS="${BUILD_DIR}/bap.log"
 CHECKER_ALERTS_CSV="${BUILD_DIR}/checker.alerts.csv"
+TAINT_CACHE="${BUILD_DIR}/taintcache.bin"
 EVAL_RUNTIME_CSV="${BUILD_DIR}/cio-run-times.csv"
 
 # write EVAL_RUNTIME_CSV header to file
@@ -311,20 +331,50 @@ echo "CHECKING_START_SECS=$CHECKING_START_SECS"
 echo "SHA256 of pre-mitigation $BIG_OBJ is:"
 echo $(sha256sum $BIG_OBJ)
 
+if [[ -v DO_MEMTRACE && "$DO_MEMTRACE" -eq 1 ]]; then
+    export MEMTRACE="${BUILD_DIR}/checking.ctf"
+    CHECKER_MEMTRACE_FLAGS="--uarch-checker-memtrace"
+else
+    CHECKER_MEMTRACE_FLAGS=""
+fi
+
 echo "Starting checker on ${BIG_OBJ} using secrets file ${ALL_SECRETS_CSV}"
 echo "Start time is: $(TZ='America/Los_angeles' date +%F-%T-%Z)"
 echo "logging to ${BAP_LOGS}"
-bap \
-    --plugin-path=$CHECKER_PLUGIN_PATH \
-    --pass=uarch-checker \
-    --no-optimization --bil-optimization=0 \
-    --uarch-checker-output-csv-file=$CHECKER_ALERTS_CSV \
-    $CHECKER_CS_FLAGS \
-    $CHECKER_SS_FLAGS \
-    $CHECKER_SYMEX_FLAGS \
-    --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
-    --uarch-checker-config-file=$CONFIG_FILE \
-    $BIG_OBJ > $BAP_LOGS 2>&1
+if [[ -v BAP_PIN_CORE ]]; then
+    taskset -c $BAP_PIN_CORE bap \
+	    --plugin-path=$CHECKER_PLUGIN_PATH \
+	    --pass=uarch-checker \
+	    --uarch-checker-log-level=info \
+	    --uarch-checker-taint-cache=$TAINT_CACHE \
+	    --no-cache \
+	    --no-optimization --bil-optimization=0 \
+	    --uarch-checker-output-csv-file=$CHECKER_ALERTS_CSV \
+	    $CHECKER_CS_FLAGS \
+	    $CHECKER_SS_FLAGS \
+	    $CHECKER_SYMEX_FLAGS \
+	    $CHECKER_MEMTRACE_FLAGS \
+	    --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
+	    --uarch-checker-config-file=$CONFIG_FILE \
+	    $BIG_OBJ > $BAP_LOGS 2>&1
+else
+    bap \
+	--plugin-path=$CHECKER_PLUGIN_PATH \
+	--pass=uarch-checker \
+	--uarch-checker-log-level=info \
+	--uarch-checker-taint-cache=$TAINT_CACHE \
+	--no-cache \
+	--no-optimization --bil-optimization=0 \
+	--uarch-checker-output-csv-file=$CHECKER_ALERTS_CSV \
+	$CHECKER_CS_FLAGS \
+	$CHECKER_SS_FLAGS \
+	$CHECKER_SYMEX_FLAGS \
+	$CHECKER_MEMTRACE_FLAGS \
+	--uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
+	--uarch-checker-config-file=$CONFIG_FILE \
+	$BIG_OBJ > $BAP_LOGS 2>&1
+fi
+
 echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%F-%T-%Z)"
 
 echo "Checking if bap actually ran... you should also check that the elapsed time above is >= 10 minutes"
@@ -414,22 +464,52 @@ echo "Starting double-checking step"
 DOUBLECHECKING_START_SECS=$(date +%s)
 echo "DOUBLECHECKING_START_SECS=$DOUBLECHECKING_START_SECS"
 
-if [[ $SKIP_DOUBLE_CHECK -eq 0 ]]; then 
+if [[ $SKIP_DOUBLE_CHECK -eq 0 ]]; then
     echo -n Running verification pass...
     echo "Start time is: $(TZ='America/Los_angeles' date +%F-%T-%Z)"
     echo "logging to ${BAP_LOGS}"
-    bap \
-	--plugin-path=$CHECKER_PLUGIN_PATH \
-	--pass=uarch-checker \
-	--uarch-checker-double-check \
-	--no-optimization --bil-optimization=0 \
-	--uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
-	$CHECKER_CS_FLAGS \
-	$CHECKER_SS_FLAGS \
-	$CHECKER_SYMEX_FLAGS \
-	--uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
-	--uarch-checker-config-file=$CONFIG_FILE \
-	${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
+    if [[ -v DO_MEMTRACE && "$DO_MEMTRACE" -eq 1 ]]; then
+	export MEMTRACE="${BUILD_DIR}/double-checking.ctf"
+	CHECKER_MEMTRACE_FLAGS="--uarch-checker-memtrace"
+    else
+	CHECKER_MEMTRACE_FLAGS=""
+    fi
+    
+    if [[ -v BAP_PIN_CORE ]]; then
+	taskset -c $BAP_PIN_CORE bap \
+		--plugin-path=$CHECKER_PLUGIN_PATH \
+		--pass=uarch-checker \
+		--uarch-checker-double-check \
+		--uarch-checker-log-level=info \
+		--uarch-checker-taint-cache=$TAINT_CACHE \
+		--no-cache \
+		--no-optimization --bil-optimization=0 \
+		--uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
+		$CHECKER_CS_FLAGS \
+		$CHECKER_SS_FLAGS \
+		$CHECKER_SYMEX_FLAGS \
+		$CHECKER_MEMTRACE_FLAGS \
+		--uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
+		--uarch-checker-config-file=$CONFIG_FILE \
+		${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
+    else
+	bap \
+	    --plugin-path=$CHECKER_PLUGIN_PATH \
+	    --pass=uarch-checker \
+	    --uarch-checker-double-check \
+	    --uarch-checker-log-level=info \
+	    --uarch-checker-taint-cache=$TAINT_CACHE \
+	    --no-cache \
+	    --no-optimization --bil-optimization=0 \
+	    --uarch-checker-output-csv-file=${CHECKER_ALERTS_CSV}.verification.csv \
+	    $CHECKER_CS_FLAGS \
+	    $CHECKER_SS_FLAGS \
+	    $CHECKER_SYMEX_FLAGS \
+	    $CHECKER_MEMTRACE_FLAGS \
+	    --uarch-checker-symex-profiling-output-file=./symex-profiling-data.csv \
+	    --uarch-checker-config-file=$CONFIG_FILE \
+	    ${BIG_OBJ}.verification.o > ${BAP_LOGS}.verification.log 2>&1
+    fi
     echo "Done checking $BIG_OBJ at $(TZ='America/Los_angeles' date +%F-%T-%Z)"
     echo done
 else
