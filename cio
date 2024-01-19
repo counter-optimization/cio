@@ -61,11 +61,7 @@ function usage
     exit 2
 }
 
-<<<<<<< HEAD
-PARSED_ARGS=$(getopt -o "dhc:p:b:o:f:e:p:t:j:a:" -l "dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
-=======
 PARSED_ARGS=$(getopt -o "mdhc:p:b:o:f:e:r:p:t:j:a:b:" -l "bap-core:,dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
->>>>>>> main
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
