@@ -45,7 +45,7 @@ function usage
 			   [ -b | --build-dir <path where $TOOLNAME stores intermeiate build artifacts> ]
 			   [ -a | --cflags \"<~double quoted string~ of extra cflags for CC>\" ]
 			   [ -e | --checker-flags \"<~double quoted string~ of extra flags for uarch_checker>\" ]
-			   [ -b | --bap-core \"<which core to pin bap to>\" ]
+			   [ -r | --bap-core \"<which core to pin bap to>\" ]
 			   [ -m \"<record mem usage using JaneStreet Ocaml memtrace for (double-)checking to build dir>\" ]
 			   [ -j <num make job slots> ]
 			   [ --is-libsodium <run libsodium init> ]
@@ -61,7 +61,7 @@ function usage
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "mdhc:p:b:o:f:e:p:t:j:b:" -l "bap-core:,dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
+PARSED_ARGS=$(getopt -o "mdhc:p:b:o:f:e:r:p:t:j:b:" -l "bap-core:,dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -114,7 +114,7 @@ while true; do
 	    shift 2
 	    continue
 	    ;;
-	'-b' | '--bap-core')
+	'-r' | '--bap-core')
 	    BAP_PIN_CORE=$2
 	    shift 2
 	    continue
