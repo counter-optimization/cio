@@ -256,7 +256,7 @@ for i in ${!CS_ABLATIONS[@]}; do
 		CC=$CC CHECKER_DIR=$CHECKER_DIR LIBSODIUM_DIR=$LIBSODIUM_DIR \
 		NUM_MAKE_JOB_SLOTS=$NUM_MAKE_JOB_SLOTS EXTRA_MAKEFILE_FLAGS=$EXTRA_MAKEFILE_FLAGS \
 		EVAL_MSG=$EVAL_MSG \
-		EXTRA_CIO_FLAGS="--cflags \"-mllvm --x86-cs-enable-${CS_ABLATIONS[$i]}\" $EXTRA_CIO_FLAGS" \
+		EXTRA_CIO_FLAGS="--extra-cflags \"-mllvm --x86-cs-enable-${CS_ABLATIONS[$i]}\" $EXTRA_CIO_FLAGS" \
 		run_eval
 	
 	if [[ $? -ne 0 ]]; then

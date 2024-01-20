@@ -21,6 +21,7 @@ LATEST_BUILD_DIR="latest-cio-build"
 NUM_MAKE_JOB_SLOTS=8
 
 CFLAGS="-g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic"
+EXTRA_CFLAGS=""
 EXTRA_CHECKER_FLAGS=""
 
 IS_LIBSODIUM=0
@@ -44,6 +45,7 @@ function usage
 			   [ -o | --big-obj <path where $TOOLNAME puts jammed together obj file> ]
 			   [ -b | --build-dir <path where $TOOLNAME stores intermeiate build artifacts> ]
 			   [ -a | --cflags \"<~double quoted string~ of cflags for CC>\" ]
+			   [ --extra-cflags \"<~double quoted string~ of extra cflags for CC>\" ]
 			   [ -e | --checker-flags \"<~double quoted string~ of extra flags for uarch_checker>\" ]
 			   [ -r | --bap-core \"<which core to pin bap to>\" ]
 			   [ -m \"<record mem usage using JaneStreet Ocaml memtrace for (double-)checking to build dir>\" ]
@@ -61,7 +63,7 @@ function usage
     exit 2
 }
 
-PARSED_ARGS=$(getopt -o "mdhc:p:b:o:f:e:r:p:t:j:a:b:" -l "bap-core:,dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
+PARSED_ARGS=$(getopt -o "mdhc:p:b:o:f:e:r:p:t:j:a:b:" -l "bap-core:,dynamic-hit-counts,help,cc:,checker-plugin-path:,build-dir:,big-obj:,config-file:,checker-flags:,cflags:,extra-cflags:,crypto-dir:,is-libsodium,ss,cs,nosymex,skip-double-check" -n $TOOLNAME -- "$@")
 
 if [[ $? -ne 0 ]]; then
        echo "Error parsing args"
@@ -146,6 +148,11 @@ while true; do
 	    ;;
 	'-a' | '--cflags')
 	    CFLAGS=$2
+	    shift 2
+	    continue
+	    ;;
+	'--extra-cflags')
+	    EXTRA_CFLAGS=$2
 	    shift 2
 	    continue
 	    ;;
@@ -269,7 +276,7 @@ fi
 # echo done
 
 # Get their CFLAGS so we can append ours
-COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $CFLAGS"
+COMPILATION_STEP_CFLAGS="-mllvm --x86-gen-idx $CFLAGS $EXTRA_CFLAGS"
 # grep -E 'override CFLAGS' ${TARGET_DIR}/Makefile
 # NO_OVERRIDE=$?
 # if [[ NO_OVERRIDE -eq 0 ]]; then
@@ -399,14 +406,14 @@ make --directory=$TARGET_DIR clean
 echo done
 
 if [[ "$MITIGATE_CS" -eq 1 && "$MITIGATE_SS" -eq 1 ]]; then
-    MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx -mllvm -global-scratch -mllvm -gs-size=8 $CFLAGS"
+    MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx -mllvm -global-scratch -mllvm -gs-size=8 $CFLAGS $EXTRA_CFLAGS"
 else
     if [[ "$MITIGATE_CS" -eq 1 ]]; then
-	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx -mllvm -global-scratch -mllvm -gs-size=8 $CFLAGS"
+	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-cs -mllvm --x86-cs-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx -mllvm -global-scratch -mllvm -gs-size=8 $CFLAGS $EXTRA_CFLAGS"
     fi
     
     if [[ "$MITIGATE_SS" -eq 1 ]]; then
-	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx $CFLAGS"
+	MITIGATION_PASS_CFLAGS="-mllvm --x86-gen-idx -mllvm --x86-ss -mllvm --x86-ss-csv-path=${CHECKER_ALERTS_CSV} -mllvm --x86-gen-deidx $CFLAGS $EXTRA_CFLAGS"
     fi
 fi
 
