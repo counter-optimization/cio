@@ -310,4 +310,6 @@ fi
 echo ""
 echo "Overheads vs baseline:"
 python3 process_eval_data.py $TOP_EVAL_DIR $BASELINE_DIR \
-    $SS_CS_DIR $CS_DIR $SS_DIR ${CS_ABLATIONS_REFERENCE[@]} $REG_RES_DIR
+	$SS_CS_DIR $CS_DIR $SS_DIR ${CS_ABLATIONS_REFERENCE[@]} $REG_RES_DIR
+
+bash get_bap_numbers.sh "$SS_CS_DIR"
