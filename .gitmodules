@@ -3,7 +3,7 @@
 	url = https://github.com/jedisct1/libsodium
 [submodule "checker"]
 	path = checker
-	url = git@github.com:flandini/checker
+	url = https://github.com/counter-optimization/checker.git
 [submodule "llvm-project"]
 	path = llvm-project
 	url = git@github.com:Flandini/llvm-project.git
