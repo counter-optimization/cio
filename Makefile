@@ -71,6 +71,7 @@ run_eval: build_eval
 	cp Makefile $(EVAL_DIR)
 	cp $(LIBSODIUM_BUILT_AR) $(EVAL_DIR)
 	cp *.c $(EVAL_DIR)
+	-cp $(CIO_BUILD_DIR)/cio-run-times.csv $(EVAL_DIR)
 	echo "$(CC)" > $(FILE_WHICH_CC_FOR_EVAL_BUILD)
 	echo "$(CFLAGS)" > $(FILE_WHICH_CFLAGS_FOR_EVAL_BUILD)
 	echo "$(MITIGATIONS)" > $(FILE_WHICH_MITIGATIONS_FOR_EVAL_BUILD)
